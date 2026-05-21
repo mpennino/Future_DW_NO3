@@ -910,6 +910,7 @@ summary(dep_N_hu12$totalN_2050ref_kgNha)
 ```
 
 # Upload NNI Data
+* Units kg N /sqkm
 ```{r}
 library(dplyr)
 #-------------------------------------------------------------------------------
@@ -1016,16 +1017,6 @@ Cat_HUC12 = read.csv("D:/Data/Spatial/COMID_HUC12_st_join_cat_centroids.csv") # 
 # Add leading zeros
 Cat_HUC12$HUC12 = formatC(as.numeric(as.character(Cat_HUC12$HUC12)), width = 12, format = "f",flag = "0",digits = 0) # add zero in front of any 
 
-# catcals = c('COMID','CBNFCat','FertCat','ManureCat',
-#                    'Precip8110Cat',
-#                    'Precip_Minus_EVTCat','PermCat','Tmean8110Cat',
-#                    'PctDecid2019Cat','PctConif2019Cat','PctMxFst2019Cat',
-#                     'PctCrop2019Cat','PopDen2010Cat',
-#                    'N_TW2010Cat'
-#                    )
-# 
-# StreamCat_sub <- read_fst("D:/Data/All_StreamCat_Vars_2022.fst",
-#                 columns =  catcals)
 
 catcals = c('COMID','AgKffactCat','AgKffactWs','BFICat','BFIWs',
             'ElevCat','ElevWs','Precip8110Cat','Precip8110Ws',
@@ -1053,7 +1044,7 @@ streamcat.vars.v2 <- read_fst("D:/Data/Cat.All.Vars2_All_Cats.fst",
                                            "Hillslope_PctCat",'Hillslope_PctWs',
                                            "NHDslope_Pct_Cat",'NHDslope_Pct_Ws',
                                         'N_TW2012Cat','N_TW2012Ws','S_TW2012Cat','S_TW2012Ws',
-                                           'NANI_kgkm2_Cat','NANI_kgkm2_Ws','CatAreaSqKm'))
+                                           'NANI_kgkm2_Cat','NANI_kgkm2_Ws','CatAreaSqKm','WsAreaSqKm'))
 
 sc_data <- read_fst("D:/Data/StreamCat_temp_precip_9120.fst",
                               columns =  c('COMID','precip9120cat','precip9120ws',"tmean9120cat",'tmean9120ws'))
@@ -1104,10 +1095,17 @@ StreamCat_sub$PctForest2019Ws = StreamCat_sub$PctDecid2019Ws +
   StreamCat_sub$PctConif2019Ws + StreamCat_sub$PctMxFst2019Ws 
 
 
+
+
+# Convert StreamCat N Surplus to area waited value
+StreamCat_sub$N_Surp_kgsqkm_2017ws = StreamCat_sub$N_Surp_2017ws / StreamCat_sub$WsAreaSqKm
+StreamCat_sub$N_Surp_kgsqkm_2017cat = StreamCat_sub$N_Surp_2017cat / StreamCat_sub$CatAreaSqKm
+
 StreamCat_sub = 
   subset(StreamCat_sub, 
          select= -c(PctDecid2019Cat,PctConif2019Cat,PctMxFst2019Cat,
-                    Tmean8110Cat,Precip8110Cat))
+                    Tmean8110Cat,Precip8110Cat,N_Surp_2017ws,N_Surp_2017cat))
+
 
 # Summarize by HUC12
 StreamCat_HU12_ = merge(StreamCat_sub,Cat_HUC12,by='COMID')
@@ -1243,6 +1241,102 @@ projection(states_conus)
 
 ```
 
+
+# * N Treatment by PWSID 05-2021
+* Comes from the "Treatment_All_PWSID.Rmd" file in the Paper 7 Trends Causes Folder
+```{r}
+
+m_dir = 'C:/Users/mpennino/OneDrive - Environmental Protection Agency (EPA)/'
+
+PWS_N_Treat_All = read.csv(paste0(m_dir, 'Projects/Data/NO3_Treatment05to21_byPWSID.csv'))
+
+
+# Look at treatment numbers for GW vs. SW
+
+treat_gwsw = merge(PWS_N_Treat_All,PWS_inventory_gwsw,by='PWSID')
+
+treat_gwsw = unique(treat_gwsw[,c("PWSID","Nitrate.Treatment","GW.or.SW")])
+treat_gwsw = treat_gwsw[treat_gwsw$Nitrate.Treatment == 'Nitrate Removal',]
+
+treat_gw = treat_gwsw[treat_gwsw$GW.or.SW == 'Groundwater',]
+treat_sw = treat_gwsw[treat_gwsw$GW.or.SW == 'Surface water',]
+
+# This gives proportion off PWS with NO3 Treatment that are GW or SW
+100*nrow(treat_gw)/(nrow(treat_gw)+nrow(treat_sw)) # 94.95192
+100*nrow(treat_sw)/(nrow(treat_gw)+nrow(treat_sw)) # 5.048077
+
+# This gives proportion of all SW PWS that have NO3 Treatment
+
+
+# This gives proportion of all GW PWS that have NO3 Treatment
+
+treat_gwsw2 = merge(PWS_inventory_gwsw, unique(PWS_N_Treat_All[,c("PWSID","Nitrate.Treatment")]),by='PWSID',all.x=T)
+
+treat_gw2 = treat_gwsw2[treat_gwsw2$GW.or.SW == 'Groundwater',]
+treat_sw2 = treat_gwsw2[treat_gwsw2$GW.or.SW == 'Surface water',]
+
+treat_gw3 = treat_gw2[complete.cases(treat_gw2[,c("Nitrate.Treatment")]),] 
+treat_sw3 = treat_sw2[complete.cases(treat_sw2[,c("Nitrate.Treatment")]),] 
+
+100*nrow(treat_gw3)/nrow(treat_gw2) # 8.32821
+100*nrow(treat_sw3)/nrow(treat_sw2) # 5.273668
+
+
+```
+
+# Summaryize Treatment by HUC12
+```{r}
+
+temp_N_treat = merge(PWS_inventory_gwsw,
+                     unique(PWS_N_Treat_All[,c('PWSID','Nitrate.Treatment')]),
+                            by='PWSID',all.x=T)
+
+temp_N_treat$Nitrate_Treatment_yn =
+  ifelse(temp_N_treat$Nitrate.Treatment == "Nitrate Removal",1,0)
+temp_N_treat$Nitrate_Treatment_yn[is.na(temp_N_treat$Nitrate_Treatment_yn)] <- 0
+temp_N_treat2 = unique(subset(temp_N_treat,select=c(PWSID,GW.or.SW,Nitrate_Treatment_yn)))
+
+N_treat_gw = temp_N_treat2[temp_N_treat2$GW.or.SW == 'Groundwater',]
+N_treat_sw = temp_N_treat2[temp_N_treat2$GW.or.SW == 'Surface water',]
+
+N_treat_gw = merge(N_treat_gw,PWS_HUC12,by="PWSID")
+N_treat_sw = merge(N_treat_sw,PWS_HUC12,by="PWSID")
+N_treat_gwsw = merge(temp_N_treat2,PWS_HUC12,by="PWSID")
+
+N_treat_huc12_gw = N_treat_gw %>% group_by(HUC12) %>% summarize(Nitrate_Treatment_freq = sum(Nitrate_Treatment_yn))
+N_treat_huc12_sw = N_treat_sw %>% group_by(HUC12) %>% summarize(Nitrate_Treatment_freq = sum(Nitrate_Treatment_yn))
+N_treat_huc12_gwsw = N_treat_gwsw %>% group_by(HUC12) %>% summarize(Nitrate_Treatment_freq = sum(Nitrate_Treatment_yn))
+
+summary(N_treat_huc12_gw$Nitrate_Treatment_freq)
+summary(N_treat_huc12_sw$Nitrate_Treatment_freq)
+summary(N_treat_huc12_gwsw$Nitrate_Treatment_freq)
+
+length(unique(N_treat_huc12_gw$HUC12))
+length(unique(N_treat_huc12_sw$HUC12))
+length(unique(N_treat_huc12_gwsw$HUC12))
+
+```
+
+
+# Load Treatment by HUC
+* This came from "Treatment_HUCs.Rmd"
+```{r}
+
+Ntreat_HU12 = read.csv(paste0(m_dir, 'Projects/Data/NO3_Treatment05to21_HUC12.csv'))
+Ntreat_HU12_yrs = read.csv(paste0(m_dir, 'Projects/Data/NO3_Treatment05to21_HUC12_yrs.csv'))
+
+summary(Ntreat_HU12$Nitrate.Treatment)
+
+Ntreat_HU12$HUC12 = formatC(as.numeric(as.character(Ntreat_HU12$HUC12)), width = 12, format = "f",flag = "0",digits = 0) # add zero in front of any 
+Ntreat_HU12_yrs$HUC12 = formatC(as.numeric(as.character(Ntreat_HU12_yrs$HUC12)), width = 12, format = "f",flag = "0",digits = 0) # add zero in front of any 
+
+Ntreat_HU12 = unique(Ntreat_HU12)
+Ntreat_HU12_yrs = unique(Ntreat_HU12_yrs)
+
+length(unique(Ntreat_HU12$HUC12))
+
+
+```
 
 #------------------------------------------------------------------------------
 
@@ -2371,6 +2465,9 @@ NANI_huc12$NANI_RCP4.5G =
 rf_sw = merge(viol_sw_hu12,subset(NDATA_huc12,select=-c(PopDen2010Cat)),by='HUC12')
 rf_sw = merge(rf_sw,StreamCat_HU12,by='HUC12')
 rf_sw = merge(rf_sw,NNI17,by='HUC12')
+#rf_sw = merge(rf_sw,N_treat_huc12_sw,by='HUC12')
+
+
 
 
 # Original
@@ -2392,7 +2489,8 @@ keeps = c("HUC12","viol_freq"
           # Other
           ,"Fe2O3Ws","ElevWs"#,"WtDepWs","SandWs"
           ,"NHDslope_Pct_Ws"#,"Hillslope_PctWs"#,"S_TW2012Ws","rckdepWs"
-
+          #,'Nitrate_Treatment_freq'
+  
           )
 
 rf_sw2 = unique(na.omit(rf_sw[,keeps]))
@@ -2480,7 +2578,7 @@ keeps_sw = c("COMID","viol_freq"
 
           # N Inputs
           ,"N_TW2012Ws","FertWs","ManureWs","RockNWs","CBNFWs"
-          ,"N_Surp_2017ws"#,"n_surplus_kgsqkm"#,"n_ag_surplus_kgsqkm"#,"NANI_kgkm2_Ws"
+          ,"N_Surp_kgsqkm_2017ws"#,"n_surplus_kgsqkm"#,"n_ag_surplus_kgsqkm"#,"NANI_kgkm2_Ws"
 
           # Other
           ,"Fe2O3Ws","ElevWs"#,"WtDepWs","SandWs"
@@ -3964,7 +4062,7 @@ end_time <- Sys.time(); end_time - start_time
 
 ```
 
-# Raster Map Current HUC12
+# Raster Map Current GW HUC12
 ```{r}
 
 #()()()()()()()()()()()()()()()()
@@ -3973,7 +4071,9 @@ map_title = "Current Probability of Violations 2020"
 predictData = predHUC_cur  
 #rfr_pred = rfc_sw_p # rfc_gw_p, rfc_sw_p
 #rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
-rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
+#rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
+
+rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
 
 #()()()()()()()()()()()()()()()()
 
@@ -4039,11 +4139,12 @@ ggplot()+
 end_time <- Sys.time(); end_time - start_time
 # Time difference of 33.21989 secs
 
+pred_gw_HU12 = pred_all
 
 
 ```
 
-# Raster Map Current COMID
+# Raster Map Current SW COMID
 ```{r}
 
 #()()()()()()()()()()()()()()()()
@@ -4051,7 +4152,6 @@ map_title = "Current Probability of Violations 2020"
 
 predictData = predCat_cur  
 #rfr_pred = rfc_sw_p # rfc_gw_p, rfc_sw_p
-#rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
 rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
 
 #()()()()()()()()()()()()()()()()
@@ -4123,6 +4223,8 @@ ggplot()+
 end_time <- Sys.time(); end_time - start_time
 # Time difference of 33.21989 secs
 
+pred_sw_Cat = pred_all
+pred_sw_HU12 = pred_all2
 
 
 ```
@@ -4597,91 +4699,153 @@ end_time <- Sys.time(); end_time - start_time
 ```
 
 #--
-# Error Map SW
+# Error Map SW Catchments
 ```{r}
 
 #()()()()()()()()()()()()()()()()
-map_title = "Error SWDW Probability of Violations 2020"
+map_title = "Error SWDW Probability of Violations Catchments"
 
 predictData = predCat_cur  
 #rfr_pred = rfc_sw_p # rfc_gw_p, rfc_sw_p
 #rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
 rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
 ObsData = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_SW_COMIDS.csv'))
-
+pred_sw = pred_sw_Cat
 #()()()()()()()()()()()()()()()()
 
-predictData2 = as.data.frame(subset(predictData,select=-c(COMID)))
-dim(predictData2)
 
-setdiff(names(rfr_pred$variable.importance),colnames(predictData)) # gives not matching
+errmap = merge(pred_sw,ObsData[,c('COMID','Viol_Class')],by='COMID')
 
+errmap$error[errmap$Viol_Class == 1 & errmap$Prediction >= 0.5] = "True Positive"
+errmap$error[errmap$Viol_Class == 0 & errmap$Prediction < 0.5] = "True Negative"
+errmap$error[errmap$Viol_Class == 1 & errmap$Prediction < 0.5] = "False Negative"
+errmap$error[errmap$Viol_Class == 0 & errmap$Prediction >= 0.5] = "False Positive"
 
-predict1 = predict(rfr_pred,data = predictData2)
+levels(factor(errmap$error))
 
-preds = as.data.frame(predict1$predictions[,2])
-names(preds)[1] = "Prediction"
+map1 <-merge(errmap,cats_p,by="COMID",all.x=T)
+map2 <- st_as_sf(map1) # added this because the above didn't retain geometry
+#map3 <- map2[order(map2$error),]
 
-# Merge back on HUC12s
-pred_all = cbind(predictData$COMID ,preds)
-names(pred_all)[1] = 'COMID'
+# Get point data for plotting
+map3<-cbind(map2, st_coordinates(st_centroid(map2$geometry)))
 
-nrow(pred_all)  # 2643994 
+#palette.colors(palette = "Okabe-Ito")
+#"#000000" "#E69F00" "#56B4E9" "#009E73" "#F0E442" "#0072B2" "#D55E00" "#CC79A7" "#999999"
 
-nrow(pred_all[pred_all$Prediction > 0.5,]) # 598450
-100*nrow(pred_all[pred_all$Prediction > 0.5,]) /nrow(pred_all) # 22.63432
-summary(pred_all$Prediction)
-
-
-# Summarize by HUC12
-pred_all2. = merge(pred_all,Cat_HUC12,by='COMID')
-pred_all2 = pred_all2. %>% group_by(HUC12) %>% summarize(Prediction = mean(Prediction,na.rm=T))
-# Merge on Spatial Data
-
-map1 = merge(pred_all2,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
-
-map2 = map1[complete.cases(map1[,c("Prediction")]),] 
-map2 <- st_as_sf(map2) # added this because the above didn't retain geometry
-map3 <- map2[order(map2$Prediction),]
-#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
-
-nrow(map3[map3$Prediction>0.5,]) # 19244
-summary(map3$Prediction)
-
-# Format rasters
-start_time <- Sys.time()
-map4<-st_rasterize(map3[,"Prediction"],
-                     st_as_stars(st_bbox(states_boundary),
-                                 dx = 3000, dy = 3000, values=NA_real_), na.rm=T)
-end_time <- Sys.time(); end_time - start_time
-# Time difference of 8.113112 secs (Desktop at 1000m)
+mypal =c( "True Positive"="red", "True Negative"="#009E73",
+          "False Negative"="#CC79A7", "False Positive"="#F0E442" )
 
 
-## Plot Nitrogen Maps
-start_time <- Sys.time()
-ggplot()+
-  geom_stars(data=map4, aes(fill=Prediction))+
+# Change order of categories
+morder = c('True Negative','False Positive','False Negative','True Positive')
+map3$error <- factor(map3$error, levels = morder)
+
+map3a = map3[map3$error != "True Positive",]
+map3b = map3[map3$error == "True Positive",]
+
+ggplot() +
+  geom_sf(fill='white', data=states_conus, color='black') +
+  geom_point(data=map3a, aes(x=X, y=Y, color=error)) +
+  geom_point(data=map3b, aes(x=X, y=Y, color=error)) +
   geom_sf(fill='transparent', data = states_conus, color='black') +
-  # scale_color_viridis(option="magma",name="Risk Score" 
-  #                     ,limits = c(0, 1)
-  #                     )+ # options: viridis, magma, plasma
-  binned_scale(aesthetics = "fill",
-               palette=function(x) c("#5E4FA2","#3288BD","#66C2A5","#ABDDA4","#E6F598",
-                                     "#FEE08B","#FDAE61","#F46D43","#D53E4F","#9E0142"),
-               breaks=c(.1, .2, .3, .4, .5, 0.6, .7, 0.8, 0.9)) +
-  theme (axis.text = element_blank(), axis.title = element_blank(), 
-         panel.background = element_blank(), axis.ticks = element_blank(), 
-         legend.text = element_text(size = 14), legend.title = element_text(size = 14))+
-  ggtitle(map_title)+
+  scale_color_manual(values = mypal,name="Error Categories",)+
+  #scale_color_viridis(option="rocket",name="Viol. Frequency")+ # options: viridis, magma, plasma
+  theme(panel.background = element_blank())+ # remove grey background
+  theme(axis.text = element_blank())+ # remove axis text
+  theme(axis.ticks = element_blank())+ # remove axis text
   theme(plot.title = element_text(hjust=0.5))+
-  labs(fill="Risk Value")
-end_time <- Sys.time(); end_time - start_time
-# Time difference of 33.21989 secs
+  ggtitle(map_title)+
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),     # Remove background
+    panel.grid = element_blank(),     # Remove gridlines
+    axis.text = element_blank(),     # Remove Axis ticks/text/titles
+    axis.ticks = element_blank(),
+    axis.title = element_blank())
+
+
+100*nrow(errmap[errmap$error=='True Positive',])/nrow(errmap) # 3.857366
+100*nrow(errmap[errmap$error=='False Negative',])/nrow(errmap) # 0.2516341
+100*nrow(errmap[errmap$error=='False Positive',])/nrow(errmap) # 21.01451
+
+100*nrow(errmap[errmap$error=='False Positive',])/nrow(errmap[errmap$Viol_Class==0,]) # 21.01451
 
 
 
 ```
 
+# Error Map GW HUC12
+```{r}
+
+#()()()()()()()()()()()()()()()()
+map_title = "Error GWDW Probability of Violations HUC12"
+
+predictData = predHUC_cur  
+#rfr_pred = rfc_sw_p # rfc_gw_p, rfc_sw_p
+#rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+ObsData = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_GW_HUC12.csv'))
+pred_gw = pred_gw_HU12
+#()()()()()()()()()()()()()()()()
+
+# Add leading zeros
+ObsData$HUC12 = formatC(as.numeric(as.character(ObsData$HUC12)), width = 12, format = "f",flag = "0",digits = 0) 
+
+errmap = merge(pred_gw,ObsData[,c('HUC12','Viol_Class')],by='HUC12')
+
+errmap$error[errmap$Viol_Class == 1 & errmap$Prediction >= 0.5] = "True Positive"
+errmap$error[errmap$Viol_Class == 0 & errmap$Prediction < 0.5] = "True Negative"
+errmap$error[errmap$Viol_Class == 1 & errmap$Prediction < 0.5] = "False Negative"
+errmap$error[errmap$Viol_Class == 0 & errmap$Prediction >= 0.5] = "False Positive"
+
+levels(factor(errmap$error))
+
+map1 <-merge(errmap,huc12_p,by="HUC12",all.x=T)
+map2 <- st_as_sf(map1) # added this because the above didn't retain geometry
+#map3 <- map2[order(map2$error),]
+
+# Get point data for plotting
+map3<-cbind(map2, st_coordinates(st_centroid(map2$geometry)))
+
+#palette.colors(palette = "Okabe-Ito")
+#"#000000" "#E69F00" "#56B4E9" "#009E73" "#F0E442" "#0072B2" "#D55E00" "#CC79A7" "#999999"
+
+mypal =c( "True Positive"="red", "True Negative"="#009E73",
+          "False Negative"="#CC79A7", "False Positive"="#F0E442" )
+
+
+# Change order of categories
+morder = c('True Negative','False Positive','False Negative','True Positive')
+map3$error <- factor(map3$error, levels = morder)
+
+map3a = map3[map3$error != "True Positive",]
+map3b = map3[map3$error == "True Positive",]
+
+ggplot() +
+  geom_sf(fill='white', data=states_conus, color='black') +
+  geom_point(data=map3a, aes(x=X, y=Y, color=error)) +
+  geom_point(data=map3b, aes(x=X, y=Y, color=error)) +
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  scale_color_manual(values = mypal,name="Error Categories",)+
+  #scale_color_viridis(option="rocket",name="Viol. Frequency")+ # options: viridis, magma, plasma
+  theme(panel.background = element_blank())+ # remove grey background
+  theme(axis.text = element_blank())+ # remove axis text
+  theme(axis.ticks = element_blank())+ # remove axis text
+  theme(plot.title = element_text(hjust=0.5))+
+  ggtitle(map_title)+
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),     # Remove background
+    panel.grid = element_blank(),     # Remove gridlines
+    axis.text = element_blank(),     # Remove Axis ticks/text/titles
+    axis.ticks = element_blank(),
+    axis.title = element_blank())
+
+
+100*nrow(errmap[errmap$error=='True Positive',])/nrow(errmap) # 3.857366
+100*nrow(errmap[errmap$error=='False Negative',])/nrow(errmap) # 0.2516341
+100*nrow(errmap[errmap$error=='False Positive',])/nrow(errmap) # 21.01451
+
+
+```
 
 #-- 
 # Systematic Future Check
@@ -5683,14 +5847,75 @@ end_time <- Sys.time(); end_time - start_time
 ```
 
 
-# Map Current N Surplus
+# Map Current N Surplus (NNI)
 ```{r}
 
 #()()()()()()()()()()()()()()()()
-map_title = "Current N Surplus"
+map_title = "Current N Surplus (NNI17)"
 
 MapData = NNI17  
 MapData$Variable = MapData$n_surplus_kgsqkm
+#()()()()()()()()()()()()()()()()
+
+
+# Remove rows where value is NA or Inf
+MapData$Variable[is.infinite(MapData$Variable)] = NA
+MapData = MapData[complete.cases(MapData[,c("Variable")]),] 
+#test = MapData[,c('HUC12','N_Surp_2017ws','N_surp_RCP4.5G')]
+
+
+# Merge on Spatial Data
+map1 = merge(MapData,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
+map2 <- st_as_sf(map1) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Variable),]
+#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
+
+summary(map3$Variable)
+
+# Format rasters
+start_time <- Sys.time()
+map4<-st_rasterize(map3[,"Variable"],
+                     st_as_stars(st_bbox(states_boundary),
+                                 dx = 10000, dy = 10000, values=NA_real_), na.rm=T)
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 8.113112 secs (Desktop at 1000m)
+
+
+## Plot Nitrogen Maps
+start_time <- Sys.time()
+ggplot()+
+  geom_stars(data=map4, aes(fill=Variable))+
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  # scale_color_viridis(option="magma",name=""
+  #                     #,limits = c(0, 1)
+  #                     )+ # options: viridis, magma, plasma
+  binned_scale(aesthetics = "fill",
+               palette=function(x) c("#5E4FA2","#3288BD","#66C2A5","#ABDDA4","#E6F598",
+                                     "#FEE08B","#FDAE61","#F46D43","#D53E4F","#9E0142"),
+               breaks=c(-10000, 0, 1000, 2000, 3000, 5000, 30000, 60000)) +
+  theme (axis.text = element_blank(), axis.title = element_blank(), 
+         panel.background = element_blank(), axis.ticks = element_blank(), 
+         legend.text = element_text(size = 14), legend.title = element_text(size = 14))+
+  ggtitle(map_title)+
+  theme(plot.title = element_text(hjust=0.5))+
+  labs(fill="kg/sqkm")
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 33.21989 secs
+
+
+
+
+
+```
+
+# Map Current N Surplus (StreamCat)
+```{r}
+
+#()()()()()()()()()()()()()()()()
+map_title = "Current N Surplus Ws (StreamCat)"
+
+MapData = StreamCat_HU12  
+MapData$Variable = MapData$N_Surp_2017ws
 #()()()()()()()()()()()()()()()()
 
 
