@@ -1284,7 +1284,39 @@ treat_sw3 = treat_sw2[complete.cases(treat_sw2[,c("Nitrate.Treatment")]),]
 
 ```
 
-# Summaryize Treatment by HUC12
+# Summarize Treatment by Catchment
+```{r}
+
+temp_N_treat = merge(PWS_inventory_gwsw,
+                     unique(PWS_N_Treat_All[,c('PWSID','Nitrate.Treatment')]),
+                            by='PWSID',all.x=T)
+
+temp_N_treat$Nitrate_Treatment_yn =
+  ifelse(temp_N_treat$Nitrate.Treatment == "Nitrate Removal",1,0)
+temp_N_treat$Nitrate_Treatment_yn[is.na(temp_N_treat$Nitrate_Treatment_yn)] <- 0
+temp_N_treat2 = unique(subset(temp_N_treat,select=c(PWSID,GW.or.SW,Nitrate_Treatment_yn)))
+
+N_treat_gw. = temp_N_treat2[temp_N_treat2$GW.or.SW == 'Groundwater',]
+N_treat_sw. = temp_N_treat2[temp_N_treat2$GW.or.SW == 'Surface water',]
+
+N_treat_gw. = merge(N_treat_gw.,PWS_COMID,by="PWSID")
+N_treat_sw. = merge(N_treat_sw.,PWS_COMID,by="PWSID")
+N_treat_gwsw. = merge(temp_N_treat2,PWS_COMID,by="PWSID")
+
+N_treat_cat_gw = N_treat_gw. %>% group_by(COMID) %>% summarize(Nitrate_Treatment_freq = sum(Nitrate_Treatment_yn))
+N_treat_cat_sw = N_treat_sw. %>% group_by(COMID) %>% summarize(Nitrate_Treatment_freq = sum(Nitrate_Treatment_yn))
+N_treat_cat_gwsw = N_treat_gwsw. %>% group_by(COMID) %>% summarize(Nitrate_Treatment_freq = sum(Nitrate_Treatment_yn))
+
+N_treat_cat_gw$Nitrate_Treatment_yn = ifelse(N_treat_cat_gw$Nitrate_Treatment_freq > 0,1,0)
+N_treat_cat_sw$Nitrate_Treatment_yn = ifelse(N_treat_cat_sw$Nitrate_Treatment_freq > 0,1,0)
+N_treat_cat_gwsw$Nitrate_Treatment_yn = ifelse(N_treat_cat_gwsw$Nitrate_Treatment_freq > 0,1,0)
+
+length(unique(N_treat_cat_gw$COMID)) # 116541
+length(unique(N_treat_cat_sw$COMID)) # 15241
+
+```
+
+# Summarize Treatment by HUC12
 ```{r}
 
 temp_N_treat = merge(PWS_inventory_gwsw,
@@ -1306,6 +1338,10 @@ N_treat_gwsw = merge(temp_N_treat2,PWS_HUC12,by="PWSID")
 N_treat_huc12_gw = N_treat_gw %>% group_by(HUC12) %>% summarize(Nitrate_Treatment_freq = sum(Nitrate_Treatment_yn))
 N_treat_huc12_sw = N_treat_sw %>% group_by(HUC12) %>% summarize(Nitrate_Treatment_freq = sum(Nitrate_Treatment_yn))
 N_treat_huc12_gwsw = N_treat_gwsw %>% group_by(HUC12) %>% summarize(Nitrate_Treatment_freq = sum(Nitrate_Treatment_yn))
+
+N_treat_huc12_gw$Nitrate_Treatment_yn = ifelse(N_treat_huc12_gw$Nitrate_Treatment_freq > 0,1,0)
+N_treat_huc12_sw$Nitrate_Treatment_yn = ifelse(N_treat_huc12_sw$Nitrate_Treatment_freq > 0,1,0)
+N_treat_huc12_gwsw$Nitrate_Treatment_yn = ifelse(N_treat_huc12_gwsw$Nitrate_Treatment_freq > 0,1,0)
 
 summary(N_treat_huc12_gw$Nitrate_Treatment_freq)
 summary(N_treat_huc12_sw$Nitrate_Treatment_freq)
@@ -1337,6 +1373,7 @@ length(unique(Ntreat_HU12$HUC12))
 
 
 ```
+
 
 #------------------------------------------------------------------------------
 
@@ -1397,30 +1434,31 @@ LU_nni_hu12 = merge(LU_nni_hu12,imprv_hu12,by='HUC12')
 
 ```
 
+#-------------------------------------------------------------------------------
 # Change Ratio - Ag Land
 ```{r}
 
 # Get the Land Use grouped together
 LU_nni_hu12$area_ag_2010= 
   LU_nni_hu12$area_07.cropland_landuse_2010 + 
-  LU_nni_hu12$area_05.grazing_landuse_2010 +
+  #LU_nni_hu12$area_05.grazing_landuse_2010 +
   LU_nni_hu12$area_06.pasture_landuse_2010
 
 LU_nni_hu12$area_ag_RCP4.5G = 
   LU_nni_hu12$area_07.cropland_landuse_RCP4.5GISS+ 
-  LU_nni_hu12$area_05.grazing_landuse_RCP4.5GISS +
+  #LU_nni_hu12$area_05.grazing_landuse_RCP4.5GISS +
   LU_nni_hu12$area_06.pasture_landuse_RCP4.5GISS
 LU_nni_hu12$area_ag_RCP8.5G = 
   LU_nni_hu12$area_07.cropland_landuse_RCP8.5GISS+ 
-  LU_nni_hu12$area_05.grazing_landuse_RCP8.5GISS +
+  #LU_nni_hu12$area_05.grazing_landuse_RCP8.5GISS +
   LU_nni_hu12$area_06.pasture_landuse_RCP8.5GISS
 LU_nni_hu12$area_ag_RCP4.5H = 
   LU_nni_hu12$area_07.cropland_landuse_RCP4.5Hadgem+ 
-  LU_nni_hu12$area_05.grazing_landuse_RCP4.5Hadgem +
+  #LU_nni_hu12$area_05.grazing_landuse_RCP4.5Hadgem +
   LU_nni_hu12$area_06.pasture_landuse_RCP4.5Hadgem
 LU_nni_hu12$area_ag_RCP8.5H = 
   LU_nni_hu12$area_07.cropland_landuse_RCP8.5Hadgem+ 
-  LU_nni_hu12$area_05.grazing_landuse_RCP8.5Hadgem +
+  #LU_nni_hu12$area_05.grazing_landuse_RCP8.5Hadgem +
   LU_nni_hu12$area_06.pasture_landuse_RCP8.5Hadgem
 
 # Calculate Change Ratio (the multiplier for calculating how much mass of N changed)
@@ -1447,6 +1485,10 @@ summary(LU_nni_hu12$change_ratio_crop_RCP8.5G)
 
 # Convert change ratio to NA if zero value in 2010
 
+LU_nni_hu12$change_ratio_ag_RCP4.5G[is.infinite(LU_nni_hu12$change_ratio_ag_RCP4.5G)] = NA
+LU_nni_hu12$change_ratio_ag_RCP8.5G[is.infinite(LU_nni_hu12$change_ratio_ag_RCP8.5G)] = NA
+LU_nni_hu12$change_ratio_ag_RCP4.5H[is.infinite(LU_nni_hu12$change_ratio_ag_RCP4.5H)] = NA
+LU_nni_hu12$change_ratio_ag_RCP8.5H[is.infinite(LU_nni_hu12$change_ratio_ag_RCP8.5H)] = NA
 
 LU_nni_hu12$change_ratio_crop_RCP4.5G[is.infinite(LU_nni_hu12$change_ratio_crop_RCP4.5G)] = NA
 LU_nni_hu12$change_ratio_crop_RCP8.5G[is.infinite(LU_nni_hu12$change_ratio_crop_RCP8.5G)] = NA
@@ -1454,39 +1496,49 @@ LU_nni_hu12$change_ratio_crop_RCP4.5H[is.infinite(LU_nni_hu12$change_ratio_crop_
 LU_nni_hu12$change_ratio_crop_RCP8.5H[is.infinite(LU_nni_hu12$change_ratio_crop_RCP8.5H)] = NA
 
 nrow(LU_nni_hu12)
-nrow(LU_nni_hu12[complete.cases(LU_nni_hu12[,c("change_ratio_crop_RCP4.5G")]),]) 
+nrow(LU_nni_hu12[complete.cases(LU_nni_hu12[,c("change_ratio_ag_RCP4.5G")]),]) 
 
+nrow(LU_nni_hu12[complete.cases(LU_nni_hu12[,c("change_ratio_crop_RCP4.5G")]),]) 
 
 # If change ratio is NA, but there is cropland in future scenario, replace change ratio with average change ratio
 
-mean(LU_nni_hu12$change_ratio_crop_RCP4.5G,na.rm=T)
+# mean(LU_nni_hu12$change_ratio_crop_RCP4.5G,na.rm=T)
+# 
+# LU_nni_hu12$change_ratio_crop_RCP4.5G = 
+#   ifelse(LU_nni_hu12$area_07.cropland_landuse_RCP4.5GISS >0 & 
+#            is.na(LU_nni_hu12$change_ratio_crop_RCP4.5G),
+#          mean(LU_nni_hu12$change_ratio_crop_RCP4.5G,na.rm=T),
+#          LU_nni_hu12$change_ratio_crop_RCP4.5G )
+# nrow(LU_nni_hu12[complete.cases(LU_nni_hu12[,c("change_ratio_crop_RCP4.5G")]),]) 
+# 
+# LU_nni_hu12$change_ratio_crop_RCP8.5G = 
+#   ifelse(LU_nni_hu12$area_07.cropland_landuse_RCP8.5GISS >0 & 
+#            is.na(LU_nni_hu12$change_ratio_crop_RCP8.5G),
+#          mean(LU_nni_hu12$change_ratio_crop_RCP8.5G,na.rm=T),
+#          LU_nni_hu12$change_ratio_crop_RCP8.5G )
+# 
+# LU_nni_hu12$change_ratio_crop_RCP4.5H = 
+#   ifelse(LU_nni_hu12$area_07.cropland_landuse_RCP4.5Hadgem >0 & 
+#            is.na(LU_nni_hu12$change_ratio_crop_RCP4.5H),
+#          mean(LU_nni_hu12$change_ratio_crop_RCP4.5H,na.rm=T),
+#          LU_nni_hu12$change_ratio_crop_RCP4.5H )
+# 
+# LU_nni_hu12$change_ratio_crop_RCP8.5H = 
+#   ifelse(LU_nni_hu12$area_07.cropland_landuse_RCP8.5Hadgem >0 & 
+#            is.na(LU_nni_hu12$change_ratio_crop_RCP8.5H),
+#          mean(LU_nni_hu12$change_ratio_crop_RCP8.5H,na.rm=T),
+#          LU_nni_hu12$change_ratio_crop_RCP8.5H )
 
-LU_nni_hu12$change_ratio_crop_RCP4.5G = 
-  ifelse(LU_nni_hu12$area_07.cropland_landuse_RCP4.5GISS >0 & 
-           is.na(LU_nni_hu12$change_ratio_crop_RCP4.5G),
-         mean(LU_nni_hu12$change_ratio_crop_RCP4.5G,na.rm=T),
-         LU_nni_hu12$change_ratio_crop_RCP4.5G )
-nrow(LU_nni_hu12[complete.cases(LU_nni_hu12[,c("change_ratio_crop_RCP4.5G")]),]) 
+# If Change ratio is NA (meaning 0% ag/crop in 2010) convert to 1 (meaning no change)
+LU_nni_hu12$change_ratio_ag_RCP4.5G = 
+  ifelse(is.na(LU_nni_hu12$change_ratio_ag_RCP4.5G),1,LU_nni_hu12$change_ratio_ag_RCP4.5G)
+LU_nni_hu12$change_ratio_ag_RCP8.5G = 
+  ifelse(is.na(LU_nni_hu12$change_ratio_ag_RCP8.5G),1,LU_nni_hu12$change_ratio_ag_RCP8.5G)
+LU_nni_hu12$change_ratio_ag_RCP4.5H = 
+  ifelse(is.na(LU_nni_hu12$change_ratio_ag_RCP4.5H),1,LU_nni_hu12$change_ratio_ag_RCP4.5H)
+LU_nni_hu12$change_ratio_ag_RCP8.5H = 
+  ifelse(is.na(LU_nni_hu12$change_ratio_ag_RCP8.5H),1,LU_nni_hu12$change_ratio_ag_RCP8.5H)
 
-LU_nni_hu12$change_ratio_crop_RCP8.5G = 
-  ifelse(LU_nni_hu12$area_07.cropland_landuse_RCP8.5GISS >0 & 
-           is.na(LU_nni_hu12$change_ratio_crop_RCP8.5G),
-         mean(LU_nni_hu12$change_ratio_crop_RCP8.5G,na.rm=T),
-         LU_nni_hu12$change_ratio_crop_RCP8.5G )
-
-LU_nni_hu12$change_ratio_crop_RCP4.5H = 
-  ifelse(LU_nni_hu12$area_07.cropland_landuse_RCP4.5Hadgem >0 & 
-           is.na(LU_nni_hu12$change_ratio_crop_RCP4.5H),
-         mean(LU_nni_hu12$change_ratio_crop_RCP4.5H,na.rm=T),
-         LU_nni_hu12$change_ratio_crop_RCP4.5H )
-
-LU_nni_hu12$change_ratio_crop_RCP8.5H = 
-  ifelse(LU_nni_hu12$area_07.cropland_landuse_RCP8.5Hadgem >0 & 
-           is.na(LU_nni_hu12$change_ratio_crop_RCP8.5H),
-         mean(LU_nni_hu12$change_ratio_crop_RCP8.5H,na.rm=T),
-         LU_nni_hu12$change_ratio_crop_RCP8.5H )
-
-# If Change ratio is NA or zero, convert to 1 (meaning no change)
 LU_nni_hu12$change_ratio_crop_RCP4.5G = 
   ifelse(is.na(LU_nni_hu12$change_ratio_crop_RCP4.5G),1,LU_nni_hu12$change_ratio_crop_RCP4.5G)
 LU_nni_hu12$change_ratio_crop_RCP8.5G = 
@@ -1496,14 +1548,14 @@ LU_nni_hu12$change_ratio_crop_RCP4.5H =
 LU_nni_hu12$change_ratio_crop_RCP8.5H = 
   ifelse(is.na(LU_nni_hu12$change_ratio_crop_RCP8.5H),1,LU_nni_hu12$change_ratio_crop_RCP8.5H)
 
-LU_nni_hu12$change_ratio_crop_RCP4.5G = 
-  ifelse(LU_nni_hu12$change_ratio_crop_RCP4.5G==0,1,LU_nni_hu12$change_ratio_crop_RCP4.5G)
-LU_nni_hu12$change_ratio_crop_RCP8.5G = 
-  ifelse(LU_nni_hu12$change_ratio_crop_RCP8.5G==0,1,LU_nni_hu12$change_ratio_crop_RCP8.5G)
-LU_nni_hu12$change_ratio_crop_RCP4.5H = 
-  ifelse(LU_nni_hu12$change_ratio_crop_RCP4.5H==0,1,LU_nni_hu12$change_ratio_crop_RCP4.5H)
-LU_nni_hu12$change_ratio_crop_RCP8.5H = 
-  ifelse(LU_nni_hu12$change_ratio_crop_RCP8.5H==0,1,LU_nni_hu12$change_ratio_crop_RCP8.5H)
+# LU_nni_hu12$change_ratio_crop_RCP4.5G = 
+#   ifelse(LU_nni_hu12$change_ratio_crop_RCP4.5G==0,1,LU_nni_hu12$change_ratio_crop_RCP4.5G)
+# LU_nni_hu12$change_ratio_crop_RCP8.5G = 
+#   ifelse(LU_nni_hu12$change_ratio_crop_RCP8.5G==0,1,LU_nni_hu12$change_ratio_crop_RCP8.5G)
+# LU_nni_hu12$change_ratio_crop_RCP4.5H = 
+#   ifelse(LU_nni_hu12$change_ratio_crop_RCP4.5H==0,1,LU_nni_hu12$change_ratio_crop_RCP4.5H)
+# LU_nni_hu12$change_ratio_crop_RCP8.5H = 
+#   ifelse(LU_nni_hu12$change_ratio_crop_RCP8.5H==0,1,LU_nni_hu12$change_ratio_crop_RCP8.5H)
 
 
 
@@ -2045,6 +2097,18 @@ temp$Pct_crop_land_RCP4.5H =
 temp$Pct_crop_land_RCP8.5H = 
   100*temp$area_07.cropland_landuse_RCP8.5Hadgem / temp$huc12_area_m2
 
+#-------------------------------------------------------------------------------
+# % Crop + Pasture Land
+temp$Pct_crop_pasture_land_2010 = 
+  100*(temp$area_07.cropland_landuse_2010 + temp$area_06.pasture_landuse_2010) / temp$huc12_area_m2
+temp$Pct_crop_pasture_land_RCP4.5G = 
+  100*(temp$area_07.cropland_landuse_RCP4.5GISS + temp$area_06.pasture_landuse_RCP4.5GISS) / temp$huc12_area_m2
+temp$Pct_crop_pasture_land_RCP8.5G = 
+  100*(temp$area_07.cropland_landuse_RCP8.5GISS + temp$area_06.pasture_landuse_RCP8.5GISS) / temp$huc12_area_m2
+temp$Pct_crop_pasture_land_RCP4.5H = 
+  100*(temp$area_07.cropland_landuse_RCP4.5Hadgem + temp$area_06.pasture_landuse_RCP4.5Hadgem) / temp$huc12_area_m2
+temp$Pct_crop_pasture_land_RCP8.5H = 
+  100*(temp$area_07.cropland_landuse_RCP8.5Hadgem + temp$area_06.pasture_landuse_RCP8.5Hadgem) / temp$huc12_area_m2
 
 #-------------------------------------------------------------------------------
 # % Pasture
@@ -2273,9 +2337,377 @@ test = merge(test,StreamCat_HU12[,c('HUC12','PopDen2010Cat')],by='HUC12')
 
 ```
 
+#------------------------------------------------------------------------------
+
+# xy plot pasture/hay vs. ICLUS 
+```{r}
+library(hexbin)
+
+XYplot = merge(StreamCat_HU12,LU_nni_hu12,by='HUC12')  
+
+XYplot$crop_hay_past_streamcat = XYplot$PctHay2019Cat + XYplot$PctCrop2019Cat
+XYplot$Pct_crop_land_2010_iclus = XYplot$Pct_crop_land_2010
+XYplot$Pct_crop_pasture_2010_iclus = XYplot$Pct_crop_pasture_land_2010
+#XYplot$Pct_crop_pasture_2010_iclus = XYplot$Pct_crop_land_2010 + XYplot$Pct_pasture_land_2010
+
+plot(XYplot$Pct_crop_pasture_2010_iclus ~ XYplot$crop_hay_past_streamcat)
+
+# remove the (0,0)
+
+#XYplot$flag0 = ifelse(XYplot$Pct_crop_pasture_2010_iclus ==0 | XYplot$crop_hay_past_streamcat == 0,0,1)
+XYplot$flag0 = ifelse(XYplot$Pct_crop_pasture_2010_iclus < 1 | XYplot$crop_hay_past_streamcat <1,0,1)
+
+XYplot2 = XYplot[XYplot$flag0 !=0,]
+
+XYplot2 = XYplot2[,c('HUC12','Pct_crop_pasture_2010_iclus','crop_hay_past_streamcat')]
+
+
+# Hexplot 
+ggplot(XYplot2, aes(crop_hay_past_streamcat,Pct_crop_pasture_2010_iclus)) +
+  geom_hex()
+
+# Density Plot
+# ggplot(XYplot, aes(Pct_crop_pasture_2010_iclus, crop_hay_past_streamcat)) +
+#   stat_density2d(geom="tile", aes(fill = ..density..), contour = FALSE) + 
+#   geom_point(colour = "white")
+
+
+# Calculate what % of sites have > 20% difference, etc.
+XYplot$pct_diff = abs(100*(XYplot$Pct_crop_pasture_2010_iclus - XYplot$crop_hay_past_streamcat)/XYplot$crop_hay_past_streamcat)
+XYplot$diff = abs(XYplot$Pct_crop_pasture_2010_iclus - XYplot$crop_hay_past_streamcat)
+XYplot$diff2 = XYplot$Pct_crop_pasture_2010_iclus - XYplot$crop_hay_past_streamcat
+
+summary(XYplot$pct_diff)
+
+100*nrow(XYplot[XYplot$pct_diff > 50,])/nrow(XYplot)
+
+# What percent of sites have values within 20% of each other
+100*nrow(XYplot[XYplot$diff < 20,])/nrow(XYplot) # 86.98633
+
+# What percent of sites have values within 10% of each other
+100*nrow(XYplot[XYplot$diff < 10,])/nrow(XYplot) # 68.186
+
+# What percent of sites have values within 5% of each other
+100*nrow(XYplot[XYplot$diff > 5,])/nrow(XYplot) # 47.03043
+
+
+```
+
+# Map Current % Diff between ICLUS and StreamCt Land (ICLUS 2010)
+```{r}
+
+#()()()()()()()()()()()()()()()()
+map_title = "Current Difference btwn ICLUS & StreamCat Ag Land"
+
+MapData = XYplot 
+MapData$Variable = MapData$diff2
+#()()()()()()()()()()()()()()()()
+summary(MapData$Variable)
+
+
+# Remove rows where value is NA or Inf
+MapData$Variable[is.infinite(MapData$Variable)] = NA
+MapData = MapData[complete.cases(MapData[,c("Variable")]),] 
+#test = MapData[,c('HUC12','N_Surp_2017ws','N_surp_RCP4.5G')]
+
+
+# Merge on Spatial Data
+map1 = merge(MapData,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
+map2 <- st_as_sf(map1) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Variable),]
+#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
+
+summary(map3$Variable)
+
+# Format rasters
+start_time <- Sys.time()
+map4<-st_rasterize(map3[,"Variable"],
+                     st_as_stars(st_bbox(states_boundary),
+                                 dx = 10000, dy = 10000, values=NA_real_), na.rm=T)
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 8.113112 secs (Desktop at 1000m)
+
+
+start_time <- Sys.time()
+ggplot() +
+  geom_stars(data=map4, aes(fill=Variable))+
+  geom_sf(data=states_conus,fill=NA,color='black')+
+  scale_fill_viridis(option="cividis",name="Diff=ICLUS-StreamCat",na.value = "white" 
+                      #limits = c(0, 1)
+                      )+ # options: viridis, magma, plasma
+  theme(panel.background = element_blank())+ # remove grey background
+  theme(axis.text = element_blank())+ # remove axis text
+  theme(axis.ticks = element_blank())+ # remove axis text
+  theme(plot.title = element_text(hjust=0.5))+
+  ggtitle(map_title)+
+  
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),     # Remove background
+    panel.grid = element_blank(),     # Remove gridlines
+    axis.text = element_blank(),     # Remove Axis ticks/text/titles
+    axis.ticks = element_blank(),
+    axis.title = element_blank())
+end_time <- Sys.time(); end_time - start_time
+
+
+
+```
+
+
+# Spatial Model Correction for Ag land
+* Goal:
+*** 1. develop relationship between 2010 Iclus and Current NLCD/StreamCat with spmodel
+*** 2. Use the fitted spmodel to predict 2050 StreamCat/NLCD Ag (Crop+Pasture)
+*** 3. Calculate change ratio based on StreamCat Values 2050 StreamCat / 2020 StreamCat
+*** 4. Use change ratio as multiplier to convert current NNI N inputs to future 2050 NNI N inputs
+```{r}
+
+library(spmodel)
+library(broom)
+library(knitr)
+library(tictoc)
+
+
+
+# Add on spatial information
+ag_sp = merge(XYplot[,c('HUC12','crop_hay_past_streamcat','Pct_crop_pasture_2010_iclus')],
+              huc12_p[,c('HUC12','geometry')],by='HUC12')
+ag_sp <- st_as_sf(ag_sp) # added this because the above didn't retain geometry
+
+# remove missing values
+ag_sp = unique(na.omit(ag_sp))
+
+#-------------------------------------------------------------------------------
+# Model calibration and prediction
+
+start_time <- Sys.time()
+m0 <- splm(crop_hay_past_streamcat ~ poly(Pct_crop_pasture_2010_iclus, 3), data=ag_sp,
+           spcov_type = "none",  # linear model, no accounty for spatial covariance
+           local = list(parallel = TRUE, ncores = 12))
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 50.90884 secs
+gc()
+
+start_time <- Sys.time()
+spmod0 <- splm(crop_hay_past_streamcat ~ poly(Pct_crop_pasture_2010_iclus, 3), data=ag_sp,
+              spcov_type = "exponential",
+              local = list(size = 50, method = "kmeans", parallel = TRUE, ncores = 12, var_adjust = "none"))
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 2.61594 mins
+gc()
+
+
+#saveRDS(spmod0, './tdep-tn-spatial-model-huc12.rds')
+ns.obs.prd <- data.frame(observed = m0$obdata$Pct_crop_pasture_2010_iclus,
+                      predicted = fitted(m0))
+
+obs.prd <- data.frame(observed = spmod0$obdata$Pct_crop_pasture_2010_iclus,
+                      predicted = fitted(spmod0) + fitted(spmod0, type = "spcov")$de)
+
+error <- ns.obs.prd$observed - ns.obs.prd$predicted
+ns.obs.prd_stats <- data.frame(Model = 'Non-spatial', bias = mean(error), MSPE = mean(error^2),
+                             RMSPE = sqrt(mean(error^2)), cor2 = cor(ns.obs.prd$observed, ns.obs.prd$predicted)^2)
+
+error <- obs.prd$observed - obs.prd$predicted
+obs.prd_stats <- data.frame(Model = 'Spatial', bias = mean(error), MSPE = mean(error^2),
+                             RMSPE = sqrt(mean(error^2)), cor2 = cor(obs.prd$observed, obs.prd$predicted)^2)
+
+kable(rbind(ns.obs.prd_stats, 
+            obs.prd_stats))
+#-------------------------------------------------------------------------------
+
+# x-y scatter for non-spatial model
+ggplot(data=ns.obs.prd, aes(x=predicted, y=observed)) + 
+  geom_hex(bins = 100) + ggtitle("Non-Spatial Model - Ag Land") +
+  xlim(0, max(ns.obs.prd)) + ylim(0, max(ns.obs.prd)) +
+  scale_fill_gradient(low = "grey", high = "red") +
+  geom_abline(color='black') + theme_bw()
+
+# x-y scatter for spatial model
+ggplot(data=obs.prd, aes(x=predicted, y=observed)) + 
+  geom_hex(bins = 100) + ggtitle("Spatial Model - Ag Land") +
+  xlim(0, max(ns.obs.prd)) + ylim(0, max(ns.obs.prd)) +
+  scale_fill_gradient(low = "grey", high = "red") +
+  geom_abline(color='black') + theme_bw()
+
+
+#-------------------------------------------------------------------------------
+# Create Future Dataset
+# create dataframe with ag_data for 2050
+ag2050 = LU_nni_hu12[,c('HUC12',#'Pct_crop_pasture_land_2010',
+                        'Pct_crop_pasture_land_RCP4.5G',
+                        'Pct_crop_pasture_land_RCP8.5G',
+                        'Pct_crop_pasture_land_RCP4.5H','Pct_crop_pasture_land_RCP8.5H'
+                        )]
+
+# remove missing values
+ag2050 = unique(na.omit(ag2050))
+
+# Add on spatial information
+ag2050_sp = merge(ag2050,
+              huc12_p[,c('HUC12','geometry')],by='HUC12')
+ag2050_sp <- st_as_sf(ag2050_sp) # added this because the above didn't retain geometry
+
+
+#-------------------------------------------------------------------------------
+# Use this model to Predict 2050 NCLD (StreamCat) Ag % 
+
+tictoc::tic()
+ag_nlcd_2050_rcp4.5G <- predict(spmod0, 
+                       newdata = ag2050_sp %>% 
+                         rename(Pct_crop_pasture_2010_iclus=Pct_crop_pasture_land_RCP4.5G),# %>% slice(1:1),
+                       se.fit = FALSE,
+                       local = list(parallel = TRUE, 
+                                    ncores = 20))
+tictoc::toc()
+# 134.48 sec elapsed
+
+start_time <- Sys.time()
+ag_nlcd_2050_rcp8.5G <- predict(spmod0, 
+                       newdata = ag2050_sp %>% 
+                         rename(Pct_crop_pasture_2010_iclus=Pct_crop_pasture_land_RCP8.5G),# %>% slice(1:1),
+                       se.fit = FALSE,
+                       local = list(parallel = TRUE, 
+                                    ncores = 20))
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 2.142908 mins
+
+# Merge back on HUC12s
+ag_nlcd_2050_rcp4.5G = cbind(ag2050_sp$HUC12 ,ag_nlcd_2050_rcp4.5G)
+ag_nlcd_2050_rcp8.5G = cbind(ag2050_sp$HUC12 ,ag_nlcd_2050_rcp8.5G)
+
+
+ag_nlcd_2050_rcp4.5G = as.data.frame(ag_nlcd_2050_rcp4.5G)
+ag_nlcd_2050_rcp8.5G = as.data.frame(ag_nlcd_2050_rcp8.5G)
+
+names(ag_nlcd_2050_rcp4.5G)[1] = 'HUC12'
+names(ag_nlcd_2050_rcp8.5G)[1] = 'HUC12'
+
+ag_nlcd_2050_rcp4.5G$ag_nlcd_2050_rcp4.5G = as.numeric(ag_nlcd_2050_rcp4.5G$ag_nlcd_2050_rcp4.5G)
+ag_nlcd_2050_rcp8.5G$ag_nlcd_2050_rcp8.5G = as.numeric(ag_nlcd_2050_rcp8.5G$ag_nlcd_2050_rcp8.5G)
+
+
+#-------------------------------------------------------------------------------
+
+fwrite(tdep.spmod0, './Predicted_TDEP_N_total_wet_dry_huc12.csv', row.names = F)
+
+
+```
+
+# Test Scatter
+```{r}
+
+XYplot = merge(StreamCat_HU12,LU_nni_hu12,by='HUC12')  
+
+XYplot$crop_hay_past_2019streamcat = XYplot$PctHay2019Cat + XYplot$PctCrop2019Cat
+XYplot$Pct_crop_land_2010_iclus = XYplot$Pct_crop_land_2010
+XYplot$Pct_crop_pasture_2010_iclus = XYplot$Pct_crop_pasture_land_2010
+
+test = merge(ag_nlcd_2050_rcp4.5G,ag_nlcd_2050_rcp8.5G,by='HUC12')
+test = merge(test,ag2050,by='HUC12')
+test = merge(test,XYplot[,c('HUC12','Pct_crop_land_2010_iclus','crop_hay_past_2019streamcat')],by='HUC12')
+
+test$diff2 = test$Pct_crop_pasture_land_RCP4.5G - test$ag_nlcd_2050_rcp4.5G
+
+
+plot(test$ag_nlcd_2050_rcp4.5G ~ test$Pct_crop_pasture_land_RCP4.5G)
+
+ggplot(data=test, aes(x=Pct_crop_pasture_land_RCP4.5G, y=ag_nlcd_2050_rcp4.5G)) + 
+  geom_hex(bins = 100) + ggtitle("Prediced Future StreamCat") +
+  xlim(0, max(ns.obs.prd)) + ylim(0, max(ns.obs.prd)) +
+  scale_fill_gradient(low = "grey", high = "red") +
+  geom_abline(color='black') + theme_bw()
+
+ggplot(data=test, aes(x=crop_hay_past_2019streamcat, y=ag_nlcd_2050_rcp4.5G)) + 
+  geom_hex(bins = 100) + ggtitle("Prediced Future StreamCat") +
+  xlim(0, max(ns.obs.prd)) + ylim(0, max(ns.obs.prd)) +
+  scale_fill_gradient(low = "grey", high = "red") +
+  geom_abline(color='black') + theme_bw()
+
+
+# Hexplot 
+# remove the (0,0)
+test$flag0 = ifelse(test$Pct_crop_pasture_land_RCP4.5G < 1 | test$ag_nlcd_2050_rcp4.5G <1,0,1)
+test2 = test[test$flag0 !=0,]
+ggplot(test2, aes(Pct_crop_pasture_land_RCP4.5G,ag_nlcd_2050_rcp4.5G)) +
+  geom_hex()
+
+
+
+```
+
+# Map Current % Diff between ICLUS and StreamCt Land (ICLUS 2010)
+```{r}
+
+#()()()()()()()()()()()()()()()()
+map_title = "Future Difference btwn ICLUS 2050 & StreamCat Ag Land 2050"
+
+MapData = test 
+MapData$Variable = MapData$diff2
+#()()()()()()()()()()()()()()()()
+summary(MapData$Variable)
+
+
+# Remove rows where value is NA or Inf
+MapData$Variable[is.infinite(MapData$Variable)] = NA
+MapData = MapData[complete.cases(MapData[,c("Variable")]),] 
+#test = MapData[,c('HUC12','N_Surp_2017ws','N_surp_RCP4.5G')]
+
+
+# Merge on Spatial Data
+map1 = merge(MapData,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
+map2 <- st_as_sf(map1) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Variable),]
+#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
+
+summary(map3$Variable)
+
+# Format rasters
+start_time <- Sys.time()
+map4<-st_rasterize(map3[,"Variable"],
+                     st_as_stars(st_bbox(states_boundary),
+                                 dx = 10000, dy = 10000, values=NA_real_), na.rm=T)
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 8.113112 secs (Desktop at 1000m)
+
+
+start_time <- Sys.time()
+ggplot() +
+  geom_stars(data=map4, aes(fill=Variable))+
+  geom_sf(data=states_conus,fill=NA,color='black')+
+  scale_fill_viridis(option="cividis",name="Diff=ICLUS-StreamCat",na.value = "white" 
+                      #limits = c(0, 1)
+                      )+ # options: viridis, magma, plasma
+  theme(panel.background = element_blank())+ # remove grey background
+  theme(axis.text = element_blank())+ # remove axis text
+  theme(axis.ticks = element_blank())+ # remove axis text
+  theme(plot.title = element_text(hjust=0.5))+
+  ggtitle(map_title)+
+  
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),     # Remove background
+    panel.grid = element_blank(),     # Remove gridlines
+    axis.text = element_blank(),     # Remove Axis ticks/text/titles
+    axis.ticks = element_blank(),
+    axis.title = element_blank())
+end_time <- Sys.time(); end_time - start_time
+
+
+
+```
+
+# Change Raio - Based on NLCD Ag Land
+```{r}
+
+
+
+```
+
+
+
 #----------------------------------------------------------------------------------------------------------
 
-# N Surplus Calc
+# N Surplus Calc HUC12
 * N Surplus = N inputs – N outputs
 * N inputs = N Deposition + Fertilizer N + Livestock Manure N + Fixation N + Human Waste N  
 * N outputs = N from crop removal	
@@ -2517,6 +2949,7 @@ data_sw_huc = rf_sw3
 rf_gw = merge(viol_gw_hu12,subset(NDATA_huc12,select=-c(PopDen2010Cat)),by='HUC12')
 rf_gw = merge(rf_gw,StreamCat_HU12,by='HUC12')
 rf_gw = merge(rf_gw,NNI17,by='HUC12')
+rf_gw = merge(rf_gw,N_treat_huc12_gw,by='HUC12')
 
 # Me
 
@@ -2538,7 +2971,8 @@ keeps = c("HUC12","viol_freq"
           # Other
           ,"Fe2O3Cat","WtDepCat","Hillslope_PctCat","ElevCat"#,"SandCat"
           #,"rckdepcat" #,"S_TW2012Cat"##,"NHDslope_Pct_Cat"
-          
+          ,'Nitrate_Treatment_freq'
+
           )
 
 rf_gw2 = unique(na.omit(rf_gw[,keeps]))
@@ -2563,6 +2997,7 @@ data_gw_huc = rf_gw3
 ```{r}
 
 rf_sw = merge(viol_sw_cat,StreamCat_sub,by='COMID')
+rf_sw = merge(rf_sw,N_treat_cat_sw,by='COMID')
 
 
 keeps_sw = c("COMID","viol_freq"
@@ -2572,7 +3007,7 @@ keeps_sw = c("COMID","viol_freq"
           ,"AgKffactWs","AgDrain_pctWs"#,"PctImp2016Ws"
 
           # Weather/Hydro
-          ,"precip9120ws","tmean9120ws","BFIWs"#,"Precip_Minus_EVTWs"
+          ,"precip9120ws","tmean9120ws","BFIWs","Precip_Minus_EVTWs"
           ,"WaterInputWs","wdrw_LDWs"#,"HydrlCondWs"
           ,"permws"#,"runoffWs"
 
@@ -2583,6 +3018,7 @@ keeps_sw = c("COMID","viol_freq"
           # Other
           ,"Fe2O3Ws","ElevWs"#,"WtDepWs","SandWs"
           ,"NHDslope_Pct_Ws"#,"Hillslope_PctWs"#,"S_TW2012Ws","rckdepWs"
+          ,'Nitrate_Treatment_yn'
 
           )
 # keeps_sw = c("COMID","viol_freq"
@@ -2630,6 +3066,8 @@ data_sw_cat = rf_sw3
 ```{r}
 
 rf_gw = merge(viol_gw_cat,StreamCat_sub,by='COMID')
+rf_gw = merge(rf_gw,N_treat_cat_gw,by='COMID')
+
 #rf_gw = merge(rf_gw,NNI17,by='HUC12')
 
 # Me
@@ -2638,22 +3076,23 @@ rf_gw = merge(viol_gw_cat,StreamCat_sub,by='COMID')
 keeps_gw = c("COMID","viol_freq"
           
           # Land Use
-          ,"PctCrop2019Cat","PopDen2010Cat","PctForest2019Cat"
-          ,"AgKffactCat","AgDrain_pctCat"
+          ,"PopDen2010Cat","PctForest2019Cat"#,"PctCrop2019Cat",
+          ,"AgKffactCat"#,"AgDrain_pctCat",
           
           # Weather/Hydro
           ,"precip9120ws","tmean9120cat","BFICat","Precip_Minus_EVTCat"
-          ,"WaterInputCat","wdrw_LDCat","PctImp2016Cat"#"HydrlCondCat",
+          ,"WaterInputCat","wdrw_LDCat"#,"PctImp2016Cat"#"HydrlCondCat",
           ,"permcat","runoffcat"
           
           # N Inputs
-          ,"RockNCat","N_TW2012Cat" #"CBNFCat","ManureCat","FertCat"
-          ,"N_Surp_2017ws","n_ags_2017ws"
+          ,"RockNCat","N_TW2012Cat","FertCat"#,"ManureCat","CBNFCat",
+          ,"N_Surp_kgsqkm_2017cat"#,"n_ags_kgsqkm_2017cat"
           
           # Other
-          ,"Fe2O3Cat","WtDepCat","SandCat","Hillslope_PctCat"#,"ElevCat"
+          ,"Fe2O3Cat","WtDepCat","SandCat","Hillslope_PctCat","ElevCat"
           #,"S_TW2012Cat"#,"rckdepcat" #,"NHDslope_Pct_Cat"
-          
+          ,'Nitrate_Treatment_yn'
+
           )
 
 rf_gw2 = unique(na.omit(rf_gw[,keeps_gw]))
@@ -3040,8 +3479,8 @@ result_df = data.frame(N=nrow(RFDATA),PCC=round(pcc,1),
 write_clip(result_df) 
 result_df
 
-saveRDS(rfc_gw, file = paste0(future_dir ,'Data/Models/RF_bi_model_Future_DW_NO3_GW_HU12.rds'))
-saveRDS(rfc_gw_p, file = paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+# saveRDS(rfc_gw, file = paste0(future_dir ,'Data/Models/RF_bi_model_Future_DW_NO3_GW_HU12.rds'))
+# saveRDS(rfc_gw_p, file = paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
 
 
 ```
@@ -3254,8 +3693,8 @@ result_df = data.frame(N=nrow(RFDATA),PCC=round(pcc,1),
 write_clip(result_df) 
 result_df
 
-saveRDS(rfc_gw, file = paste0(future_dir ,'Data/Models/RF_bi_model_Future_DW_NO3_GW_HU12.rds'))
-saveRDS(rfc_gw_p, file = paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+saveRDS(rfc_gw, file = paste0(future_dir ,'Data/Models/RF_bi_model_Future_DW_NO3_GW_Cat.rds'))
+saveRDS(rfc_gw_p, file = paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
 
 
 ```
@@ -3267,11 +3706,11 @@ library(data.table)
 
 
 #()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
-rfc_ranger = rfc_sw_p
+rfc_ranger = rfc_sw_p # rfc_sw_p, rfc_gw_p
 #rfc_ranger = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
-#rfc_ranger = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
-
 #rfc_ranger = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+
+#rfc_ranger = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
 #rfc_ranger = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
 
 #()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
@@ -3349,9 +3788,11 @@ partialvars <- as.data.frame(VarImpDF[order(-VarImpDF$PercIncMSE),])
 
 rf_train = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_SW_HUC12.csv'))
 rf_train = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_SW_COMIDS.csv'))
+rf_train = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_GW_COMIDS.csv'))
 
 rfc_ranger_p = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
 rfc_ranger_p = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
+rfc_ranger_p = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
 
 #()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
 
@@ -3406,6 +3847,11 @@ par.p8 <- pdp::partial(rfc_ranger_p, train = rf_train,
 p8 <- autoplot(par.p8, contour = TRUE, 
               ylab=ylabel, xlab=paste0(partialvars[8,1]))+theme_bw()
 
+precip_surp <- pdp::partial(rfc_ranger_p, train = rf_train,
+                    pred.var='Precip_Minus_EVTWs', chull= T)
+precip_surp2 <- autoplot(precip_surp, contour = TRUE, 
+              ylab=ylabel, xlab='Precip_Minus_EVTWs')+theme_bw()
+
 parNsurp <- pdp::partial(rfc_ranger_p, train = rf_train,
                     pred.var='N_Surp_2017ws', chull= T)
 parNsurp2 <- autoplot(parNsurp, contour = TRUE, 
@@ -3421,10 +3867,30 @@ Nsurp <- pdp::partial(rfc_ranger_p, train = rf_train,
 Nsurp2 <- autoplot(Nsurp, contour = TRUE, 
               ylab=ylabel, xlab='n_surplus_kgsqkm')+theme_bw()
 
+Nsurp <- pdp::partial(rfc_ranger_p, train = rf_train,
+                    pred.var='N_Surp_kgsqkm_2017ws', chull= T)
+Nsurp2 <- autoplot(Nsurp, contour = TRUE, 
+              ylab=ylabel, xlab='N_Surp_kgsqkm_2017ws')+theme_bw()
+Nsurp <- pdp::partial(rfc_ranger_p, train = rf_train,
+                    pred.var='N_Surp_kgsqkm_2017cat', chull= T)
+Nsurp2 <- autoplot(Nsurp, contour = TRUE, 
+              ylab=ylabel, xlab='N_Surp_kgsqkm_2017cat')+theme_bw()
+
 fert <- pdp::partial(rfc_ranger_p, train = rf_train,
                     pred.var='FertCat', chull= T)
 fert2 <- autoplot(fert, contour = TRUE, 
               ylab=ylabel, xlab='FertCat')+theme_bw()
+
+treat1 <- pdp::partial(rfc_ranger_p, train = rf_train,
+                    pred.var='Nitrate_Treatment_yn', chull= T)
+treat2 <- autoplot(treat1, contour = TRUE, 
+              ylab=ylabel, xlab='Nitrate_Treatment_yn')+theme_bw()
+
+treat1. <- pdp::partial(rfc_ranger_p, train = rf_train,
+                    pred.var='Nitrate_Treatment_freq', chull= T)
+treat2. <- autoplot(treat1., contour = TRUE, 
+              ylab=ylabel, xlab='Nitrate_Treatment_freq')+theme_bw()
+
 
 # Puts all the plots together
 #grid.arrange(p1,p2,p3,p4, nrow=2,ncol=2)
@@ -3433,7 +3899,9 @@ fert2 <- autoplot(fert, contour = TRUE,
 #grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8, nrow=2,ncol=4)
 grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8, nrow=4,ncol=2)
 
-p9
+grid.arrange(p1,p2,Nsurp2,p5,p8, precip_surp2,nrow=3,ncol=2)
+grid.arrange(p1,p2,Nsurp2,fert2,nrow=2,ncol=2)
+
 
 ```
 
@@ -3762,12 +4230,35 @@ ggplot(data=VarImpDF,
 
 
 #----------------------------------------------------------------------------------------------------------
-
-# Current HUC12 Prediction Dataset
+s
+# Current Prediction Dataset
 ```{r}
 
 predCat_cur = StreamCat_sub
 predHUC_cur = merge(StreamCat_HU12,NNI17[,c("HUC12","n_surplus_kgsqkm")],by='HUC12')
+
+# Add on Treatment & assign zero treatment to locations without PWS
+predHUC_cur_treat = merge(predHUC_cur,N_treat_huc12_gwsw,by='HUC12',all.x=T)
+predHUC_cur_treat$Nitrate_Treatment_freq[is.na(predHUC_cur_treat$Nitrate_Treatment_freq)] <- 0
+predHUC_cur_treat$Nitrate_Treatment_yn[is.na(predHUC_cur_treat$Nitrate_Treatment_yn)] <- 0
+
+predCat_cur_treat = merge(predCat_cur,N_treat_cat_gwsw,by='COMID',all.x=T)
+predCat_cur_treat$Nitrate_Treatment_freq[is.na(predCat_cur_treat$Nitrate_Treatment_freq)] <- 0
+predCat_cur_treat$Nitrate_Treatment_yn[is.na(predCat_cur_treat$Nitrate_Treatment_yn)] <- 0
+
+# Add on Treatment & assign Yes (one) treatment to locations without PWS
+predHUC_cur_treat1 = merge(predHUC_cur,N_treat_huc12_gwsw,by='HUC12',all.x=T)
+predHUC_cur_treat1$Nitrate_Treatment_freq[is.na(predHUC_cur_treat1$Nitrate_Treatment_freq)]<-1
+predHUC_cur_treat1$Nitrate_Treatment_yn[is.na(predHUC_cur_treat1$Nitrate_Treatment_yn)]<-1
+
+predCat_cur_treat1 = merge(predCat_cur,N_treat_cat_gwsw,by='COMID',all.x=T)
+predCat_cur_treat1$Nitrate_Treatment_freq[is.na(predCat_cur_treat1$Nitrate_Treatment_freq)]<-1
+predCat_cur_treat1$Nitrate_Treatment_yn[is.na(predCat_cur_treat1$Nitrate_Treatment_yn)]<-1
+
+
+
+dim(predCat_cur_treat)
+
 
 ```
 
@@ -3783,20 +4274,41 @@ predHUC_fut = merge(predHUC_fut,imprv_hu12,by='HUC12')
 #predHUC_fut = merge(predHUC_fut,popden_hu12,by='HUC12')
 
 
-predHUC_fut$n_ags_2017ws = predHUC_fut$N_ag_surp_RCP4.5G
-predHUC_fut$N_Surp_2017ws = predHUC_fut$N_surp_RCP4.5G
-predHUC_fut$n_surplus_kgsqkm = predHUC_fut$N_surp_RCP4.5G
-predHUC_fut$PctCrop2019Cat = predHUC_fut$Pct_ag_land_RCP4.5G
-predHUC_fut$FertCat = predHUC_fut$n_farm_fert_kgsqkm_RCP4.5G
-predHUC_fut$PopDen2010Cat = predHUC_fut$pop_den_RCP4.5G
-predHUC_fut$PctImp2016Cat = predHUC_fut$impervious_2050_RCP4.5GISS
-predHUC_fut$N_TW2012Cat = predHUC_fut$totalN_2050ctl_kgNha
-predHUC_fut$CBNFCat = predHUC_fut$n_crop_fix_kgsqkm_RCP4.5G
-predHUC_fut$ManureCat = predHUC_fut$n_manure_kgsqkm_RCP4.5G
-predHUC_fut$PctForest2019Cat = predHUC_fut$Pct_forest_RCP4.5G
-predHUC_fut$tmean9120cat = predHUC_fut$temp_2050_degC_RCP4.5GISS
-predHUC_fut$precip9120ws = predHUC_fut$precip_2050_mm_RCP4.5GISS
+predHUC_fut$N_Surp_kgsqkm_2017ws = predHUC_fut$N_surp_RCP4.5G
+predHUC_fut$N_Surp_kgsqkm_2017cat = predHUC_fut$N_surp_RCP4.5G
 
+predHUC_fut$PctCrop2019Ws = predHUC_fut$Pct_ag_land_RCP4.5G
+predHUC_fut$PctCrop2019Cat = predHUC_fut$Pct_ag_land_RCP4.5G
+
+predHUC_fut$FertWs = predHUC_fut$n_farm_fert_kgsqkm_RCP4.5G
+predHUC_fut$FertCat = predHUC_fut$n_farm_fert_kgsqkm_RCP4.5G
+
+predHUC_fut$PopDen2010Ws = predHUC_fut$pop_den_RCP4.5G
+predHUC_fut$PopDen2010Cat = predHUC_fut$pop_den_RCP4.5G
+
+predHUC_fut$PctImp2016Ws = predHUC_fut$impervious_2050_RCP4.5GISS
+predHUC_fut$PctImp2016Cat = predHUC_fut$impervious_2050_RCP4.5GISS
+
+predHUC_fut$N_TW2012Ws = predHUC_fut$totalN_2050ctl_kgNha
+predHUC_fut$N_TW2012Cat = predHUC_fut$totalN_2050ctl_kgNha
+
+predHUC_fut$CBNFWs = predHUC_fut$n_crop_fix_kgsqkm_RCP4.5G
+predHUC_fut$CBNFCat = predHUC_fut$n_crop_fix_kgsqkm_RCP4.5G
+
+predHUC_fut$ManureWs = predHUC_fut$n_manure_kgsqkm_RCP4.5G
+predHUC_fut$ManureCat = predHUC_fut$n_manure_kgsqkm_RCP4.5G
+
+predHUC_fut$PctForest2019Ws = predHUC_fut$Pct_forest_RCP4.5G
+predHUC_fut$PctForest2019Cat = predHUC_fut$Pct_forest_RCP4.5G
+
+predHUC_fut$tmean9120ws = predHUC_fut$temp_2050_degC_RCP4.5GISS
+predHUC_fut$tmean9120cat = predHUC_fut$temp_2050_degC_RCP4.5GISS
+
+predHUC_fut$precip9120ws = predHUC_fut$precip_2050_mm_RCP4.5GISS
+predHUC_fut$precip9120cat = predHUC_fut$precip_2050_mm_RCP4.5GISS
+
+#predHUC_fut$n_ags_2017ws = predHUC_fut$N_ag_surp_RCP4.5G
+#predHUC_fut$n_surplus_kgsqkm = predHUC_fut$N_surp_RCP4.5G
 
 
 #"N_Surp_2017ws" "n_ags_2017ws" 
@@ -3805,7 +4317,11 @@ predHUC_fut$precip9120ws = predHUC_fut$precip_2050_mm_RCP4.5GISS
 statkeeps = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
               'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
-              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat')
+              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat',
+              'ElevWs','AgKffactWs','AgDrain_pctWs','BFIWs',
+              'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
+              'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
+              'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs')
 predHUC_4.5G = merge(predHUC_fut,StreamCat_HU12[,statkeeps],by='HUC12')
 
 
@@ -3932,6 +4448,7 @@ predHUC_8.5H = merge(predHUC_fut,StreamCat_HU12[,statkeeps],by='HUC12')
 
 ```
 
+#--
 
 # * MAP PWS Points
 ```{r}
@@ -4068,7 +4585,7 @@ end_time <- Sys.time(); end_time - start_time
 #()()()()()()()()()()()()()()()()
 map_title = "Current Probability of Violations 2020"
 
-predictData = predHUC_cur  
+predictData = predHUC_cur # predHUC_cur, predHUC_cur_treat 
 #rfr_pred = rfc_sw_p # rfc_gw_p, rfc_sw_p
 #rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
 #rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
@@ -4148,9 +4665,9 @@ pred_gw_HU12 = pred_all
 ```{r}
 
 #()()()()()()()()()()()()()()()()
-map_title = "Current Probability of Violations 2020"
+map_title = "Current SWDW Probability of Violations 2020"
 
-predictData = predCat_cur  
+predictData = predCat_cur_treat1   # predCat_cur, predCat_cur_treat, predCat_cur_treat1
 #rfr_pred = rfc_sw_p # rfc_gw_p, rfc_sw_p
 rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
 
@@ -4229,8 +4746,92 @@ pred_sw_HU12 = pred_all2
 
 ```
 
+# Raster Map Current GW COMID
+```{r}
 
-# Raster Map 4.5G
+#()()()()()()()()()()()()()()()()
+map_title = "Current GWDW Probability of Violations 2020"
+
+predictData = predCat_cur_treat1   # predCat_cur, predCat_cur_treat,predCat_cur_treat1
+#rfr_pred = rfc_sw_p # rfc_gw_p, rfc_sw_p
+rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
+
+#()()()()()()()()()()()()()()()()
+
+predictData2 = as.data.frame(subset(predictData,select=-c(COMID)))
+dim(predictData2)
+
+setdiff(names(rfr_pred$variable.importance),colnames(predictData)) # gives not matching
+
+
+predict1 = predict(rfr_pred,data = predictData2)
+
+preds = as.data.frame(predict1$predictions[,2])
+names(preds)[1] = "Prediction"
+
+# Merge back on HUC12s
+pred_all = cbind(predictData$COMID ,preds)
+names(pred_all)[1] = 'COMID'
+
+nrow(pred_all)  # 2643994 
+
+nrow(pred_all[pred_all$Prediction > 0.5,]) # 598450
+100*nrow(pred_all[pred_all$Prediction > 0.5,]) /nrow(pred_all) # 22.63432
+summary(pred_all$Prediction)
+
+
+# Summarize by HUC12
+pred_all2. = merge(pred_all,Cat_HUC12,by='COMID')
+pred_all2 = pred_all2. %>% group_by(HUC12) %>% summarize(Prediction = mean(Prediction,na.rm=T))
+# Merge on Spatial Data
+
+map1 = merge(pred_all2,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
+
+map2 = map1[complete.cases(map1[,c("Prediction")]),] 
+map2 <- st_as_sf(map2) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Prediction),]
+#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
+
+nrow(map3[map3$Prediction>0.5,]) # 19244
+summary(map3$Prediction)
+
+# Format rasters
+start_time <- Sys.time()
+map4<-st_rasterize(map3[,"Prediction"],
+                     st_as_stars(st_bbox(states_boundary),
+                                 dx = 3000, dy = 3000, values=NA_real_), na.rm=T)
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 8.113112 secs (Desktop at 1000m)
+
+
+## Plot Nitrogen Maps
+start_time <- Sys.time()
+ggplot()+
+  geom_stars(data=map4, aes(fill=Prediction))+
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  # scale_color_viridis(option="magma",name="Risk Score" 
+  #                     ,limits = c(0, 1)
+  #                     )+ # options: viridis, magma, plasma
+  binned_scale(aesthetics = "fill",
+               palette=function(x) c("#5E4FA2","#3288BD","#66C2A5","#ABDDA4","#E6F598",
+                                     "#FEE08B","#FDAE61","#F46D43","#D53E4F","#9E0142"),
+               breaks=c(.1, .2, .3, .4, .5, 0.6, .7, 0.8, 0.9)) +
+  theme (axis.text = element_blank(), axis.title = element_blank(), 
+         panel.background = element_blank(), axis.ticks = element_blank(), 
+         legend.text = element_text(size = 14), legend.title = element_text(size = 14))+
+  ggtitle(map_title)+
+  theme(plot.title = element_text(hjust=0.5))+
+  labs(fill="Risk Value")
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 33.21989 secs
+
+pred_gw_Cat = pred_all
+pred_gw_HU12 = pred_all2
+
+
+```
+
+# Raster Map 4.5G HUC12
 ```{r}
 
 
@@ -4239,9 +4840,11 @@ pred_sw_HU12 = pred_all2
 map_title = "Future Probability of Violations (RCP4.5 GISS)"
 
 predictData = predHUC_4.5G  
-rfr_pred = rfc_sw_p
-rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+#rfr_pred = rfc_sw_p
+#rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
 #rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
+#rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
 
 
 #()()()()()()()()()()()()()()()()
@@ -4549,7 +5152,95 @@ end_time <- Sys.time(); end_time - start_time
 
 ```
 
-# Change Map
+# Raster Map 4.5G Catchment
+```{r}
+
+
+
+#()()()()()()()()()()()()()()()()
+map_title = "Future Probability of Violations (RCP4.5 GISS)"
+
+predictData = predHUC_4.5G  
+#rfr_pred = rfc_sw_p
+#rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+#rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
+
+#()()()()()()()()()()()()()()()()
+
+predictData2 = as.data.frame(subset(predictData,select=-c(COMID)))
+dim(predictData2)
+
+setdiff(names(rfr_pred$variable.importance),colnames(predictData)) # gives not matching
+
+
+predict1 = predict(rfr_pred,data = predictData2)
+
+preds = as.data.frame(predict1$predictions[,2])
+names(preds)[1] = "Prediction"
+
+# Merge back on HUC12s
+pred_all = cbind(predictData$COMID ,preds)
+names(pred_all)[1] = 'COMID'
+
+nrow(pred_all)  # 2643994 
+
+nrow(pred_all[pred_all$Prediction > 0.5,]) # 598450
+100*nrow(pred_all[pred_all$Prediction > 0.5,]) /nrow(pred_all) # 22.63432
+summary(pred_all$Prediction)
+
+
+# Summarize by HUC12
+pred_all2. = merge(pred_all,Cat_HUC12,by='COMID')
+pred_all2 = pred_all2. %>% group_by(HUC12) %>% summarize(Prediction = mean(Prediction,na.rm=T))
+
+# Merge on Spatial Data
+map1 = merge(pred_all2,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
+map2 = map1[complete.cases(map1[,c("Prediction")]),] 
+map2 <- st_as_sf(map2) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Prediction),]
+#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
+
+nrow(map3[map3$Prediction>0.5,])
+summary(map3$Prediction)
+
+# Format rasters
+start_time <- Sys.time()
+map4<-st_rasterize(map3[,"Prediction"],
+                     st_as_stars(st_bbox(states_boundary),
+                                 dx = 3000, dy = 3000, values=NA_real_), na.rm=T)
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 8.113112 secs (Desktop at 1000m)
+
+
+## Plot Nitrogen Maps
+start_time <- Sys.time()
+ggplot()+
+  geom_stars(data=map4, aes(fill=Prediction))+
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  # scale_color_viridis(option="magma",name="Risk Score" 
+  #                     ,limits = c(0, 1)
+  #                     )+ # options: viridis, magma, plasma
+  binned_scale(aesthetics = "fill",
+               palette=function(x) c("#5E4FA2","#3288BD","#66C2A5","#ABDDA4","#E6F598",
+                                     "#FEE08B","#FDAE61","#F46D43","#D53E4F","#9E0142"),
+               breaks=c(.1, .2, .3, .4, .5, 0.6, .7, 0.8, 0.9)) +
+  theme (axis.text = element_blank(), axis.title = element_blank(), 
+         panel.background = element_blank(), axis.ticks = element_blank(), 
+         legend.text = element_text(size = 14), legend.title = element_text(size = 14))+
+  ggtitle(map_title)+
+  theme(plot.title = element_text(hjust=0.5))+
+  labs(fill="Risk Value")
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 33.21989 secs
+
+
+
+```
+
+
+#--
+# Change Map 4.5G
 ```{r}
 
 
@@ -4561,8 +5252,11 @@ predictData1 = predHUC_cur
 predictData2 = predHUC_4.5G 
 
 #rfr_pred = rfc_gw_p # rfc_gw_p, rfc_sw_p
-rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+#rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
 #rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+
+rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
+rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
 
 #()()()()()()()()()()()()()()()()
 
@@ -4695,6 +5389,20 @@ ggplot()+
   labs(fill="Change in Probability")
 end_time <- Sys.time(); end_time - start_time
 
+# Decrease in Risk
+100*nrow(map3[map3$chg_over_under == 1,])/nrow(map3)
+
+# Increase in Risk
+100*nrow(map3[map3$chg_over_under == 2,])/nrow(map3)
+
+# Stays above 0.5 Risk
+100*nrow(map3[map3$chg_over_under == 3,])/nrow(map3)
+        
+# Stays above 0.5 Risk
+100*nrow(map3[map3$chg_over_under == 0,])/nrow(map3)
+        
+
+                        
 
 ```
 
@@ -4711,6 +5419,80 @@ predictData = predCat_cur
 rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
 ObsData = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_SW_COMIDS.csv'))
 pred_sw = pred_sw_Cat
+#()()()()()()()()()()()()()()()()
+
+
+errmap = merge(pred_sw,ObsData[,c('COMID','Viol_Class')],by='COMID')
+
+errmap$error[errmap$Viol_Class == 1 & errmap$Prediction >= 0.5] = "True Positive"
+errmap$error[errmap$Viol_Class == 0 & errmap$Prediction < 0.5] = "True Negative"
+errmap$error[errmap$Viol_Class == 1 & errmap$Prediction < 0.5] = "False Negative"
+errmap$error[errmap$Viol_Class == 0 & errmap$Prediction >= 0.5] = "False Positive"
+
+levels(factor(errmap$error))
+
+map1 <-merge(errmap,cats_p,by="COMID",all.x=T)
+map2 <- st_as_sf(map1) # added this because the above didn't retain geometry
+#map3 <- map2[order(map2$error),]
+
+# Get point data for plotting
+map3<-cbind(map2, st_coordinates(st_centroid(map2$geometry)))
+
+#palette.colors(palette = "Okabe-Ito")
+#"#000000" "#E69F00" "#56B4E9" "#009E73" "#F0E442" "#0072B2" "#D55E00" "#CC79A7" "#999999"
+
+mypal =c( "True Positive"="red", "True Negative"="#009E73",
+          "False Negative"="#CC79A7", "False Positive"="#F0E442" )
+
+
+# Change order of categories
+morder = c('True Negative','False Positive','False Negative','True Positive')
+map3$error <- factor(map3$error, levels = morder)
+
+map3a = map3[map3$error != "True Positive",]
+map3b = map3[map3$error == "True Positive",]
+
+ggplot() +
+  geom_sf(fill='white', data=states_conus, color='black') +
+  geom_point(data=map3a, aes(x=X, y=Y, color=error)) +
+  geom_point(data=map3b, aes(x=X, y=Y, color=error)) +
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  scale_color_manual(values = mypal,name="Error Categories",)+
+  #scale_color_viridis(option="rocket",name="Viol. Frequency")+ # options: viridis, magma, plasma
+  theme(panel.background = element_blank())+ # remove grey background
+  theme(axis.text = element_blank())+ # remove axis text
+  theme(axis.ticks = element_blank())+ # remove axis text
+  theme(plot.title = element_text(hjust=0.5))+
+  ggtitle(map_title)+
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),     # Remove background
+    panel.grid = element_blank(),     # Remove gridlines
+    axis.text = element_blank(),     # Remove Axis ticks/text/titles
+    axis.ticks = element_blank(),
+    axis.title = element_blank())
+
+
+100*nrow(errmap[errmap$error=='True Positive',])/nrow(errmap) # 3.857366
+100*nrow(errmap[errmap$error=='False Negative',])/nrow(errmap) # 0.2516341
+100*nrow(errmap[errmap$error=='False Positive',])/nrow(errmap) # 21.01451
+
+100*nrow(errmap[errmap$error=='False Positive',])/nrow(errmap[errmap$Viol_Class==0,]) # 21.01451
+
+
+
+```
+
+# Error Map GW Catchments
+```{r}
+
+#()()()()()()()()()()()()()()()()
+map_title = "Error GWDW Probability of Violations Catchments"
+
+predictData = predCat_cur  
+#rfr_pred = rfc_sw_p # rfc_gw_p, rfc_sw_p
+rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
+ObsData = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_GW_COMIDS.csv'))
+pred_sw = pred_gw_Cat
 #()()()()()()()()()()()()()()()()
 
 
@@ -5608,19 +6390,6 @@ test = LU_nni_hu12[,c("HUC12","Change_ag_land_pct_RCP4.5G","Change_crop_land_pct
 
 ```
 
-# xy plot pasture/hay vs. ICLUS 
-```{r}
-
-
-xyplot = merge(StreamCat_HU12,LU_nni_hu12,by='HUC12')  
-
-xyplot$crop_hay_past_streamcat = xyplot$PctHay2019Cat + xyplot$PctCrop2019Cat
-xyplot$Pct_crop_land_2010_iclus = xyplot$Pct_crop_land_2010
-xyplot$Pct_crop_pasture_2010_iclus = xyplot$Pct_crop_land_2010 + xyplot$Pct_pasture_land_2010
-
-plot(xyplot$crop_hay_past_streamcat ~ xyplot$Pct_crop_pasture_2010_iclus)
-
-```
 
 
 #---------------------
@@ -6071,7 +6840,7 @@ start_time <- Sys.time()
 ggplot() +
   geom_stars(data=map4, aes(fill=Variable))+
   geom_sf(data=states_conus,fill=NA,color='black')+
-  scale_fill_viridis(option="cividis",name="kg N/ha", 
+  scale_fill_viridis(option="cividis",name="kg N/ha", na.value = "white"
                       #limits = c(0, 1)
                       )+ # options: viridis, magma, plasma
   theme(panel.background = element_blank())+ # remove grey background
@@ -6131,7 +6900,7 @@ start_time <- Sys.time()
 ggplot() +
   geom_stars(data=map4, aes(fill=Variable))+
   geom_sf(data=states_conus,fill=NA,color='black')+
-  scale_fill_viridis(option="cividis",name="kg N/ha", 
+  scale_fill_viridis(option="cividis",name="kg N/ha", na.value = "white"
                       #limits = c(0, 1)
                       )+ # options: viridis, magma, plasma
   theme(panel.background = element_blank())+ # remove grey background
@@ -6191,7 +6960,7 @@ start_time <- Sys.time()
 ggplot() +
   geom_stars(data=map4, aes(fill=Variable))+
   geom_sf(data=states_conus,fill=NA,color='black')+
-  scale_fill_viridis(option="cividis",name="kg N/ha", 
+  scale_fill_viridis(option="cividis",name="kg N/ha", na.value = "white"
                       #limits = c(0, 1)
                       )+ # options: viridis, magma, plasma
   theme(panel.background = element_blank())+ # remove grey background
@@ -6251,7 +7020,7 @@ start_time <- Sys.time()
 ggplot() +
   geom_stars(data=map4, aes(fill=Variable))+
   geom_sf(data=states_conus,fill=NA,color='black')+
-  scale_fill_viridis(option="cividis",name="% Crop", 
+  scale_fill_viridis(option="cividis",name="% Crop", na.value = "white"
                       #limits = c(0, 1)
                       )+ # options: viridis, magma, plasma
   theme(panel.background = element_blank())+ # remove grey background
@@ -6311,7 +7080,7 @@ start_time <- Sys.time()
 ggplot() +
   geom_stars(data=map4, aes(fill=Variable))+
   geom_sf(data=states_conus,fill=NA,color='black')+
-  scale_fill_viridis(option="cividis",name="% Cropland", 
+  scale_fill_viridis(option="cividis",name="% Cropland",na.value = "white" 
                       #limits = c(0, 1)
                       )+ # options: viridis, magma, plasma
   theme(panel.background = element_blank())+ # remove grey background
@@ -6331,6 +7100,67 @@ end_time <- Sys.time(); end_time - start_time
 
 
 ```
+
+# Map Current % Crop+Pasture Land (ICLUS 2010)
+```{r}
+
+#()()()()()()()()()()()()()()()()
+map_title = "Current % Crop+Pasture Land (ICLUS)"
+
+MapData = LU_nni_hu12
+MapData$Variable = MapData$Pct_crop_pasture_land_2010  
+#()()()()()()()()()()()()()()()()
+summary(MapData$Variable)
+
+
+# Remove rows where value is NA or Inf
+MapData$Variable[is.infinite(MapData$Variable)] = NA
+MapData = MapData[complete.cases(MapData[,c("Variable")]),] 
+#test = MapData[,c('HUC12','N_Surp_2017ws','N_surp_RCP4.5G')]
+
+
+# Merge on Spatial Data
+map1 = merge(MapData,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
+map2 <- st_as_sf(map1) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Variable),]
+#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
+
+summary(map3$Variable)
+
+# Format rasters
+start_time <- Sys.time()
+map4<-st_rasterize(map3[,"Variable"],
+                     st_as_stars(st_bbox(states_boundary),
+                                 dx = 10000, dy = 10000, values=NA_real_), na.rm=T)
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 8.113112 secs (Desktop at 1000m)
+
+
+start_time <- Sys.time()
+ggplot() +
+  geom_stars(data=map4, aes(fill=Variable))+
+  geom_sf(data=states_conus,fill=NA,color='black')+
+  scale_fill_viridis(option="cividis",name="% Cropland",na.value = "white" 
+                      #limits = c(0, 1)
+                      )+ # options: viridis, magma, plasma
+  theme(panel.background = element_blank())+ # remove grey background
+  theme(axis.text = element_blank())+ # remove axis text
+  theme(axis.ticks = element_blank())+ # remove axis text
+  theme(plot.title = element_text(hjust=0.5))+
+  ggtitle(map_title)+
+  
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),     # Remove background
+    panel.grid = element_blank(),     # Remove gridlines
+    axis.text = element_blank(),     # Remove Axis ticks/text/titles
+    axis.ticks = element_blank(),
+    axis.title = element_blank())
+end_time <- Sys.time(); end_time - start_time
+
+
+
+```
+
 
 
 # Map Current % Ag Land (ICLUS 2010)
@@ -6372,7 +7202,7 @@ start_time <- Sys.time()
 ggplot() +
   geom_stars(data=map4, aes(fill=Variable))+
   geom_sf(data=states_conus,fill=NA,color='black')+
-  scale_fill_viridis(option="cividis",name="% Cropland", 
+  scale_fill_viridis(option="cividis",name="% Cropland", na.value = "white"
                       #limits = c(0, 1)
                       )+ # options: viridis, magma, plasma
   theme(panel.background = element_blank())+ # remove grey background
@@ -6432,7 +7262,7 @@ start_time <- Sys.time()
 ggplot() +
   geom_stars(data=map4, aes(fill=Variable))+
   geom_sf(data=states_conus,fill=NA,color='black')+
-  scale_fill_viridis(option="cividis",name="%", 
+  scale_fill_viridis(option="cividis",name="%", na.value = "white"
                       #limits = c(0, 1)
                       )+ # options: viridis, magma, plasma
   theme(panel.background = element_blank())+ # remove grey background
@@ -6494,7 +7324,7 @@ start_time <- Sys.time()
 ggplot() +
   geom_stars(data=map4, aes(fill=Variable))+
   geom_sf(data=states_conus,fill=NA,color='black')+
-  scale_fill_viridis(option="cividis",name="%", 
+  scale_fill_viridis(option="cividis",name="%", na.value = "white"
                       #limits = c(0, 1)
                       )+ # options: viridis, magma, plasma
   theme(panel.background = element_blank())+ # remove grey background
@@ -6554,7 +7384,7 @@ start_time <- Sys.time()
 ggplot() +
   geom_stars(data=map4, aes(fill=Variable))+
   geom_sf(data=states_conus,fill=NA,color='black')+
-  scale_fill_viridis(option="cividis",name="% ", 
+  scale_fill_viridis(option="cividis",name="% ", na.value = "white"
                       #limits = c(0, 1)
                       )+ # options: viridis, magma, plasma
   theme(panel.background = element_blank())+ # remove grey background
@@ -6614,7 +7444,7 @@ start_time <- Sys.time()
 ggplot() +
   geom_stars(data=map4, aes(fill=Variable))+
   geom_sf(data=states_conus,fill=NA,color='black')+
-  scale_fill_viridis(option="cividis",name="% ", 
+  scale_fill_viridis(option="cividis",name="% ",na.value = "white" 
                       #limits = c(0, 1)
                       )+ # options: viridis, magma, plasma
   theme(panel.background = element_blank())+ # remove grey background
@@ -6676,7 +7506,7 @@ start_time <- Sys.time()
 ggplot() +
   geom_stars(data=map4, aes(fill=Variable))+
   geom_sf(data=states_conus,fill=NA,color='black')+
-  scale_fill_viridis(option="cividis",name="% ", 
+  scale_fill_viridis(option="cividis",name="% ",na.value = "white" 
                       #limits = c(0, 1)
                       )+ # options: viridis, magma, plasma
   theme(panel.background = element_blank())+ # remove grey background
@@ -6736,7 +7566,7 @@ start_time <- Sys.time()
 ggplot() +
   geom_stars(data=map4, aes(fill=Variable))+
   geom_sf(data=states_conus,fill=NA,color='black')+
-  scale_fill_viridis(option="cividis",name="% ", 
+  scale_fill_viridis(option="cividis",name="% ",na.value = "white" 
                       #limits = c(0, 1)
                       )+ # options: viridis, magma, plasma
   theme(panel.background = element_blank())+ # remove grey background
@@ -6797,7 +7627,7 @@ ggplot() +
   geom_stars(data=map4, aes(fill=Variable))+
   geom_sf(data=states_conus,fill=NA,color='black')+
   #scale_fill_viridis(option="cividis",name="Change in %")+
-  scale_fill_viridis_b(option="cividis",name="Change in %", 
+  scale_fill_viridis_b(option="cividis",name="Change in %", na.value = "white"
                      breaks = c(-50,-10,-5, -1, 0,0.1))+
   theme(panel.background = element_blank())+ # remove grey background
   theme(axis.text = element_blank())+ # remove axis text
@@ -6860,7 +7690,7 @@ ggplot() +
   geom_stars(data=map4, aes(fill=Variable))+
   geom_sf(data=states_conus,fill=NA,color='black')+
   #scale_fill_viridis(option="cividis",name="Change in %")+
-  scale_fill_viridis_b(option="cividis",name="Change in %", 
+  scale_fill_viridis_b(option="cividis",name="Change in %", na.value = "white",
                      breaks = c(-50,-10,-5, -1, 0,0.001))+
   theme(panel.background = element_blank())+ # remove grey background
   theme(axis.text = element_blank())+ # remove axis text
@@ -6921,7 +7751,7 @@ ggplot() +
   geom_stars(data=map4, aes(fill=Variable))+
   geom_sf(data=states_conus,fill=NA,color='black')+
   #scale_fill_viridis(option="cividis",name="Change in %")+
-  scale_fill_viridis_b(option="cividis",name="Change kg/sqkm", 
+  scale_fill_viridis_b(option="cividis",name="Change kg/sqkm", na.value = "white",
                      breaks = c(-10000,-1000,-500, -100, 0,100))+
   theme(panel.background = element_blank())+ # remove grey background
   theme(axis.text = element_blank())+ # remove axis text
@@ -6983,7 +7813,7 @@ ggplot() +
   geom_stars(data=map4, aes(fill=Variable))+
   geom_sf(data=states_conus,fill=NA,color='black')+
   #scale_fill_viridis(option="cividis",name="Change in %")+
-  scale_fill_viridis_b(option="cividis",name="Change kg/sqkm", 
+  scale_fill_viridis_b(option="cividis",name="Change kg/sqkm", na.value = "white",
                      breaks = c(-100000,-10000,-1000,-500, -100, 0,100,1000))+
   theme(panel.background = element_blank())+ # remove grey background
   theme(axis.text = element_blank())+ # remove axis text
@@ -7044,7 +7874,7 @@ ggplot() +
   geom_stars(data=map4, aes(fill=Variable))+
   geom_sf(data=states_conus,fill=NA,color='black')+
   #scale_fill_viridis(option="turbo",name="Change in %")+
-  scale_fill_viridis_b(option="turbo",name="Change kg/sqkm",
+  scale_fill_viridis_b(option="turbo",name="Change kg/sqkm", na.value = "white",
                      breaks = c(-5000,-1000,-500,-100,0,100))+
   theme(panel.background = element_blank())+ # remove grey background
   theme(axis.text = element_blank())+ # remove axis text
@@ -7105,7 +7935,7 @@ ggplot() +
   geom_stars(data=map4, aes(fill=Variable))+
   geom_sf(data=states_conus,fill=NA,color='black')+
   #scale_fill_viridis(option="plasma",name="Change in %")+
-  scale_fill_viridis_b(option="plasma",name="Change kg/sqkm",
+  scale_fill_viridis_b(option="plasma",name="Change kg/sqkm", na.value = "white",
                      breaks = c(.2,.4,.6,.8,0.9,1,1.1))+
   theme(panel.background = element_blank())+ # remove grey background
   theme(axis.text = element_blank())+ # remove axis text
@@ -7166,7 +7996,7 @@ ggplot() +
   geom_stars(data=map4, aes(fill=Variable))+
   geom_sf(data=states_conus,fill=NA,color='black')+
   #scale_fill_viridis(option="plasma",name="Change in %")+
-  scale_fill_viridis_b(option="plasma",name="Change kg/sqkm",
+  scale_fill_viridis_b(option="plasma",name="Change kg/sqkm", na.value = "white",
                      breaks = c(.2,.4,.6,.8,1,1.2))+
   theme(panel.background = element_blank())+ # remove grey background
   theme(axis.text = element_blank())+ # remove axis text
