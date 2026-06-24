@@ -552,8 +552,11 @@ length(unique(PWS_HUC12$PWSID)) # 397765 (same as nrow so no duplicates)
 # Summarize SDWIS HUC12 & Catchment
 ```{r}
 
+YYYY = 2013
+EEEE = 2017
+
 library(dplyr)
-viols = SDWIS_no3[SDWIS_no3$YEAR >= 2013,]
+viols = SDWIS_no3[SDWIS_no3$YEAR >= YYYY & SDWIS_no3$YEAR <= EEEE,]
 
 viols = unique(subset(viols,select=c(PWSID,DATE,YEAR,Submission.Year.Quarter,Contaminant)))
 
@@ -617,9 +620,12 @@ length(unique(viol_sw_cat$COMID)) # 70
 # Summarize CDC Conc. HUC12 & Catchment
 ```{r}
 
+YYYY = 2013
+EEEE = 2017
+
 library(dplyr)
-cdc_sw = cdc_sw[cdc_sw$YEAR >= 2013,]
-cdc_gw = cdc_gw[cdc_gw$YEAR >= 2013,]
+cdc_sw = cdc_sw[cdc_sw$YEAR >= YYYY & cdc_sw$YEAR <= EEEE,]
+cdc_gw = cdc_gw[cdc_gw$YEAR >= YYYY & cdc_gw$YEAR <= EEEE,]
 
 #viols = unique(subset(viols,select=c(PWSID,DATE,YEAR,Submission.Year.Quarter,Contaminant)))
 
@@ -1007,6 +1013,7 @@ sc_get_params(param='metric_names') # List of parameters – NNI isn’t listed 
 ```
 
 # StreamCat Data
+*? 'Septic_km2Cat','Septic_km2Ws',
 ```{r}
 
 library(fst)
@@ -1044,7 +1051,8 @@ streamcat.vars.v2 <- read_fst("D:/Data/Cat.All.Vars2_All_Cats.fst",
                                            "Hillslope_PctCat",'Hillslope_PctWs',
                                            "NHDslope_Pct_Cat",'NHDslope_Pct_Ws',
                                         'N_TW2012Cat','N_TW2012Ws','S_TW2012Cat','S_TW2012Ws',
-                                           'NANI_kgkm2_Cat','NANI_kgkm2_Ws','CatAreaSqKm','WsAreaSqKm'))
+                                           'NANI_kgkm2_Cat','NANI_kgkm2_Ws','CatAreaSqKm','WsAreaSqKm',
+                                        'Septic_km2Cat','Septic_km2Ws'))
 
 sc_data <- read_fst("D:/Data/StreamCat_temp_precip_9120.fst",
                               columns =  c('COMID','precip9120cat','precip9120ws',"tmean9120cat",'tmean9120ws'))
@@ -1113,7 +1121,7 @@ StreamCat_HU12_ = merge(StreamCat_sub,Cat_HUC12,by='COMID')
 StreamCat_HU12 = StreamCat_HU12_ %>% group_by(HUC12) %>% summarize_all(mean)
 
 
-
+StreamCat_cats = StreamCat_sub
 
 
 ```
@@ -1434,172 +1442,201 @@ LU_nni_hu12 = merge(LU_nni_hu12,imprv_hu12,by='HUC12')
 
 ```
 
-#-------------------------------------------------------------------------------
-# Change Ratio - Ag Land
+#------------------------------------------------------------------------------
+
+
+
+# Change Ratio spmodel - Based on NLCD Ag Land
+* See spmodel code below
 ```{r}
 
-# Get the Land Use grouped together
-LU_nni_hu12$area_ag_2010= 
-  LU_nni_hu12$area_07.cropland_landuse_2010 + 
-  #LU_nni_hu12$area_05.grazing_landuse_2010 +
-  LU_nni_hu12$area_06.pasture_landuse_2010
+TEMP = merge(StreamCat_HU12,LU_nni_hu12,by='HUC12')  
+TEMP$crop_hay_past_streamcat = TEMP$PctHay2019Cat + TEMP$PctCrop2019Cat
+TEMP$Pct_crop_land_2010_iclus = TEMP$Pct_crop_land_2010
 
-LU_nni_hu12$area_ag_RCP4.5G = 
-  LU_nni_hu12$area_07.cropland_landuse_RCP4.5GISS+ 
-  #LU_nni_hu12$area_05.grazing_landuse_RCP4.5GISS +
-  LU_nni_hu12$area_06.pasture_landuse_RCP4.5GISS
-LU_nni_hu12$area_ag_RCP8.5G = 
-  LU_nni_hu12$area_07.cropland_landuse_RCP8.5GISS+ 
-  #LU_nni_hu12$area_05.grazing_landuse_RCP8.5GISS +
-  LU_nni_hu12$area_06.pasture_landuse_RCP8.5GISS
-LU_nni_hu12$area_ag_RCP4.5H = 
-  LU_nni_hu12$area_07.cropland_landuse_RCP4.5Hadgem+ 
-  #LU_nni_hu12$area_05.grazing_landuse_RCP4.5Hadgem +
-  LU_nni_hu12$area_06.pasture_landuse_RCP4.5Hadgem
-LU_nni_hu12$area_ag_RCP8.5H = 
-  LU_nni_hu12$area_07.cropland_landuse_RCP8.5Hadgem+ 
-  #LU_nni_hu12$area_05.grazing_landuse_RCP8.5Hadgem +
-  LU_nni_hu12$area_06.pasture_landuse_RCP8.5Hadgem
+ag_nlcd_2050 = read.csv(paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP_GISS_HADGEM_HU12.csv'))
+# Add leading zeros
+ag_nlcd_2050$HUC12 = formatC(as.numeric(as.character(ag_nlcd_2050$HUC12)), width = 12, format = "f",flag = "0",digits = 0) 
 
-# Calculate Change Ratio (the multiplier for calculating how much mass of N changed)
-LU_nni_hu12$change_ratio_ag_RCP4.5G = 
-  LU_nni_hu12$area_ag_RCP4.5G / LU_nni_hu12$area_ag_2010
-LU_nni_hu12$change_ratio_ag_RCP8.5G = 
-  LU_nni_hu12$area_ag_RCP8.5G / LU_nni_hu12$area_ag_2010
-LU_nni_hu12$change_ratio_ag_RCP4.5H = 
-  LU_nni_hu12$area_ag_RCP4.5H / LU_nni_hu12$area_ag_2010
-LU_nni_hu12$change_ratio_ag_RCP8.5H = 
-  LU_nni_hu12$area_ag_RCP8.5H / LU_nni_hu12$area_ag_2010
-summary(LU_nni_hu12$change_ratio_ag_RCP4.5G)
+chg_ratio = merge(ag_nlcd_2050, TEMP[,c('HUC12','crop_hay_past_streamcat')],by='HUC12')
 
-# Change Ratio for Crop Land only
-LU_nni_hu12$change_ratio_crop_RCP4.5G = 
-  LU_nni_hu12$area_07.cropland_landuse_RCP4.5GISS / LU_nni_hu12$area_07.cropland_landuse_2010
-LU_nni_hu12$change_ratio_crop_RCP8.5G = 
-  LU_nni_hu12$area_07.cropland_landuse_RCP8.5GISS / LU_nni_hu12$area_07.cropland_landuse_2010
-LU_nni_hu12$change_ratio_crop_RCP4.5H = 
-  LU_nni_hu12$area_07.cropland_landuse_RCP4.5Hadgem / LU_nni_hu12$area_07.cropland_landuse_2010
-LU_nni_hu12$change_ratio_crop_RCP8.5H = 
-  LU_nni_hu12$area_07.cropland_landuse_RCP8.5Hadgem / LU_nni_hu12$area_07.cropland_landuse_2010
-summary(LU_nni_hu12$change_ratio_crop_RCP8.5G)
+summary(chg_ratio$ag_nlcd_2050_rcp4.5G)
+summary(chg_ratio$ag_nlcd_2050_rcp8.5G)
 
-# Convert change ratio to NA if zero value in 2010
+chg_ratio$change_ratio_crop_RCP4.5G = 
+  chg_ratio$ag_nlcd_2050_rcp4.5G/chg_ratio$crop_hay_past_streamcat
+chg_ratio$change_ratio_crop_RCP8.5G = 
+  chg_ratio$ag_nlcd_2050_rcp8.5G/chg_ratio$crop_hay_past_streamcat
+chg_ratio$change_ratio_crop_RCP4.5H = 
+  chg_ratio$ag_nlcd_2050_rcp4.5H/chg_ratio$crop_hay_past_streamcat
+chg_ratio$change_ratio_crop_RCP8.5H = 
+  chg_ratio$ag_nlcd_2050_rcp8.5H/chg_ratio$crop_hay_past_streamcat
 
-LU_nni_hu12$change_ratio_ag_RCP4.5G[is.infinite(LU_nni_hu12$change_ratio_ag_RCP4.5G)] = NA
-LU_nni_hu12$change_ratio_ag_RCP8.5G[is.infinite(LU_nni_hu12$change_ratio_ag_RCP8.5G)] = NA
-LU_nni_hu12$change_ratio_ag_RCP4.5H[is.infinite(LU_nni_hu12$change_ratio_ag_RCP4.5H)] = NA
-LU_nni_hu12$change_ratio_ag_RCP8.5H[is.infinite(LU_nni_hu12$change_ratio_ag_RCP8.5H)] = NA
+summary(chg_ratio$change_ratio_crop_RCP4.5G )
 
-LU_nni_hu12$change_ratio_crop_RCP4.5G[is.infinite(LU_nni_hu12$change_ratio_crop_RCP4.5G)] = NA
-LU_nni_hu12$change_ratio_crop_RCP8.5G[is.infinite(LU_nni_hu12$change_ratio_crop_RCP8.5G)] = NA
-LU_nni_hu12$change_ratio_crop_RCP4.5H[is.infinite(LU_nni_hu12$change_ratio_crop_RCP4.5H)] = NA
-LU_nni_hu12$change_ratio_crop_RCP8.5H[is.infinite(LU_nni_hu12$change_ratio_crop_RCP8.5H)] = NA
+# Convert change ratio to NA if zero value in 2010 (resulting in Inf for change ratio)
+chg_ratio$change_ratio_crop_RCP4.5G[is.infinite(chg_ratio$change_ratio_crop_RCP4.5G)] = NA
+chg_ratio$change_ratio_crop_RCP8.5G[is.infinite(chg_ratio$change_ratio_crop_RCP8.5G)] = NA
+chg_ratio$change_ratio_crop_RCP4.5H[is.infinite(chg_ratio$change_ratio_crop_RCP4.5H)] = NA
+chg_ratio$change_ratio_crop_RCP8.5H[is.infinite(chg_ratio$change_ratio_crop_RCP8.5H)] = NA
 
-nrow(LU_nni_hu12)
-nrow(LU_nni_hu12[complete.cases(LU_nni_hu12[,c("change_ratio_ag_RCP4.5G")]),]) 
 
-nrow(LU_nni_hu12[complete.cases(LU_nni_hu12[,c("change_ratio_crop_RCP4.5G")]),]) 
+# If Change ratio is NA (meaning 0% crop in 2010) convert to 1 (meaning no change)
+chg_ratio$change_ratio_crop_RCP4.5G = 
+  ifelse(is.na(chg_ratio$change_ratio_crop_RCP4.5G),1,
+         chg_ratio$change_ratio_crop_RCP4.5G)
+chg_ratio$change_ratio_crop_RCP8.5G = 
+  ifelse(is.na(chg_ratio$change_ratio_crop_RCP8.5G),1,
+         chg_ratio$change_ratio_crop_RCP8.5G)
+chg_ratio$change_ratio_crop_RCP4.5H = 
+  ifelse(is.na(chg_ratio$change_ratio_crop_RCP4.5H),1,
+         chg_ratio$change_ratio_crop_RCP4.5H)
+chg_ratio$change_ratio_crop_RCP8.5H = 
+  ifelse(is.na(chg_ratio$change_ratio_crop_RCP8.5H),1,
+         chg_ratio$change_ratio_crop_RCP8.5H)
 
-# If change ratio is NA, but there is cropland in future scenario, replace change ratio with average change ratio
 
-# mean(LU_nni_hu12$change_ratio_crop_RCP4.5G,na.rm=T)
+summary(chg_ratio$change_ratio_crop_RCP4.5G)
+summary(chg_ratio$change_ratio_crop_RCP8.5G)
+summary(chg_ratio$change_ratio_crop_RCP4.5H)
+summary(chg_ratio$change_ratio_crop_RCP8.5H)
+
+
+# Merge on 
+LU_nni_hu12 = merge(LU_nni_hu12,chg_ratio,by='HUC12')
+
+
+```
+
+
+#-------------------------------------------------------------------------------
+# Change Ratio - Ag Land
+* Commenting out because using spmodel version of change ratio
+```{r}
+
+# # Get the Land Use grouped together
+# LU_nni_hu12$area_ag_2010= 
+#   LU_nni_hu12$area_07.cropland_landuse_2010 + 
+#   #LU_nni_hu12$area_05.grazing_landuse_2010 +
+#   LU_nni_hu12$area_06.pasture_landuse_2010
 # 
+# LU_nni_hu12$area_ag_RCP4.5G = 
+#   LU_nni_hu12$area_07.cropland_landuse_RCP4.5GISS+ 
+#   #LU_nni_hu12$area_05.grazing_landuse_RCP4.5GISS +
+#   LU_nni_hu12$area_06.pasture_landuse_RCP4.5GISS
+# LU_nni_hu12$area_ag_RCP8.5G = 
+#   LU_nni_hu12$area_07.cropland_landuse_RCP8.5GISS+ 
+#   #LU_nni_hu12$area_05.grazing_landuse_RCP8.5GISS +
+#   LU_nni_hu12$area_06.pasture_landuse_RCP8.5GISS
+# LU_nni_hu12$area_ag_RCP4.5H = 
+#   LU_nni_hu12$area_07.cropland_landuse_RCP4.5Hadgem+ 
+#   #LU_nni_hu12$area_05.grazing_landuse_RCP4.5Hadgem +
+#   LU_nni_hu12$area_06.pasture_landuse_RCP4.5Hadgem
+# LU_nni_hu12$area_ag_RCP8.5H = 
+#   LU_nni_hu12$area_07.cropland_landuse_RCP8.5Hadgem+ 
+#   #LU_nni_hu12$area_05.grazing_landuse_RCP8.5Hadgem +
+#   LU_nni_hu12$area_06.pasture_landuse_RCP8.5Hadgem
+# 
+# # Calculate Change Ratio (the multiplier for calculating how much mass of N changed)
+# LU_nni_hu12$change_ratio_ag_RCP4.5G = 
+#   LU_nni_hu12$area_ag_RCP4.5G / LU_nni_hu12$area_ag_2010
+# LU_nni_hu12$change_ratio_ag_RCP8.5G = 
+#   LU_nni_hu12$area_ag_RCP8.5G / LU_nni_hu12$area_ag_2010
+# LU_nni_hu12$change_ratio_ag_RCP4.5H = 
+#   LU_nni_hu12$area_ag_RCP4.5H / LU_nni_hu12$area_ag_2010
+# LU_nni_hu12$change_ratio_ag_RCP8.5H = 
+#   LU_nni_hu12$area_ag_RCP8.5H / LU_nni_hu12$area_ag_2010
+# summary(LU_nni_hu12$change_ratio_ag_RCP4.5G)
+# 
+# # Change Ratio for Crop Land only
 # LU_nni_hu12$change_ratio_crop_RCP4.5G = 
-#   ifelse(LU_nni_hu12$area_07.cropland_landuse_RCP4.5GISS >0 & 
-#            is.na(LU_nni_hu12$change_ratio_crop_RCP4.5G),
-#          mean(LU_nni_hu12$change_ratio_crop_RCP4.5G,na.rm=T),
-#          LU_nni_hu12$change_ratio_crop_RCP4.5G )
+#   LU_nni_hu12$area_07.cropland_landuse_RCP4.5GISS / LU_nni_hu12$area_07.cropland_landuse_2010
+# LU_nni_hu12$change_ratio_crop_RCP8.5G = 
+#   LU_nni_hu12$area_07.cropland_landuse_RCP8.5GISS / LU_nni_hu12$area_07.cropland_landuse_2010
+# LU_nni_hu12$change_ratio_crop_RCP4.5H = 
+#   LU_nni_hu12$area_07.cropland_landuse_RCP4.5Hadgem / LU_nni_hu12$area_07.cropland_landuse_2010
+# LU_nni_hu12$change_ratio_crop_RCP8.5H = 
+#   LU_nni_hu12$area_07.cropland_landuse_RCP8.5Hadgem / LU_nni_hu12$area_07.cropland_landuse_2010
+# summary(LU_nni_hu12$change_ratio_crop_RCP8.5G)
+# 
+# # Convert change ratio to NA if zero value in 2010
+# 
+# LU_nni_hu12$change_ratio_ag_RCP4.5G[is.infinite(LU_nni_hu12$change_ratio_ag_RCP4.5G)] = NA
+# LU_nni_hu12$change_ratio_ag_RCP8.5G[is.infinite(LU_nni_hu12$change_ratio_ag_RCP8.5G)] = NA
+# LU_nni_hu12$change_ratio_ag_RCP4.5H[is.infinite(LU_nni_hu12$change_ratio_ag_RCP4.5H)] = NA
+# LU_nni_hu12$change_ratio_ag_RCP8.5H[is.infinite(LU_nni_hu12$change_ratio_ag_RCP8.5H)] = NA
+# 
+# LU_nni_hu12$change_ratio_crop_RCP4.5G[is.infinite(LU_nni_hu12$change_ratio_crop_RCP4.5G)] = NA
+# LU_nni_hu12$change_ratio_crop_RCP8.5G[is.infinite(LU_nni_hu12$change_ratio_crop_RCP8.5G)] = NA
+# LU_nni_hu12$change_ratio_crop_RCP4.5H[is.infinite(LU_nni_hu12$change_ratio_crop_RCP4.5H)] = NA
+# LU_nni_hu12$change_ratio_crop_RCP8.5H[is.infinite(LU_nni_hu12$change_ratio_crop_RCP8.5H)] = NA
+# 
+# nrow(LU_nni_hu12)
+# nrow(LU_nni_hu12[complete.cases(LU_nni_hu12[,c("change_ratio_ag_RCP4.5G")]),]) 
+# 
 # nrow(LU_nni_hu12[complete.cases(LU_nni_hu12[,c("change_ratio_crop_RCP4.5G")]),]) 
 # 
-# LU_nni_hu12$change_ratio_crop_RCP8.5G = 
-#   ifelse(LU_nni_hu12$area_07.cropland_landuse_RCP8.5GISS >0 & 
-#            is.na(LU_nni_hu12$change_ratio_crop_RCP8.5G),
-#          mean(LU_nni_hu12$change_ratio_crop_RCP8.5G,na.rm=T),
-#          LU_nni_hu12$change_ratio_crop_RCP8.5G )
+# # If Change ratio is NA (meaning 0% ag/crop in 2010) convert to 1 (meaning no change)
+# LU_nni_hu12$change_ratio_ag_RCP4.5G = 
+#   ifelse(is.na(LU_nni_hu12$change_ratio_ag_RCP4.5G),1,LU_nni_hu12$change_ratio_ag_RCP4.5G)
+# LU_nni_hu12$change_ratio_ag_RCP8.5G = 
+#   ifelse(is.na(LU_nni_hu12$change_ratio_ag_RCP8.5G),1,LU_nni_hu12$change_ratio_ag_RCP8.5G)
+# LU_nni_hu12$change_ratio_ag_RCP4.5H = 
+#   ifelse(is.na(LU_nni_hu12$change_ratio_ag_RCP4.5H),1,LU_nni_hu12$change_ratio_ag_RCP4.5H)
+# LU_nni_hu12$change_ratio_ag_RCP8.5H = 
+#   ifelse(is.na(LU_nni_hu12$change_ratio_ag_RCP8.5H),1,LU_nni_hu12$change_ratio_ag_RCP8.5H)
 # 
-# LU_nni_hu12$change_ratio_crop_RCP4.5H = 
-#   ifelse(LU_nni_hu12$area_07.cropland_landuse_RCP4.5Hadgem >0 & 
-#            is.na(LU_nni_hu12$change_ratio_crop_RCP4.5H),
-#          mean(LU_nni_hu12$change_ratio_crop_RCP4.5H,na.rm=T),
-#          LU_nni_hu12$change_ratio_crop_RCP4.5H )
-# 
-# LU_nni_hu12$change_ratio_crop_RCP8.5H = 
-#   ifelse(LU_nni_hu12$area_07.cropland_landuse_RCP8.5Hadgem >0 & 
-#            is.na(LU_nni_hu12$change_ratio_crop_RCP8.5H),
-#          mean(LU_nni_hu12$change_ratio_crop_RCP8.5H,na.rm=T),
-#          LU_nni_hu12$change_ratio_crop_RCP8.5H )
-
-# If Change ratio is NA (meaning 0% ag/crop in 2010) convert to 1 (meaning no change)
-LU_nni_hu12$change_ratio_ag_RCP4.5G = 
-  ifelse(is.na(LU_nni_hu12$change_ratio_ag_RCP4.5G),1,LU_nni_hu12$change_ratio_ag_RCP4.5G)
-LU_nni_hu12$change_ratio_ag_RCP8.5G = 
-  ifelse(is.na(LU_nni_hu12$change_ratio_ag_RCP8.5G),1,LU_nni_hu12$change_ratio_ag_RCP8.5G)
-LU_nni_hu12$change_ratio_ag_RCP4.5H = 
-  ifelse(is.na(LU_nni_hu12$change_ratio_ag_RCP4.5H),1,LU_nni_hu12$change_ratio_ag_RCP4.5H)
-LU_nni_hu12$change_ratio_ag_RCP8.5H = 
-  ifelse(is.na(LU_nni_hu12$change_ratio_ag_RCP8.5H),1,LU_nni_hu12$change_ratio_ag_RCP8.5H)
-
-LU_nni_hu12$change_ratio_crop_RCP4.5G = 
-  ifelse(is.na(LU_nni_hu12$change_ratio_crop_RCP4.5G),1,LU_nni_hu12$change_ratio_crop_RCP4.5G)
-LU_nni_hu12$change_ratio_crop_RCP8.5G = 
-  ifelse(is.na(LU_nni_hu12$change_ratio_crop_RCP8.5G),1,LU_nni_hu12$change_ratio_crop_RCP8.5G)
-LU_nni_hu12$change_ratio_crop_RCP4.5H = 
-  ifelse(is.na(LU_nni_hu12$change_ratio_crop_RCP4.5H),1,LU_nni_hu12$change_ratio_crop_RCP4.5H)
-LU_nni_hu12$change_ratio_crop_RCP8.5H = 
-  ifelse(is.na(LU_nni_hu12$change_ratio_crop_RCP8.5H),1,LU_nni_hu12$change_ratio_crop_RCP8.5H)
-
 # LU_nni_hu12$change_ratio_crop_RCP4.5G = 
-#   ifelse(LU_nni_hu12$change_ratio_crop_RCP4.5G==0,1,LU_nni_hu12$change_ratio_crop_RCP4.5G)
+#   ifelse(is.na(LU_nni_hu12$change_ratio_crop_RCP4.5G),1,LU_nni_hu12$change_ratio_crop_RCP4.5G)
 # LU_nni_hu12$change_ratio_crop_RCP8.5G = 
-#   ifelse(LU_nni_hu12$change_ratio_crop_RCP8.5G==0,1,LU_nni_hu12$change_ratio_crop_RCP8.5G)
+#   ifelse(is.na(LU_nni_hu12$change_ratio_crop_RCP8.5G),1,LU_nni_hu12$change_ratio_crop_RCP8.5G)
 # LU_nni_hu12$change_ratio_crop_RCP4.5H = 
-#   ifelse(LU_nni_hu12$change_ratio_crop_RCP4.5H==0,1,LU_nni_hu12$change_ratio_crop_RCP4.5H)
+#   ifelse(is.na(LU_nni_hu12$change_ratio_crop_RCP4.5H),1,LU_nni_hu12$change_ratio_crop_RCP4.5H)
 # LU_nni_hu12$change_ratio_crop_RCP8.5H = 
-#   ifelse(LU_nni_hu12$change_ratio_crop_RCP8.5H==0,1,LU_nni_hu12$change_ratio_crop_RCP8.5H)
-
-
-
-summary(LU_nni_hu12$change_ratio_crop_RCP4.5G)
-summary(LU_nni_hu12$change_ratio_crop_RCP8.5G)
-summary(LU_nni_hu12$change_ratio_crop_RCP4.5H)
-summary(LU_nni_hu12$change_ratio_crop_RCP8.5H)
+#   ifelse(is.na(LU_nni_hu12$change_ratio_crop_RCP8.5H),1,LU_nni_hu12$change_ratio_crop_RCP8.5H)
+# 
+# summary(LU_nni_hu12$change_ratio_crop_RCP4.5G)
+# summary(LU_nni_hu12$change_ratio_crop_RCP8.5G)
+# summary(LU_nni_hu12$change_ratio_crop_RCP4.5H)
+# summary(LU_nni_hu12$change_ratio_crop_RCP8.5H)
 
 
 
 ```
 
 # Change Ratio - Livestock Land
+* Don't use this in surplus calc
 ```{r}
 
-# Get the Land Use grouped together
-LU_nni_hu12$area_livestock_2010 = 
-  LU_nni_hu12$area_05.grazing_landuse_2010 +
-  LU_nni_hu12$area_06.pasture_landuse_2010
-
-LU_nni_hu12$area_livestock_RCP4.5G = 
-  LU_nni_hu12$area_05.grazing_landuse_RCP4.5GISS +
-  LU_nni_hu12$area_06.pasture_landuse_RCP4.5GISS
-LU_nni_hu12$area_livestock_RCP8.5G = 
-  LU_nni_hu12$area_05.grazing_landuse_RCP8.5GISS +
-  LU_nni_hu12$area_06.pasture_landuse_RCP8.5GISS
-LU_nni_hu12$area_livestock_RCP4.5H = 
-  LU_nni_hu12$area_05.grazing_landuse_RCP4.5Hadgem +
-  LU_nni_hu12$area_06.pasture_landuse_RCP4.5Hadgem
-LU_nni_hu12$area_livestock_RCP8.5H = 
-  LU_nni_hu12$area_05.grazing_landuse_RCP8.5Hadgem +
-  LU_nni_hu12$area_06.pasture_landuse_RCP8.5Hadgem
-
-# Calculate Change Ratio (the multiplier for calculating how much mass of N changed)
-LU_nni_hu12$change_ratio_livestock_RCP4.5G = 
-  LU_nni_hu12$area_livestock_RCP4.5G / LU_nni_hu12$area_livestock_2010
-LU_nni_hu12$change_ratio_livestock_RCP8.5G = 
-  LU_nni_hu12$area_livestock_RCP8.5G / LU_nni_hu12$area_livestock_2010
-LU_nni_hu12$change_ratio_livestock_RCP4.5H = 
-  LU_nni_hu12$area_livestock_RCP4.5H / LU_nni_hu12$area_livestock_2010
-LU_nni_hu12$change_ratio_livestock_RCP8.5H = 
-  LU_nni_hu12$area_livestock_RCP8.5H / LU_nni_hu12$area_livestock_2010
-
-summary(LU_nni_hu12$change_ratio_livestock_RCP4.5G)
+# # Get the Land Use grouped together
+# LU_nni_hu12$area_livestock_2010 =
+#   LU_nni_hu12$area_05.grazing_landuse_2010 +
+#   LU_nni_hu12$area_06.pasture_landuse_2010
+# 
+# LU_nni_hu12$area_livestock_RCP4.5G =
+#   LU_nni_hu12$area_05.grazing_landuse_RCP4.5GISS +
+#   LU_nni_hu12$area_06.pasture_landuse_RCP4.5GISS
+# LU_nni_hu12$area_livestock_RCP8.5G =
+#   LU_nni_hu12$area_05.grazing_landuse_RCP8.5GISS +
+#   LU_nni_hu12$area_06.pasture_landuse_RCP8.5GISS
+# LU_nni_hu12$area_livestock_RCP4.5H =
+#   LU_nni_hu12$area_05.grazing_landuse_RCP4.5Hadgem +
+#   LU_nni_hu12$area_06.pasture_landuse_RCP4.5Hadgem
+# LU_nni_hu12$area_livestock_RCP8.5H =
+#   LU_nni_hu12$area_05.grazing_landuse_RCP8.5Hadgem +
+#   LU_nni_hu12$area_06.pasture_landuse_RCP8.5Hadgem
+# 
+# # Calculate Change Ratio (the multiplier for calculating how much mass of N changed)
+# LU_nni_hu12$change_ratio_livestock_RCP4.5G =
+#   LU_nni_hu12$area_livestock_RCP4.5G / LU_nni_hu12$area_livestock_2010
+# LU_nni_hu12$change_ratio_livestock_RCP8.5G =
+#   LU_nni_hu12$area_livestock_RCP8.5G / LU_nni_hu12$area_livestock_2010
+# LU_nni_hu12$change_ratio_livestock_RCP4.5H =
+#   LU_nni_hu12$area_livestock_RCP4.5H / LU_nni_hu12$area_livestock_2010
+# LU_nni_hu12$change_ratio_livestock_RCP8.5H =
+#   LU_nni_hu12$area_livestock_RCP8.5H / LU_nni_hu12$area_livestock_2010
+# 
+# summary(LU_nni_hu12$change_ratio_livestock_RCP4.5G)
 
 ```
 
@@ -1842,87 +1879,6 @@ summary(LU_nni_hu12$n_crop_rem_kgsqkm_RCP8.5H)
 ```
 
 
-# Livestock? (Same as manure?)
-*Q? should change ratio be based on ag land or just pasture land? 
-```{r}
-
-  
-# Get mass of N 2010
-LU_nni_hu12$n_livestock_dem_kg_2010 = 
-  LU_nni_hu12$n_livestock_dem_kgsqkm * LU_nni_hu12$area_sqkm
-LU_nni_hu12$n_livestock_prod_kg_2010 = 
-  LU_nni_hu12$n_livestock_prod_kgsqkm * LU_nni_hu12$area_sqkm
-LU_nni_hu12$n_livestock_rec_kg_2010 = 
-  LU_nni_hu12$n_livestock_rec_kgsqkm * LU_nni_hu12$area_sqkm
-
-# Get mass of N in 2050
-LU_nni_hu12$n_livestock_dem_kg_RCP4.5G = 
-  LU_nni_hu12$change_ratio_livestock_RCP4.5G * LU_nni_hu12$n_livestock_dem_kg_2010
-LU_nni_hu12$n_livestock_dem_kg_RCP8.5G = 
-  LU_nni_hu12$change_ratio_livestock_RCP8.5G * LU_nni_hu12$n_livestock_dem_kg_2010
-LU_nni_hu12$n_livestock_dem_kg_RCP4.5H = 
-  LU_nni_hu12$change_ratio_livestock_RCP4.5H * LU_nni_hu12$n_livestock_dem_kg_2010
-LU_nni_hu12$n_livestock_dem_kg_RCP8.5H = 
-  LU_nni_hu12$change_ratio_livestock_RCP8.5H * LU_nni_hu12$n_livestock_dem_kg_2010
-
-LU_nni_hu12$n_livestock_prod_kg_RCP4.5G = 
-  LU_nni_hu12$change_ratio_livestock_RCP4.5G * LU_nni_hu12$n_livestock_prod_kg_2010
-LU_nni_hu12$n_livestock_prod_kg_RCP8.5G = 
-  LU_nni_hu12$change_ratio_livestock_RCP8.5G * LU_nni_hu12$n_livestock_prod_kg_2010
-LU_nni_hu12$n_livestock_prod_kg_RCP4.5H = 
-  LU_nni_hu12$change_ratio_livestock_RCP4.5H * LU_nni_hu12$n_livestock_prod_kg_2010
-LU_nni_hu12$n_livestock_prod_kg_RCP8.5H = 
-  LU_nni_hu12$change_ratio_livestock_RCP8.5H * LU_nni_hu12$n_livestock_prod_kg_2010
-
-LU_nni_hu12$n_livestock_rec_kg_RCP4.5G = 
-  LU_nni_hu12$change_ratio_livestock_RCP4.5G * LU_nni_hu12$n_livestock_rec_kg_2010
-LU_nni_hu12$n_livestock_rec_kg_RCP8.5G = 
-  LU_nni_hu12$change_ratio_livestock_RCP8.5G * LU_nni_hu12$n_livestock_rec_kg_2010
-LU_nni_hu12$n_livestock_rec_kg_RCP4.5H = 
-  LU_nni_hu12$change_ratio_livestock_RCP4.5H * LU_nni_hu12$n_livestock_rec_kg_2010
-LU_nni_hu12$n_livestock_rec_kg_RCP8.5H = 
-  LU_nni_hu12$change_ratio_livestock_RCP8.5H * LU_nni_hu12$n_livestock_rec_kg_2010
-
-# Get area weighted N
-LU_nni_hu12$n_livestock_dem_kgsqkm_RCP4.5G = 
-  LU_nni_hu12$n_livestock_dem_kg_RCP4.5G / LU_nni_hu12$area_sqkm
-LU_nni_hu12$n_livestock_dem_kgsqkm_RCP8.5G = 
-  LU_nni_hu12$n_livestock_dem_kg_RCP8.5G / LU_nni_hu12$area_sqkm
-LU_nni_hu12$n_livestock_dem_kgsqkm_RCP4.5H = 
-  LU_nni_hu12$n_livestock_dem_kg_RCP4.5H / LU_nni_hu12$area_sqkm
-LU_nni_hu12$n_livestock_dem_kgsqkm_RCP8.5H = 
-  LU_nni_hu12$n_livestock_dem_kg_RCP8.5H / LU_nni_hu12$area_sqkm
-
-LU_nni_hu12$n_livestock_prod_kgsqkm_RCP4.5G = 
-  LU_nni_hu12$n_livestock_prod_kg_RCP4.5G / LU_nni_hu12$area_sqkm
-LU_nni_hu12$n_livestock_prod_kgsqkm_RCP8.5G = 
-  LU_nni_hu12$n_livestock_prod_kg_RCP8.5G / LU_nni_hu12$area_sqkm
-LU_nni_hu12$n_livestock_prod_kgsqkm_RCP4.5H = 
-  LU_nni_hu12$n_livestock_prod_kg_RCP4.5H / LU_nni_hu12$area_sqkm
-LU_nni_hu12$n_livestock_prod_kgsqkm_RCP8.5H = 
-  LU_nni_hu12$n_livestock_prod_kg_RCP8.5H / LU_nni_hu12$area_sqkm
-
-LU_nni_hu12$n_livestock_rec_kgsqkm_RCP4.5G = 
-  LU_nni_hu12$n_livestock_rec_kg_RCP4.5G / LU_nni_hu12$area_sqkm
-LU_nni_hu12$n_livestock_rec_kgsqkm_RCP8.5G = 
-  LU_nni_hu12$n_livestock_rec_kg_RCP8.5G / LU_nni_hu12$area_sqkm
-LU_nni_hu12$n_livestock_rec_kgsqkm_RCP4.5H = 
-  LU_nni_hu12$n_livestock_rec_kg_RCP4.5H / LU_nni_hu12$area_sqkm
-LU_nni_hu12$n_livestock_rec_kgsqkm_RCP8.5H = 
-  LU_nni_hu12$n_livestock_rec_kg_RCP8.5H / LU_nni_hu12$area_sqkm
-
-
-
-summary(LU_nni_hu12$n_livestock_prod_kgsqkm)
-summary(LU_nni_hu12$n_livestock_prod_kgsqkm_RCP4.5G)
-summary(LU_nni_hu12$n_livestock_prod_kgsqkm_RCP8.5G)
-summary(LU_nni_hu12$n_livestock_prod_kgsqkm_RCP4.5H)
-summary(LU_nni_hu12$n_livestock_prod_kgsqkm_RCP8.5H)
-  
-
-```
-
-
 
 
 # Human (demand & Waste)
@@ -2141,24 +2097,24 @@ temp$Pct_grazing_land_RCP8.5H =
 
 #-------------------------------------------------------------------------------
 # % Ag
-temp$Pct_ag_land_2010 = 
-  100*temp$area_ag_2010 / temp$huc12_area_m2
-temp$Pct_ag_land_RCP4.5G = 
-  100*temp$area_ag_RCP4.5G / temp$huc12_area_m2
-temp$Pct_ag_land_RCP8.5G = 
-  100*temp$area_ag_RCP8.5G / temp$huc12_area_m2
-temp$Pct_ag_land_RCP4.5H = 
-  100*temp$area_ag_RCP4.5H / temp$huc12_area_m2
-temp$Pct_ag_land_RCP8.5H = 
-  100*temp$area_ag_RCP8.5H / temp$huc12_area_m2
+# temp$Pct_ag_land_2010 = 
+#   100*temp$area_ag_2010 / temp$huc12_area_m2
+# temp$Pct_ag_land_RCP4.5G = 
+#   100*temp$area_ag_RCP4.5G / temp$huc12_area_m2
+# temp$Pct_ag_land_RCP8.5G = 
+#   100*temp$area_ag_RCP8.5G / temp$huc12_area_m2
+# temp$Pct_ag_land_RCP4.5H = 
+#   100*temp$area_ag_RCP4.5H / temp$huc12_area_m2
+# temp$Pct_ag_land_RCP8.5H = 
+#   100*temp$area_ag_RCP8.5H / temp$huc12_area_m2
 
 
 #-------------------------------------------------------------------------------
 # Change Calculations
-temp$Change_ag_land_pct_RCP4.5G = temp$Pct_ag_land_RCP4.5G - temp$Pct_ag_land_2010
-temp$Change_ag_land_pct_RCP8.5G = temp$Pct_ag_land_RCP8.5G - temp$Pct_ag_land_2010
-temp$Change_ag_land_pct_RCP4.5H = temp$Pct_ag_land_RCP4.5H - temp$Pct_ag_land_2010
-temp$Change_ag_land_pct_RCP8.5H = temp$Pct_ag_land_RCP8.5H - temp$Pct_ag_land_2010
+# temp$Change_ag_land_pct_RCP4.5G = temp$Pct_ag_land_RCP4.5G - temp$Pct_ag_land_2010
+# temp$Change_ag_land_pct_RCP8.5G = temp$Pct_ag_land_RCP8.5G - temp$Pct_ag_land_2010
+# temp$Change_ag_land_pct_RCP4.5H = temp$Pct_ag_land_RCP4.5H - temp$Pct_ag_land_2010
+# temp$Change_ag_land_pct_RCP8.5H = temp$Pct_ag_land_RCP8.5H - temp$Pct_ag_land_2010
 
 temp$Change_grazing_land_pct_RCP4.5G = temp$Pct_grazing_land_RCP4.5G - temp$Pct_grazing_land_2010
 temp$Change_grazing_land_pct_RCP8.5G = temp$Pct_grazing_land_RCP8.5G - temp$Pct_grazing_land_2010
@@ -2175,6 +2131,21 @@ temp$Change_crop_land_pct_RCP8.5G = temp$Pct_crop_land_RCP8.5G - temp$Pct_crop_l
 temp$Change_crop_land_pct_RCP4.5H = temp$Pct_crop_land_RCP4.5H - temp$Pct_crop_land_2010
 temp$Change_crop_land_pct_RCP8.5H = temp$Pct_crop_land_RCP8.5H - temp$Pct_crop_land_2010
 
+temp$Change_crop_land_pct_RCP4.5G = temp$Pct_crop_land_RCP4.5G - temp$Pct_crop_land_2010
+temp$Change_crop_land_pct_RCP8.5G = temp$Pct_crop_land_RCP8.5G - temp$Pct_crop_land_2010
+temp$Change_crop_land_pct_RCP4.5H = temp$Pct_crop_land_RCP4.5H - temp$Pct_crop_land_2010
+temp$Change_crop_land_pct_RCP8.5H = temp$Pct_crop_land_RCP8.5H - temp$Pct_crop_land_2010
+
+temp$Change_crop_pasture_land_pct_RCP4.5G = 
+  temp$Pct_crop_pasture_land_RCP4.5G - temp$Pct_crop_pasture_land_2010
+temp$Change_crop_pasture_land_pct_RCP8.5G = 
+  temp$Pct_crop_pasture_land_RCP8.5G - temp$Pct_crop_pasture_land_2010
+temp$Change_crop_pasture_land_pct_RCP4.5H = 
+  temp$Pct_crop_pasture_land_RCP4.5H - temp$Pct_crop_pasture_land_2010
+temp$Change_crop_pasture_land_pct_RCP8.5H = 
+  temp$Pct_crop_pasture_land_RCP8.5H - temp$Pct_crop_pasture_land_2010
+ 
+
 temp$Change_forest_pct_RCP4.5G = temp$Pct_forest_RCP4.5G - temp$Pct_forest_2010
 temp$Change_forest_pct_RCP8.5G = temp$Pct_forest_RCP8.5G - temp$Pct_forest_2010
 temp$Change_forest_pct_RCP4.5H = temp$Pct_forest_RCP4.5H - temp$Pct_forest_2010
@@ -2187,119 +2158,6 @@ temp$Change_wetlands_pct_RCP8.5H = temp$Pct_wetlands_RCP8.5H - temp$Pct_wetlands
 
 
 LU_nni_hu12 = temp
-
-```
-
-
-# ?n_point_source_kgsqkm
-```{r}
-
-
-
-```
-
-
-# ? n_total_fert_kgsqkm vs. n_farm_fert_kgsqkm
-
-
-# ?Urban N (n_nonfarm_fert_kgsqkm)
-```{r}
-
-#!!!!!!!!!!!!!!! Need to decide on method for dealing with zero areas in 2010 because get 
-
-# Get the Land Use grouped together
-LU_nni_hu12$area_urb_2010= 
-  LU_nni_hu12$area_10.exurbanLD_landuse_2010 + 
-  LU_nni_hu12$area_11.exurbanHD_landuse_2010 +
-  LU_nni_hu12$area_12.suburban_landuse_2010 +
-  LU_nni_hu12$area_13.urbanLD_landuse_2010 +
-  LU_nni_hu12$area_14.urbanHD_landuse_2010 +
-  LU_nni_hu12$area_15.commercial_landuse_2010 +
-  LU_nni_hu12$area_16.industrial_landuse_2010 +
-  LU_nni_hu12$area_17.institutional_landuse_2010 +
-  LU_nni_hu12$area_18.transport_landuse_2010
-
-LU_nni_hu12$area_urb_RCP4.5G = 
-  LU_nni_hu12$area_10.exurbanLD_landuse_RCP4.5GISS + 
-  LU_nni_hu12$area_11.exurbanHD_landuse_RCP4.5GISS +
-  LU_nni_hu12$area_12.suburban_landuse_RCP4.5GISS +
-  LU_nni_hu12$area_13.urbanLD_landuse_RCP4.5GISS +
-  LU_nni_hu12$area_14.urbanHD_landuse_RCP4.5GISS +
-  LU_nni_hu12$area_15.commercial_landuse_RCP4.5GISS +
-  LU_nni_hu12$area_16.industrial_landuse_RCP4.5GISS +
-  LU_nni_hu12$area_17.institutional_landuse_RCP4.5GISS +
-  LU_nni_hu12$area_18.transport_landuse_RCP4.5GISS
-
-
-# Calculate Change Ratio (the multiplier for calculating how much mass of N changed)
-LU_nni_hu12$change_ratio_urb = LU_nni_hu12$area_urb_RCP4.5G / LU_nni_hu12$area_urb_2010
-summary(LU_nni_hu12$change_ratio_urb)
-
-# Get mass of N
-LU_nni_hu12$n_nonfarm_fert_kg_2010 = LU_nni_hu12$n_nonfarm_fert_kgsqkm * LU_nni_hu12$area_sqkm
-
-# Get mass of N in 2050
-LU_nni_hu12$n_nonfarm_fert_kg_RCP4.5G = LU_nni_hu12$change_ratio_urb * LU_nni_hu12$n_nonfarm_fert_kg_2010
-
-
-# Fix Hu12s with Inf (zero areas in 2010): base future kg N based on future area and 2010 N rate
-LU_nni_hu12$n_nonfarm_fert_kg_RCP4.5G = 
-  ifelse(LU_nni_hu12$n_nonfarm_fert_kg_RCP4.5G == "Inf",
-         LU_nni_hu12$n_nonfarm_fert_kgsqkm * LU_nni_hu12$area_urb_RCP4.5G,
-         LU_nni_hu12$n_nonfarm_fert_kg_RCP4.5G)
-
-# Get area weighted N
-LU_nni_hu12$n_nonfarm_fert_kgsqkm_RCP4.5G = LU_nni_hu12$n_nonfarm_fert_kg_RCP4.5G / LU_nni_hu12$area_sqkm
-
-
-summary(LU_nni_hu12$n_nonfarm_fert_kg_2010)
-summary(LU_nni_hu12$n_nonfarm_fert_kg_RCP4.5G)
-
-summary(LU_nni_hu12$n_nonfarm_fert_kgsqkm)
-summary(LU_nni_hu12$n_nonfarm_fert_kgsqkm_RCP4.5G)
-
-
-```
-
-# ?Pasture N?
-```{r}
-
-#n_pasture_rem_kgsqkm
-
-```
-
-?AgDrain pct
-
-?AgKfact 
-
-# Checks
-```{r}
-
-test = merge(LU_2010_hu12,LU_2050_4.5G_hu12,by='HUC12')
-test = merge(test,LU_chg_4.5G_hu12,by='HUC12')
-
-test2 = test %>% dplyr::select(contains("_07"))
-
-# This shows the method for calculating change_area_*
-test2$chg_area = test2$area_07.cropland_landuse_RCP4.5GISS - test2$area_07.cropland_landuse_2010
-test2$chg_area_diff = 100*(test2$chg_area - test2$change_area_07.cropland_landuse_RCP4.5GISS)/test2$chg_area
-summary(test2$chg_area_diff)
-
-# This shows the method for calculating change_count_*
-test2$chg_count = test2$count_07.cropland_landuse_RCP4.5GISS - test2$count_07.cropland_landuse_2010
-test2$chg_count_diff = 100*(test2$chg_count - test2$change_count_07.cropland_landuse_RCP4.5GISS)/test2$chg_count
-summary(test2$chg_count_diff)
-
-# This shows the method for calculating change_pctcov_* (% cover)
-test2$chg_pctcov = test2$pctcov_07.cropland_landuse_RCP4.5GISS - test2$pctcov_07.cropland_landuse_2010
-test2$chg_pctcov_diff = 100*(test2$chg_pctcov - test2$change_pctcov_07.cropland_landuse_RCP4.5GISS)/test2$chg_pctcov
-summary(test2$chg_pctcov_diff)
-
-# This shows the method for calculating % change in area, which is not same as change_pctcov
-test2$prc_chg_area = 100*(test2$area_07.cropland_landuse_RCP4.5GISS - test2$area_07.cropland_landuse_2010)/test2$area_07.cropland_landuse_2010
-test2$prc_chg_area_diff = 100*(test2$prc_chg_area - test2$change_pctcov_07.cropland_landuse_RCP4.5GISS)/test2$prc_chg_area
-summary(test2$prc_chg_area_diff)
-
 
 ```
 
@@ -2319,23 +2177,6 @@ test = merge(test,StreamCat_HU12[,c('HUC12','PopDen2010Cat')],by='HUC12')
   
 ```
 
-# ??Future Precip Surplus
-* Temperature, irradiance, wind speed, etc. 
-```{r}
-
-
-
-
-
-```
-
-? Future AgDrain
-```{r}
-
-
-
-
-```
 
 #------------------------------------------------------------------------------
 
@@ -2454,258 +2295,8 @@ end_time <- Sys.time(); end_time - start_time
 ```
 
 
-# Spatial Model Correction for Ag land
-* Goal:
-*** 1. develop relationship between 2010 Iclus and Current NLCD/StreamCat with spmodel
-*** 2. Use the fitted spmodel to predict 2050 StreamCat/NLCD Ag (Crop+Pasture)
-*** 3. Calculate change ratio based on StreamCat Values 2050 StreamCat / 2020 StreamCat
-*** 4. Use change ratio as multiplier to convert current NNI N inputs to future 2050 NNI N inputs
-```{r}
 
-library(spmodel)
-library(broom)
-library(knitr)
-library(tictoc)
-
-
-
-# Add on spatial information
-ag_sp = merge(XYplot[,c('HUC12','crop_hay_past_streamcat','Pct_crop_pasture_2010_iclus')],
-              huc12_p[,c('HUC12','geometry')],by='HUC12')
-ag_sp <- st_as_sf(ag_sp) # added this because the above didn't retain geometry
-
-# remove missing values
-ag_sp = unique(na.omit(ag_sp))
-
-#-------------------------------------------------------------------------------
-# Model calibration and prediction
-
-start_time <- Sys.time()
-m0 <- splm(crop_hay_past_streamcat ~ poly(Pct_crop_pasture_2010_iclus, 3), data=ag_sp,
-           spcov_type = "none",  # linear model, no accounty for spatial covariance
-           local = list(parallel = TRUE, ncores = 12))
-end_time <- Sys.time(); end_time - start_time
-# Time difference of 50.90884 secs
-gc()
-
-start_time <- Sys.time()
-spmod0 <- splm(crop_hay_past_streamcat ~ poly(Pct_crop_pasture_2010_iclus, 3), data=ag_sp,
-              spcov_type = "exponential",
-              local = list(size = 50, method = "kmeans", parallel = TRUE, ncores = 12, var_adjust = "none"))
-end_time <- Sys.time(); end_time - start_time
-# Time difference of 2.61594 mins
-gc()
-
-
-#saveRDS(spmod0, './tdep-tn-spatial-model-huc12.rds')
-ns.obs.prd <- data.frame(observed = m0$obdata$Pct_crop_pasture_2010_iclus,
-                      predicted = fitted(m0))
-
-obs.prd <- data.frame(observed = spmod0$obdata$Pct_crop_pasture_2010_iclus,
-                      predicted = fitted(spmod0) + fitted(spmod0, type = "spcov")$de)
-
-error <- ns.obs.prd$observed - ns.obs.prd$predicted
-ns.obs.prd_stats <- data.frame(Model = 'Non-spatial', bias = mean(error), MSPE = mean(error^2),
-                             RMSPE = sqrt(mean(error^2)), cor2 = cor(ns.obs.prd$observed, ns.obs.prd$predicted)^2)
-
-error <- obs.prd$observed - obs.prd$predicted
-obs.prd_stats <- data.frame(Model = 'Spatial', bias = mean(error), MSPE = mean(error^2),
-                             RMSPE = sqrt(mean(error^2)), cor2 = cor(obs.prd$observed, obs.prd$predicted)^2)
-
-kable(rbind(ns.obs.prd_stats, 
-            obs.prd_stats))
-#-------------------------------------------------------------------------------
-
-# x-y scatter for non-spatial model
-ggplot(data=ns.obs.prd, aes(x=predicted, y=observed)) + 
-  geom_hex(bins = 100) + ggtitle("Non-Spatial Model - Ag Land") +
-  xlim(0, max(ns.obs.prd)) + ylim(0, max(ns.obs.prd)) +
-  scale_fill_gradient(low = "grey", high = "red") +
-  geom_abline(color='black') + theme_bw()
-
-# x-y scatter for spatial model
-ggplot(data=obs.prd, aes(x=predicted, y=observed)) + 
-  geom_hex(bins = 100) + ggtitle("Spatial Model - Ag Land") +
-  xlim(0, max(ns.obs.prd)) + ylim(0, max(ns.obs.prd)) +
-  scale_fill_gradient(low = "grey", high = "red") +
-  geom_abline(color='black') + theme_bw()
-
-
-#-------------------------------------------------------------------------------
-# Create Future Dataset
-# create dataframe with ag_data for 2050
-ag2050 = LU_nni_hu12[,c('HUC12',#'Pct_crop_pasture_land_2010',
-                        'Pct_crop_pasture_land_RCP4.5G',
-                        'Pct_crop_pasture_land_RCP8.5G',
-                        'Pct_crop_pasture_land_RCP4.5H','Pct_crop_pasture_land_RCP8.5H'
-                        )]
-
-# remove missing values
-ag2050 = unique(na.omit(ag2050))
-
-# Add on spatial information
-ag2050_sp = merge(ag2050,
-              huc12_p[,c('HUC12','geometry')],by='HUC12')
-ag2050_sp <- st_as_sf(ag2050_sp) # added this because the above didn't retain geometry
-
-
-#-------------------------------------------------------------------------------
-# Use this model to Predict 2050 NCLD (StreamCat) Ag % 
-
-tictoc::tic()
-ag_nlcd_2050_rcp4.5G <- predict(spmod0, 
-                       newdata = ag2050_sp %>% 
-                         rename(Pct_crop_pasture_2010_iclus=Pct_crop_pasture_land_RCP4.5G),# %>% slice(1:1),
-                       se.fit = FALSE,
-                       local = list(parallel = TRUE, 
-                                    ncores = 20))
-tictoc::toc()
-# 134.48 sec elapsed
-
-start_time <- Sys.time()
-ag_nlcd_2050_rcp8.5G <- predict(spmod0, 
-                       newdata = ag2050_sp %>% 
-                         rename(Pct_crop_pasture_2010_iclus=Pct_crop_pasture_land_RCP8.5G),# %>% slice(1:1),
-                       se.fit = FALSE,
-                       local = list(parallel = TRUE, 
-                                    ncores = 20))
-end_time <- Sys.time(); end_time - start_time
-# Time difference of 2.142908 mins
-
-# Merge back on HUC12s
-ag_nlcd_2050_rcp4.5G = cbind(ag2050_sp$HUC12 ,ag_nlcd_2050_rcp4.5G)
-ag_nlcd_2050_rcp8.5G = cbind(ag2050_sp$HUC12 ,ag_nlcd_2050_rcp8.5G)
-
-
-ag_nlcd_2050_rcp4.5G = as.data.frame(ag_nlcd_2050_rcp4.5G)
-ag_nlcd_2050_rcp8.5G = as.data.frame(ag_nlcd_2050_rcp8.5G)
-
-names(ag_nlcd_2050_rcp4.5G)[1] = 'HUC12'
-names(ag_nlcd_2050_rcp8.5G)[1] = 'HUC12'
-
-ag_nlcd_2050_rcp4.5G$ag_nlcd_2050_rcp4.5G = as.numeric(ag_nlcd_2050_rcp4.5G$ag_nlcd_2050_rcp4.5G)
-ag_nlcd_2050_rcp8.5G$ag_nlcd_2050_rcp8.5G = as.numeric(ag_nlcd_2050_rcp8.5G$ag_nlcd_2050_rcp8.5G)
-
-
-#-------------------------------------------------------------------------------
-
-fwrite(tdep.spmod0, './Predicted_TDEP_N_total_wet_dry_huc12.csv', row.names = F)
-
-
-```
-
-# Test Scatter
-```{r}
-
-XYplot = merge(StreamCat_HU12,LU_nni_hu12,by='HUC12')  
-
-XYplot$crop_hay_past_2019streamcat = XYplot$PctHay2019Cat + XYplot$PctCrop2019Cat
-XYplot$Pct_crop_land_2010_iclus = XYplot$Pct_crop_land_2010
-XYplot$Pct_crop_pasture_2010_iclus = XYplot$Pct_crop_pasture_land_2010
-
-test = merge(ag_nlcd_2050_rcp4.5G,ag_nlcd_2050_rcp8.5G,by='HUC12')
-test = merge(test,ag2050,by='HUC12')
-test = merge(test,XYplot[,c('HUC12','Pct_crop_land_2010_iclus','crop_hay_past_2019streamcat')],by='HUC12')
-
-test$diff2 = test$Pct_crop_pasture_land_RCP4.5G - test$ag_nlcd_2050_rcp4.5G
-
-
-plot(test$ag_nlcd_2050_rcp4.5G ~ test$Pct_crop_pasture_land_RCP4.5G)
-
-ggplot(data=test, aes(x=Pct_crop_pasture_land_RCP4.5G, y=ag_nlcd_2050_rcp4.5G)) + 
-  geom_hex(bins = 100) + ggtitle("Prediced Future StreamCat") +
-  xlim(0, max(ns.obs.prd)) + ylim(0, max(ns.obs.prd)) +
-  scale_fill_gradient(low = "grey", high = "red") +
-  geom_abline(color='black') + theme_bw()
-
-ggplot(data=test, aes(x=crop_hay_past_2019streamcat, y=ag_nlcd_2050_rcp4.5G)) + 
-  geom_hex(bins = 100) + ggtitle("Prediced Future StreamCat") +
-  xlim(0, max(ns.obs.prd)) + ylim(0, max(ns.obs.prd)) +
-  scale_fill_gradient(low = "grey", high = "red") +
-  geom_abline(color='black') + theme_bw()
-
-
-# Hexplot 
-# remove the (0,0)
-test$flag0 = ifelse(test$Pct_crop_pasture_land_RCP4.5G < 1 | test$ag_nlcd_2050_rcp4.5G <1,0,1)
-test2 = test[test$flag0 !=0,]
-ggplot(test2, aes(Pct_crop_pasture_land_RCP4.5G,ag_nlcd_2050_rcp4.5G)) +
-  geom_hex()
-
-
-
-```
-
-# Map Current % Diff between ICLUS and StreamCt Land (ICLUS 2010)
-```{r}
-
-#()()()()()()()()()()()()()()()()
-map_title = "Future Difference btwn ICLUS 2050 & StreamCat Ag Land 2050"
-
-MapData = test 
-MapData$Variable = MapData$diff2
-#()()()()()()()()()()()()()()()()
-summary(MapData$Variable)
-
-
-# Remove rows where value is NA or Inf
-MapData$Variable[is.infinite(MapData$Variable)] = NA
-MapData = MapData[complete.cases(MapData[,c("Variable")]),] 
-#test = MapData[,c('HUC12','N_Surp_2017ws','N_surp_RCP4.5G')]
-
-
-# Merge on Spatial Data
-map1 = merge(MapData,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
-map2 <- st_as_sf(map1) # added this because the above didn't retain geometry
-map3 <- map2[order(map2$Variable),]
-#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
-
-summary(map3$Variable)
-
-# Format rasters
-start_time <- Sys.time()
-map4<-st_rasterize(map3[,"Variable"],
-                     st_as_stars(st_bbox(states_boundary),
-                                 dx = 10000, dy = 10000, values=NA_real_), na.rm=T)
-end_time <- Sys.time(); end_time - start_time
-# Time difference of 8.113112 secs (Desktop at 1000m)
-
-
-start_time <- Sys.time()
-ggplot() +
-  geom_stars(data=map4, aes(fill=Variable))+
-  geom_sf(data=states_conus,fill=NA,color='black')+
-  scale_fill_viridis(option="cividis",name="Diff=ICLUS-StreamCat",na.value = "white" 
-                      #limits = c(0, 1)
-                      )+ # options: viridis, magma, plasma
-  theme(panel.background = element_blank())+ # remove grey background
-  theme(axis.text = element_blank())+ # remove axis text
-  theme(axis.ticks = element_blank())+ # remove axis text
-  theme(plot.title = element_text(hjust=0.5))+
-  ggtitle(map_title)+
-  
-  theme(
-    panel.background = element_rect(fill = "white", color = NA),     # Remove background
-    panel.grid = element_blank(),     # Remove gridlines
-    axis.text = element_blank(),     # Remove Axis ticks/text/titles
-    axis.ticks = element_blank(),
-    axis.title = element_blank())
-end_time <- Sys.time(); end_time - start_time
-
-
-
-```
-
-# Change Raio - Based on NLCD Ag Land
-```{r}
-
-
-
-```
-
-
-
-#----------------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
 
 # N Surplus Calc HUC12
 * N Surplus = N inputs – N outputs
@@ -2723,26 +2314,25 @@ n_cols = c('HUC12'
            
            ,'n_farm_fert_kgsqkm_RCP4.5G','n_manure_kgsqkm_RCP4.5G'
            ,'n_crop_fix_kgsqkm_RCP4.5G','n_crop_rem_kgsqkm_RCP4.5G'
-           ,'Pct_ag_land_RCP4.5G','Pct_forest_RCP4.5G'
+           ,'Pct_forest_RCP4.5G'#'Pct_ag_land_RCP4.5G',
            
            ,'n_farm_fert_kgsqkm_RCP8.5G','n_manure_kgsqkm_RCP8.5G'
            ,'n_crop_fix_kgsqkm_RCP8.5G','n_crop_rem_kgsqkm_RCP8.5G'
-           ,'Pct_ag_land_RCP8.5G','Pct_forest_RCP8.5G'
+           ,'Pct_forest_RCP8.5G'#,'Pct_ag_land_RCP8.5G'
            
            ,'n_farm_fert_kgsqkm_RCP4.5H','n_manure_kgsqkm_RCP4.5H'
            ,'n_crop_fix_kgsqkm_RCP4.5H','n_crop_rem_kgsqkm_RCP4.5H'
-           ,'Pct_ag_land_RCP4.5H','Pct_forest_RCP4.5H'
+           ,'Pct_forest_RCP4.5H'#,'Pct_ag_land_RCP4.5H'
            
            ,'n_farm_fert_kgsqkm_RCP8.5H','n_manure_kgsqkm_RCP8.5H'
            ,'n_crop_fix_kgsqkm_RCP8.5H','n_crop_rem_kgsqkm_RCP8.5H'
-           ,'Pct_ag_land_RCP8.5H','Pct_forest_RCP8.5H')
+           ,'Pct_forest_RCP8.5H'#,'Pct_ag_land_RCP8.5H'
+           )
 
 setdiff(n_cols,colnames(LU_nni_hu12)) # gives not matching
 
 
 NDATA_huc12 = LU_nni_hu12[,n_cols]
-
-
 
 
 NDATA_huc12 = merge(NDATA_huc12,dep_N_hu12,by='HUC12')
@@ -2760,10 +2350,10 @@ NDATA_huc12$N_surp_kgsqkm =
   NDATA_huc12$n_crop_rem_kgsqkm
 
 NDATA_huc12$N_ag_surp_kgsqkm = 
-  NDATA_huc12$totalN_2016_kgNha *100 + # convert from ha to km2 
+  #NDATA_huc12$totalN_2016_kgNha *100 + # convert from ha to km2 
   NDATA_huc12$n_farm_fert_kgsqkm + 
   NDATA_huc12$n_manure_kgsqkm + 
-  NDATA_huc12$n_crop_fix_kgsqkm +
+  NDATA_huc12$n_crop_fix_kgsqkm -
   NDATA_huc12$n_crop_rem_kgsqkm
 
 
@@ -2785,10 +2375,10 @@ summary(NDATA_huc12$n_crop_rem_kgsqkm_RCP4.5G)
 
 
 NDATA_huc12$N_ag_surp_RCP4.5G = 
-  NDATA_huc12$totalN_2055ctl_kgNha *100 + # convert from ha to km2
+  #NDATA_huc12$totalN_2055ctl_kgNha *100 + # convert from ha to km2
   NDATA_huc12$n_farm_fert_kgsqkm_RCP4.5G + 
   NDATA_huc12$n_manure_kgsqkm_RCP4.5G + 
-  NDATA_huc12$n_crop_fix_kgsqkm_RCP4.5G +
+  NDATA_huc12$n_crop_fix_kgsqkm_RCP4.5G - 
   NDATA_huc12$n_crop_rem_kgsqkm_RCP4.5G
 
 #-------------------------------------------
@@ -2801,10 +2391,10 @@ NDATA_huc12$N_surp_RCP8.5G =
   NDATA_huc12$n_crop_rem_kgsqkm_RCP8.5G
   
 NDATA_huc12$N_ag_surp_RCP8.5G = 
-  NDATA_huc12$totalN_2055ctl_kgNha *100 + # convert from ha to km2
+  #NDATA_huc12$totalN_2055ctl_kgNha *100 + # convert from ha to km2
   NDATA_huc12$n_farm_fert_kgsqkm_RCP8.5G + 
   NDATA_huc12$n_manure_kgsqkm_RCP8.5G + 
-  NDATA_huc12$n_crop_fix_kgsqkm_RCP8.5G +
+  NDATA_huc12$n_crop_fix_kgsqkm_RCP8.5G -
   NDATA_huc12$n_crop_rem_kgsqkm_RCP8.5G
 
 #-------------------------------------------
@@ -2817,10 +2407,10 @@ NDATA_huc12$N_surp_RCP4.5H =
   NDATA_huc12$n_crop_rem_kgsqkm_RCP4.5H
   
 NDATA_huc12$N_ag_surp_RCP4.5H = 
-  NDATA_huc12$totalN_2055ctl_kgNha *100 + # convert from ha to km2 
+  #NDATA_huc12$totalN_2055ctl_kgNha *100 + # convert from ha to km2 
   NDATA_huc12$n_farm_fert_kgsqkm_RCP4.5H + 
   NDATA_huc12$n_manure_kgsqkm_RCP4.5H + 
-  NDATA_huc12$n_crop_fix_kgsqkm_RCP4.5H +
+  NDATA_huc12$n_crop_fix_kgsqkm_RCP4.5H -
   NDATA_huc12$n_crop_rem_kgsqkm_RCP4.5H
 
 #-------------------------------------------
@@ -2833,10 +2423,10 @@ NDATA_huc12$N_surp_RCP8.5H =
   NDATA_huc12$n_crop_rem_kgsqkm_RCP8.5H
   
 NDATA_huc12$N_ag_surp_RCP8.5H = 
-  NDATA_huc12$totalN_2055ctl_kgNha *100 + # convert from ha to km2
+  #NDATA_huc12$totalN_2055ctl_kgNha *100 + # convert from ha to km2
   NDATA_huc12$n_farm_fert_kgsqkm_RCP8.5H + 
   NDATA_huc12$n_manure_kgsqkm_RCP8.5H + 
-  NDATA_huc12$n_crop_fix_kgsqkm_RCP8.5H +
+  NDATA_huc12$n_crop_fix_kgsqkm_RCP8.5H - 
   NDATA_huc12$n_crop_rem_kgsqkm_RCP8.5H
 
 summary(NDATA_huc12$N_surp_RCP4.5G)
@@ -2896,7 +2486,8 @@ NANI_huc12$NANI_RCP4.5G =
 
 rf_sw = merge(viol_sw_hu12,subset(NDATA_huc12,select=-c(PopDen2010Cat)),by='HUC12')
 rf_sw = merge(rf_sw,StreamCat_HU12,by='HUC12')
-rf_sw = merge(rf_sw,NNI17,by='HUC12')
+rf_sw = merge(rf_sw,subset(NNI17,select=-c(n_human_food_waste_kgsqkm,n_crop_rem_kgsqkm,
+                                           n_farm_fert_kgsqkm,n_manure_kgsqkm,n_crop_fix_kgsqkm)),by='HUC12')
 #rf_sw = merge(rf_sw,N_treat_huc12_sw,by='HUC12')
 
 
@@ -2906,17 +2497,22 @@ rf_sw = merge(rf_sw,NNI17,by='HUC12')
 keeps = c("HUC12","viol_freq"
 
           # Land Use
-          ,"PopDen2010Ws","PctForest2019Ws"#,"PctCrop2019Ws"
-          ,"AgKffactWs","AgDrain_pctWs"#,"PctImp2016Ws"
+          ,"PopDen2010Ws","PctForest2019Ws","PctCrop2019Ws"
+          #,"AgKffactWs"
+          ,"AgDrain_pctWs"#,"PctImp2016Ws"
 
           # Weather/Hydro
-          ,"precip9120ws","tmean9120ws","BFIWs","Precip_Minus_EVTWs"
+          ,"precip9120ws","tmean9120ws","BFIWs"#,"Precip_Minus_EVTWs"
           ,"WaterInputWs","wdrw_LDWs"#,"HydrlCondWs"
           ,"permws"#,"runoffWs"
 
           # N Inputs
-          ,"N_TW2012Ws","FertWs","ManureWs","RockNWs","CBNFWs"
-          ,"n_surplus_kgsqkm"#,"n_ag_surplus_kgsqkm"#,"N_Surp_2017ws","NANI_kgkm2_Ws"
+          ,"N_TW2012Ws","RockNWs","FertWs","CBNFWs","ManureWs"
+          #,"n_human_food_waste_kgsqkm"
+          ,"n_surplus_kgsqkm"#
+          #,"n_ag_surplus_kgsqkm"#,"N_Surp_2017ws","NANI_kgkm2_Ws"
+          #,"n_crop_rem_kgsqkm"
+          #,'n_farm_fert_kgsqkm','n_manure_kgsqkm'#,'n_crop_fix_kgsqkm'
 
           # Other
           ,"Fe2O3Ws","ElevWs"#,"WtDepWs","SandWs"
@@ -2925,7 +2521,13 @@ keeps = c("HUC12","viol_freq"
   
           )
 
+
 rf_sw2 = unique(na.omit(rf_sw[,keeps]))
+
+# Set neg N surplus to zero
+#rf_sw2$n_ag_surplus_kgsqkm = ifelse(rf_sw2$n_ag_surplus_kgsqkm<0,0,rf_sw2$n_ag_surplus_kgsqkm)
+#rf_sw2$n_surplus_kgsqkm = ifelse(rf_sw2$n_surplus_kgsqkm<0,0,rf_sw2$n_surplus_kgsqkm)
+
 
 setdiff(keeps,colnames(rf_sw)) # gives not matching
 
@@ -2953,29 +2555,61 @@ rf_gw = merge(rf_gw,N_treat_huc12_gw,by='HUC12')
 
 # Me
 
-
+# Original
 keeps = c("HUC12","viol_freq"
           # Land Use
-          ,"PopDen2010Cat","PctForest2019Cat"#,"PctCrop2019Cat",
+          ,"PopDen2010Cat","PctForest2019Cat","PctCrop2019Cat"
           ,"AgKffactCat","AgDrain_pctCat"
-          
+
           # Weather/Hydro
           ,"precip9120ws","tmean9120cat","BFICat","Precip_Minus_EVTCat"
           ,"WaterInputCat","wdrw_LDCat"#,"PctImp2016Cat"#
-          ,"permcat","HydrlCondCat"#,"runoffcat"
-          
+          ,"permcat"#,"HydrlCondCat"#,"runoffcat"
+
           # N Inputs
-          ,"RockNCat","N_TW2012Cat","FertCat"#,"CBNFCat","ManureCat"
-          ,"n_surplus_kgsqkm"#,"n_ag_surplus_kgsqkm","N_Surp_2017ws" #,"NANI_kgkm2_Ws"
-          
+          ,"RockNCat","N_TW2012Cat","FertWs","CBNFCat","ManureCat"
+          ,"n_surplus_kgsqkm"#
+          ,'Septic_km2Cat'
+          ,"n_ag_surplus_kgsqkm"#"N_Surp_2017ws" #
+          #,"NANI_kgkm2_Ws"
+
           # Other
-          ,"Fe2O3Cat","WtDepCat","Hillslope_PctCat","ElevCat"#,"SandCat"
+          ,"Fe2O3Cat","WtDepCat","Hillslope_PctCat","ElevCat","SandCat"
           #,"rckdepcat" #,"S_TW2012Cat"##,"NHDslope_Pct_Cat"
-          ,'Nitrate_Treatment_freq'
+          #,'Nitrate_Treatment_freq'
 
           )
 
+
+# keeps = c("HUC12","viol_freq"
+#           # Land Use
+#           #,"PopDen2010Cat","PctForest2019Cat"#,"PctCrop2019Cat",
+#           #,"AgKffactCat","AgDrain_pctCat"
+#           
+#           # Weather/Hydro
+#           #,"precip9120ws","tmean9120cat","BFICat","Precip_Minus_EVTCat"
+#           #,"WaterInputCat","wdrw_LDCat"#,"PctImp2016Cat"#
+#           ,"permcat","HydrlCondCat"#,"runoffcat"
+#           
+#           # N Inputs
+#           ,"RockNCat","N_TW2012Cat","FertCat","CBNFCat","ManureCat"
+#           ,"n_surplus_kgsqkm"#
+#           #,"n_ag_surplus_kgsqkm"#"N_Surp_2017ws" #
+#           #,"NANI_kgkm2_Ws"
+#           
+#           # Other
+#           #,"Fe2O3Cat","WtDepCat","Hillslope_PctCat","ElevCat"#,"SandCat"
+#           #,"rckdepcat" #,"S_TW2012Cat"##,"NHDslope_Pct_Cat"
+#           #,'Nitrate_Treatment_freq'
+# 
+#           )
+
 rf_gw2 = unique(na.omit(rf_gw[,keeps]))
+
+# Set neg N surplus to zero
+#rf_gw2$n_ag_surplus_kgsqkm = ifelse(rf_gw2$n_ag_surplus_kgsqkm<0,0,rf_gw2$n_ag_surplus_kgsqkm)
+#rf_gw2$n_surplus_kgsqkm = ifelse(rf_gw2$n_surplus_kgsqkm<0,0,rf_gw2$n_surplus_kgsqkm)
+
 
 setdiff(keeps,colnames(rf_gw)) # gives not matching
 
@@ -2997,7 +2631,7 @@ data_gw_huc = rf_gw3
 ```{r}
 
 rf_sw = merge(viol_sw_cat,StreamCat_sub,by='COMID')
-rf_sw = merge(rf_sw,N_treat_cat_sw,by='COMID')
+#rf_sw = merge(rf_sw,N_treat_cat_sw,by='COMID')
 
 
 keeps_sw = c("COMID","viol_freq"
@@ -3018,7 +2652,7 @@ keeps_sw = c("COMID","viol_freq"
           # Other
           ,"Fe2O3Ws","ElevWs"#,"WtDepWs","SandWs"
           ,"NHDslope_Pct_Ws"#,"Hillslope_PctWs"#,"S_TW2012Ws","rckdepWs"
-          ,'Nitrate_Treatment_yn'
+          #,'Nitrate_Treatment_yn'
 
           )
 # keeps_sw = c("COMID","viol_freq"
@@ -3066,7 +2700,7 @@ data_sw_cat = rf_sw3
 ```{r}
 
 rf_gw = merge(viol_gw_cat,StreamCat_sub,by='COMID')
-rf_gw = merge(rf_gw,N_treat_cat_gw,by='COMID')
+#rf_gw = merge(rf_gw,N_treat_cat_gw,by='COMID')
 
 #rf_gw = merge(rf_gw,NNI17,by='HUC12')
 
@@ -3091,7 +2725,7 @@ keeps_gw = c("COMID","viol_freq"
           # Other
           ,"Fe2O3Cat","WtDepCat","SandCat","Hillslope_PctCat","ElevCat"
           #,"S_TW2012Cat"#,"rckdepcat" #,"NHDslope_Pct_Cat"
-          ,'Nitrate_Treatment_yn'
+          #,'Nitrate_Treatment_yn'
 
           )
 
@@ -3198,13 +2832,14 @@ rfr_gw = merge(rfr_gw,NNI17,by='HUC12')
 
 keeps = c("HUC12","mean_conc"
           # Land Use
-          ,"PopDen2010Cat","PctForest2019Cat"#,"PctCrop2019Cat",
-          ,"AgKffactCat","AgDrain_pctCat"
+          ,"PctForest2019Cat"#,"PctCrop2019Cat","PopDen2010Cat"
+          ,"AgKffactCat"#,"AgDrain_pctCat"
           
           # Weather/Hydro
-          ,"precip9120ws","tmean9120cat","BFICat","Precip_Minus_EVTCat"
-          ,"WaterInputCat","wdrw_LDCat"#,"PctImp2016Cat"#
-          ,"permcat","HydrlCondCat"#,"runoffcat"
+          ,"precip9120ws","tmean9120cat","Precip_Minus_EVTCat"#,"BFICat"
+          ,"WaterInputCat"#,"wdrw_LDCat"#,"PctImp2016Cat"#
+          #,"permcat"
+          ,"HydrlCondCat"#,"runoffcat"
           
           # N Inputs
           ,"RockNCat","N_TW2012Cat","FertCat"#,"CBNFCat","ManureCat"
@@ -3269,11 +2904,444 @@ cor_matrix2 = as.data.frame(cor_matrix)
 
 #--
 
-
-# Fit  SW model HU12
+# Fit RandomForest
 ```{r}
 
-set.seed(10) # 10 HUC12
+library(randomForest)
+
+set.seed(10)
+
+#()()()()()()()()()()()()()()()()()()()()
+RFDATA = data_sw_huc # data_sw_huc, data_gw_huc, data_sw_cat, data_gw_cat
+ntree = 500
+
+#()()()()()()()()()()()()()()()()()()()()
+
+
+#-------------------------------------------------------------------------------------------------
+# Train Test split
+ind_test <- sample(nrow(RFDATA), round(nrow(RFDATA)*0.2))
+rf_test= RFDATA[ind_test, ]
+rf_train = RFDATA[-ind_test,]
+
+rf_train_sw = rf_train
+
+
+cmin_ <- min(table(rf_train$Viol_Class))  
+RFC_model <- randomForest(as.factor(Viol_Class) ~ ., 
+                     data = rf_train, 
+                     importance=T, 
+                     ntree =ntree,  # number of Trees
+                     strata = rf_train$Viol_Class,
+                     sampsize = rep(cmin_,2), # Balancing
+                     replace=TRUE) 
+
+#-------------------------------------------------------------------------------------------------
+# Evaluate
+#rfc_ranger= rfc_sw
+#rfc_ranger_p= rfc_sw_p
+
+yobs <- as.factor(rf_test$Viol_Class)
+ypred. = predict(RFC_model, newdata = rf_test)#,type='prob')
+ypred = as.factor(ypred.)
+#ypred.. = ypred.$predictions[,2] # if using predicted probability model
+#ypred = as.character(ifelse(ypred.. >=0.5,1,0))
+
+
+n <- nrow(rf_test)
+pcc  <- 100*sum(yobs == ypred) / n
+sens <- 100*sum(yobs == '1' & ypred == '1') / sum(yobs=='1')
+spec <- 100*sum(yobs == '0' & ypred == '0') / sum(yobs=='0')
+gmean = sqrt(sens*spec) # metric used if have an unbalanced dataset
+
+
+AUC = roc.area(as.numeric(as.character(ypred)), 
+               as.numeric(as.character(yobs))) 
+
+
+result_df = data.frame(N=nrow(RFDATA),PCC=round(pcc,1),
+                       sens=round(sens,1),spec=round(spec,1),
+                       gmean=round(gmean,1),AUC=round(AUC,2)
+                       )
+
+
+write_clip(result_df) 
+result_df
+
+```
+
+# Var Import
+```{r}
+
+library(ggplot2)
+library(data.table)
+
+
+
+rf_title = "Variable Importance"
+
+
+imprtnce = as.data.frame(RFC_model$importance)
+names(imprtnce)[1] = "PercIncMSE" 
+setDT(imprtnce, keep.rownames = TRUE)[]
+imprtnce = imprtnce[,1:2]
+names(imprtnce)[1] = "Variable.Name"
+imprtnce2 = imprtnce[order(-imprtnce$PercIncMSE),]
+all_imprtnce2 = imprtnce2
+nrow_important = min(nrow(imprtnce2),40)
+imprtnce2 = imprtnce2[1:nrow_important,] # Select top 10
+imprtnce2 = imprtnce2[order(imprtnce2$PercIncMSE),] # sort again
+
+#VarImpDF = imprtnce2
+#imprtnce2$Variable.Short = imprtnce2$Variable.Name
+imprtnce2$Relative_Importance = imprtnce2$PercIncMSE
+# imprtnce3 = merge(imprtnce2,pred_color,
+#                   by.x="Variable.Name",by.y="variable",all.x=T)
+# VarImpDF = as.data.frame(imprtnce3[,c('Variable.Name','Relative_Importance',
+#                                      'Variable.Short','category','color')])
+
+VarImpDF = imprtnce2
+# set order for labels (prevent default alphabetical order)
+#VarImpDF = VarImpDF[order(VarImpDF$Relative_Importance),]
+# VarImpDF$Variable.Short <-
+#   factor(VarImpDF$Variable.Short, levels = as.character(VarImpDF$Variable.Short))
+# 
+# VarImpDF$Variable.Name <-
+#   factor(VarImpDF$Variable.Name, levels = as.character(VarImpDF$Variable.Name))
+
+VarImpDF = VarImpDF[order(VarImpDF$Relative_Importance),]
+VarImpDF$Variable.Name <-
+  factor(VarImpDF$Variable.Name, levels = as.character(VarImpDF$Variable.Name))
+
+
+
+# classification of variable type
+#mypal = VarImpDF$color
+
+ggplot(data=VarImpDF, 
+       aes(x=Variable.Name,y=Relative_Importance,fill=Variable.Name))+
+  geom_bar(stat="identity")+
+  ggtitle( rf_title)+
+  labs(x=" ", y="Mean Decrease Accuracy")+
+  #scale_fill_manual(values = mypal)+
+  theme(axis.title=element_text(size=13))+
+  theme(axis.text=element_text(size=13))+
+  #scale_y_continuous(breaks= seq(0, 20, by=5),limits = c(0,20))+
+  theme(panel.background = element_blank())+ # remove grey background
+  theme(axis.line = element_line(colour = "black"))+ #+# add axis lines
+  guides(fill="none") + # removes legend
+  #theme(plot.margin = margin(.2,.2,.2,.2, "cm"))+
+  coord_flip()
+
+# View(importance_all)# View(importance_all)Variable.Short
+
+
+
+```
+
+# PDP
+```{r}
+
+library(pdp)
+library(gridExtra)
+
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+partialvars <- as.data.frame(VarImpDF[order(-VarImpDF$PercIncMSE),])
+
+
+
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Partial Dependence Plots
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+# DF = dataframe with response variable and all predictor variables (which was used when training the RF model)
+
+ylabel = "Response"
+
+# Code for partial dependence plots (4 separate plots in this example)
+
+par.p1 <- pdp::partial(RFC_model, train = rf_train,which.class=2,
+                    pred.var=paste0(partialvars[1,1]), chull= T)
+p1 <- autoplot(par.p1, contour = TRUE, 
+              ylab=ylabel, xlab=paste0(partialvars[1,1]))+theme_bw()
+
+par.p2 <- pdp::partial(RFC_model, train = rf_train, 
+                    pred.var=paste0(partialvars[2,1]), chull= T)
+p2 <- autoplot(par.p2, contour = TRUE, 
+              ylab=ylabel, xlab=paste0(partialvars[2,1]))+theme_bw()
+
+par.p3 <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var=paste0(partialvars[3,1]), chull= T)
+p3 <- autoplot(par.p3, contour = TRUE, 
+              ylab=ylabel, xlab=paste0(partialvars[3,1]))+theme_bw()
+
+par.p4 <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var=paste0(partialvars[4,1]), chull= T)
+p4 <- autoplot(par.p4, contour = TRUE, 
+              ylab=ylabel, xlab=paste0(partialvars[4,1]))+theme_bw()
+
+par.p5 <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var=paste0(partialvars[5,1]), chull= T)
+p5 <- autoplot(par.p5, contour = TRUE, 
+              ylab=ylabel, xlab=paste0(partialvars[5,1]))+theme_bw()
+
+par.p6 <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var=paste0(partialvars[6,1]), chull= T)
+p6 <- autoplot(par.p6, contour = TRUE, 
+              ylab=ylabel, xlab=paste0(partialvars[6,1]))+theme_bw()
+
+par.p7 <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var=paste0(partialvars[7,1]), chull= T)
+p7 <- autoplot(par.p7, contour = TRUE, 
+              ylab=ylabel, xlab=paste0(partialvars[7,1]))+theme_bw()
+
+par.p8 <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var=paste0(partialvars[8,1]), chull= T)
+p8 <- autoplot(par.p8, contour = TRUE, 
+              ylab=ylabel, xlab=paste0(partialvars[8,1]))+theme_bw()
+
+precip_surp <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var='Precip_Minus_EVTWs', chull= T)
+precip_surp2 <- autoplot(precip_surp, contour = TRUE, 
+              ylab=ylabel, xlab='Precip_Minus_EVTWs')+theme_bw()
+
+parNsurp <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var='N_Surp_2017ws', chull= T)
+parNsurp2 <- autoplot(parNsurp, contour = TRUE, 
+              ylab=ylabel, xlab='N_Surp_2017ws')+theme_bw()
+
+agsurp <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var='n_ag_surplus_kgsqkm', chull= T)
+agsurp2 <- autoplot(agsurp, contour = TRUE, 
+              ylab=ylabel, xlab='n_ag_surplus_kgsqkm')+theme_bw()
+
+nani <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var='NANI_kgkm2_Ws', chull= T)
+nani2 <- autoplot(nani, contour = TRUE, 
+              ylab=ylabel, xlab='NANI_kgkm2_Ws')+theme_bw()
+Nsurp <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var='n_surplus_kgsqkm', chull= T)
+Nsurp2 <- autoplot(Nsurp, contour = TRUE, 
+              ylab=ylabel, xlab='n_surplus_kgsqkm')+theme_bw()
+
+Nsurp <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var='N_Surp_kgsqkm_2017ws', chull= T)
+Nsurp2 <- autoplot(Nsurp, contour = TRUE, 
+              ylab=ylabel, xlab='N_Surp_kgsqkm_2017ws')+theme_bw()
+Nsurp <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var='N_Surp_kgsqkm_2017cat', chull= T)
+Nsurp2 <- autoplot(Nsurp, contour = TRUE, 
+              ylab=ylabel, xlab='N_Surp_kgsqkm_2017cat')+theme_bw()
+
+fert <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var='n_farm_fert_kgsqkm', chull= T)
+fert2 <- autoplot(fert, contour = TRUE, 
+              ylab=ylabel, xlab='n_farm_fert_kgsqkm')+theme_bw()
+fert <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var='FertCat', chull= T)
+fert2 <- autoplot(fert, contour = TRUE, 
+              ylab=ylabel, xlab='FertCat')+theme_bw()
+fert <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var='FertWs', chull= T)
+fert2 <- autoplot(fert, contour = TRUE, 
+              ylab=ylabel, xlab='FertWs')+theme_bw()
+manu <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var='n_manure_kgsqkm', chull= T)
+manu2 <- autoplot(manu, contour = TRUE, 
+              ylab=ylabel, xlab='n_manure_kgsqkm')+theme_bw()
+manu <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var='ManureCat', chull= T)
+manu2 <- autoplot(manu, contour = TRUE, 
+              ylab=ylabel, xlab='ManureCat')+theme_bw()
+manu <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var='ManureWs', chull= T)
+manu2 <- autoplot(manu, contour = TRUE, 
+              ylab=ylabel, xlab='ManureWs')+theme_bw()
+cbnf <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var='n_crop_fix_kgsqkm', chull= T)
+cbnf2 <- autoplot(cbnf, contour = TRUE, 
+              ylab=ylabel, xlab='n_crop_fix_kgsqkm')+theme_bw()
+cbnf <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var='CBNFWs', chull= T)
+cbnf2 <- autoplot(cbnf, contour = TRUE, 
+              ylab=ylabel, xlab='CBNFWs')+theme_bw()
+hum <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var='n_human_food_waste_kgsqkm', chull= T)
+hum2 <- autoplot(hum, contour = TRUE, 
+              ylab=ylabel, xlab='n_human_food_waste_kgsqkm')+theme_bw()
+rem <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var='n_crop_rem_kgsqkm', chull= T)
+rem2 <- autoplot(rem, contour = TRUE, 
+              ylab=ylabel, xlab='n_crop_rem_kgsqkm')+theme_bw()
+
+
+
+treat1 <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var='Nitrate_Treatment_yn', chull= T)
+treat2 <- autoplot(treat1, contour = TRUE, 
+              ylab=ylabel, xlab='Nitrate_Treatment_yn')+theme_bw()
+
+treat1. <- pdp::partial(RFC_model, train = rf_train,
+                    pred.var='Nitrate_Treatment_freq', chull= T)
+treat2. <- autoplot(treat1., contour = TRUE, 
+              ylab=ylabel, xlab='Nitrate_Treatment_freq')+theme_bw()
+
+
+# Puts all the plots together
+#grid.arrange(p1,p2,p3,p4, nrow=2,ncol=2)
+#grid.arrange(p1,p2, nrow=1,ncol=2)
+#grid.arrange(p1,p2,p3,p4,p5,p6, nrow=1,ncol=6)
+#grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8, nrow=2,ncol=4)
+grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8, nrow=4,ncol=2)
+
+grid.arrange(p1,p2,Nsurp2,p5,p8, precip_surp2,nrow=3,ncol=2)
+grid.arrange(p1,p2,Nsurp2,fert2,nrow=2,ncol=2)
+
+
+```
+
+#--
+# Check with hex
+```{r}
+
+# Hexplot 
+ggplot(data_balanced, aes(n_surplus_kgsqkm,Viol_Class)) +
+  geom_hex()
+
+ggplot(data_sw_huc_, aes(n_surplus_kgsqkm,Viol_Class)) +
+  geom_hex()
+
+ggplot(data_sw_huc_, aes(n_surplus_kgsqkm,viol_freq)) +
+  geom_hex()
+
+
+ggplot(data_sw_huc_, aes(n_farm_fert_kgsqkm,Viol_Class)) +
+  geom_hex()
+
+test = data_sw_huc_[data_sw_huc_$n_farm_fert_kgsqkm == 0,]
+
+
+```
+
+# Check why Fert or N surp has V-shape relationship
+```{r}
+
+
+# Fert SW
+test = data_sw_huc_[data_sw_huc_$FertWs == 0,]
+nrow(test[test$Viol_Class == 1,]) # 1
+
+test2 = data_sw_huc_[data_sw_huc_$FertWs > 0,]
+nrow(test2[test2$Viol_Class == 1,]) # 1316
+
+# Fert GW
+test = data_gw_huc_[data_gw_huc_$FertWs == 0,]
+nrow(test[test$Viol_Class == 1,]) # 28
+
+test2 = data_gw_huc_[data_gw_huc_$FertWs > 0,]
+nrow(test2[test2$Viol_Class == 1,]) # 1316
+
+
+
+#---------------------------------------------------
+# N Surp SW
+test = data_sw_huc_[data_sw_huc_$n_ag_surplus_kgsqkm <= 0,]
+nrow(test[test$Viol_Class == 1,]) # 42
+
+test2 = data_sw_huc_[data_sw_huc_$n_ag_surplus_kgsqkm > 0,]
+nrow(test2[test2$Viol_Class == 1,]) # 1302
+
+# N Surp GW
+test = data_gw_huc_[data_gw_huc_$n_ag_surplus_kgsqkm <= 0,]
+nrow(test[test$Viol_Class == 1,]) # 42
+
+test2 = data_gw_huc_[data_gw_huc_$n_ag_surplus_kgsqkm > 0,]
+nrow(test2[test2$Viol_Class == 1,]) # 1302
+
+
+#---------------------------------------------------
+# % Crop SW
+test = data_sw_huc_[data_sw_huc_$PctCrop2019Cat <= 0,]
+nrow(test[test$Viol_Class == 1,]) # 42
+
+test2 = data_sw_huc_[data_sw_huc_$PctCrop2019Cat > 0,]
+nrow(test2[test2$Viol_Class == 1,]) # 1302
+
+# % Crop GW
+test = data_gw_huc_[data_gw_huc_$PctCrop2019Cat <= 0,]
+nrow(test[test$Viol_Class == 1,]) # 60
+
+test2 = data_gw_huc_[data_gw_huc_$PctCrop2019Cat > 0,]
+nrow(test2[test2$Viol_Class == 1,]) # 833
+
+
+```
+
+# Check 2020 paper numbers
+```{r}
+
+dir_20= 'C:/Users/MPennino/OneDrive - Environmental Protection Agency (EPA)/Projects/Manuscripts/3_NO3_Model/Datasets_Publication/'
+#gw_data20. = read.csv(paste0(dir_20,'Model_Inputs/RF_Catchments_Conc_All_Variables_GW.csv'))
+#sw_data20. = read.csv(paste0(dir_20,'Model_Inputs/RF_Catchments_Conc_All_Variables_SW.csv'))
+gw_data20 = read.csv(paste0(dir_20,'Model_Inputs/RF_Catchments_Viol_Freq_All_Variables_GW.csv'))
+sw_data20 = read.csv(paste0(dir_20,'Model_Inputs/RF_Catchments_Viol_Freq_All_Variables_SW.csv'))
+
+
+#---------------------------------------------------
+# % Crop SW
+test = sw_data20[sw_data20$PctCrop2011Cat <= 0,]
+nrow(test[test$Viol.Freq > 0,]) # 33
+
+test2 = sw_data20[sw_data20$PctCrop2011Cat > 0,]
+nrow(test2[test2$Viol.Freq > 0,]) # 67
+
+100*nrow(test[test$Viol.Freq > 0,])/(nrow(test[test$Viol.Freq > 0,])+nrow(test2[test2$Viol.Freq > 0,])) # 33%
+
+# % Crop GW
+test = gw_data20[gw_data20$PctCrop2011Cat <= 0,]
+nrow(test[test$Viol.Freq > 0,]) # 112
+100*nrow(test[test$Viol.Freq > 0,])/nrow(gw_data20) # 0.19%
+
+test2 = gw_data20[gw_data20$PctCrop2011Cat > 0,]
+nrow(test2[test2$Viol.Freq > 0,]) # 714
+
+100*nrow(test[test$Viol.Freq > 0,])/(nrow(test[test$Viol.Freq > 0,])+nrow(test2[test2$Viol.Freq > 0,])) # 13.55932%
+
+#---------------------------------------------------
+# % N Surp SW
+test = sw_data20[sw_data20$Nsurp_kgkm2_Cat <= 0,]
+nrow(test[test$Viol.Freq > 0,]) # 157
+
+test2 = sw_data20[sw_data20$Nsurp_kgkm2_Cat > 0,]
+nrow(test2[test2$Viol.Freq > 0,]) # 221
+
+100*nrow(test[test$Viol.Freq > 0,])/(nrow(test[test$Viol.Freq > 0,])+nrow(test2[test2$Viol.Freq > 0,])) # 41.53439%
+
+# % N Surp GW
+test = gw_data20[gw_data20$Nsurp_kgkm2_Cat <= 0,]
+nrow(test[test$Viol.Freq > 0,]) # 1078
+
+test2 = gw_data20[gw_data20$Nsurp_kgkm2_Cat > 0,]
+nrow(test2[test2$Viol.Freq > 0,]) # 1850
+
+100*nrow(test[test$Viol.Freq > 0,])/(nrow(test[test$Viol.Freq > 0,])+nrow(test2[test2$Viol.Freq > 0,])) # 36.81694%
+
+
+
+
+```
+
+
+#-- 
+# Fit  SW model HU12
+*!! note I'm multiplying sample faction by a constant - change constant back to 1, for original method
+```{r}
+
+#set.seed(10) # 10 HUC12
 
 library(ranger)
 #library(mlr)
@@ -3281,7 +3349,9 @@ library(ranger)
 library(ROSE)
 
 #()()()()()()()()()()()()()()()()()()()()
-RFDATA = data_sw_huc  
+RFDATA = data_sw_huc 
+
+frac_constant = 1
 #()()()()()()()()()()()()()()()()()()()()
 
 
@@ -3299,10 +3369,13 @@ rf_train_sw = rf_train
 #                 target=subset(rf_train,select=c(Viol_Class)), 
 #                 K=5,dup_size=10)
 
-data_balanced <- ovun.sample(Viol_Class ~ ., data = rf_train, method = "over", p = 0.5, seed = 123)$data # 0.5 give even classes
+data_balanced <- ovun.sample(Viol_Class ~ ., data = rf_train, method = "both", p = 0.5, seed = 123)$data # 0.5 give even classes
 
 nrow(data_balanced[data_balanced$Viol_Class==1,]) # 5755
-nrow(rf_train[rf_train$Viol_Class==1,]) # 5755
+nrow(data_balanced[data_balanced$Viol_Class==0,]) # 5755
+
+nrow(rf_train[rf_train$Viol_Class==1,]) # 48
+nrow(rf_train[rf_train$Viol_Class==0,]) # 7073
 
 #-------------------------------------------------------------------------------------------------
 
@@ -3311,10 +3384,13 @@ nrow(rf_train[rf_train$Viol_Class==1,]) # 5755
 rf_train0 = rf_train[rf_train$Viol_Class == 0,]
 rf_train1 = rf_train[rf_train$Viol_Class == 1,]
 frac1 = nrow(rf_train1)/nrow(rf_train)
-
+frac2 = 1/frac1
+frac1 = frac1*frac_constant
 # Balance Dataset (due to zero inflation)
 sample.frac = c(frac1,1.0) #c(0.1, 0.5) will draw 10% from the first class and 50% 
-case_weights <- ifelse(rf_train$Viol_Class == 1,  1000, 1) # weighting where class = 1 higher than when class equals 0
+#sample.frac = c(1,frac2) #c(0.1, 0.5) will draw 10% from the first class and 50% 
+
+case_weights <- ifelse(rf_train$Viol_Class == 1,  frac2, 1) # weighting where class = 1 higher than when class equals 0
 m.try = 5
 min.node = 10
 
@@ -3385,7 +3461,7 @@ saveRDS(rfc_sw_p, file = paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW
 # Fit  GW model HU12
 ```{r}
 
-set.seed(12)
+#set.seed(12)
 
 library(ranger)
 
@@ -3402,7 +3478,15 @@ rf_train = RFDATA[-ind_test,]
 rf_train_gw = rf_train
 #-------------------------------------------------------------------------------------------------
 
+data_balanced <- ovun.sample(Viol_Class ~ ., data = rf_train, method = "both", p = 0.5, seed = 123)$data # 0.5 give even classes
 
+nrow(data_balanced[data_balanced$Viol_Class==1,]) # 12895
+nrow(data_balanced[data_balanced$Viol_Class==0,]) # 13203
+
+nrow(rf_train[rf_train$Viol_Class==1,]) # 1080
+nrow(rf_train[rf_train$Viol_Class==0,]) # 25018
+
+#---------------------------------------------------------------------------------------
 # Undersampling from majority class (class = 0)
 rf_train0 = rf_train[rf_train$Viol_Class == 0,]
 rf_train1 = rf_train[rf_train$Viol_Class == 1,]
@@ -3417,7 +3501,7 @@ min.node = 10
 #-------------------------------------------------------------------------------------------------
 # Fit Model: 
 rfc_gw = ranger(as.factor(Viol_Class) ~ .,
-             data=rf_train,
+             data=data_balanced, # rf_train, data_balanced
              num.trees=ntree,
              #mtry=m.try,
              #case.weights = case_weights,
@@ -3427,7 +3511,7 @@ rfc_gw = ranger(as.factor(Viol_Class) ~ .,
              importance='impurity')
 
 rfc_gw_p = ranger(as.factor(Viol_Class) ~ .,
-             data=rf_train,
+             data=data_balanced, # rf_train, data_balanced
              num.trees=ntree,
              #mtry=m.try,
              sample.fraction=sample.frac,
@@ -3479,8 +3563,8 @@ result_df = data.frame(N=nrow(RFDATA),PCC=round(pcc,1),
 write_clip(result_df) 
 result_df
 
-# saveRDS(rfc_gw, file = paste0(future_dir ,'Data/Models/RF_bi_model_Future_DW_NO3_GW_HU12.rds'))
-# saveRDS(rfc_gw_p, file = paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+saveRDS(rfc_gw, file = paste0(future_dir ,'Data/Models/RF_bi_model_Future_DW_NO3_GW_HU12.rds'))
+saveRDS(rfc_gw_p, file = paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
 
 
 ```
@@ -3706,7 +3790,7 @@ library(data.table)
 
 
 #()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
-rfc_ranger = rfc_sw_p # rfc_sw_p, rfc_gw_p
+rfc_ranger = rfc_gw_p # rfc_sw_p, rfc_gw_p, RFC_model
 #rfc_ranger = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
 #rfc_ranger = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
 
@@ -3787,10 +3871,12 @@ library(gridExtra)
 partialvars <- as.data.frame(VarImpDF[order(-VarImpDF$PercIncMSE),])
 
 rf_train = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_SW_HUC12.csv'))
+rf_train = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_GW_HUC12.csv'))
 rf_train = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_SW_COMIDS.csv'))
 rf_train = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_GW_COMIDS.csv'))
 
 rfc_ranger_p = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+rfc_ranger_p = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
 rfc_ranger_p = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
 rfc_ranger_p = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
 
@@ -3852,16 +3938,34 @@ precip_surp <- pdp::partial(rfc_ranger_p, train = rf_train,
 precip_surp2 <- autoplot(precip_surp, contour = TRUE, 
               ylab=ylabel, xlab='Precip_Minus_EVTWs')+theme_bw()
 
+rock <- pdp::partial(rfc_ranger_p, train = rf_train,
+                    pred.var='RockNCat', chull= T)
+rock2 <- autoplot(rock, contour = TRUE, 
+              ylab=ylabel, xlab='RockNCat')+theme_bw()
+rock <- pdp::partial(rfc_ranger_p, train = rf_train,
+                    pred.var='RockNWs', chull= T)
+rock2 <- autoplot(rock, contour = TRUE, 
+              ylab=ylabel, xlab='RockNWs')+theme_bw()
+
 parNsurp <- pdp::partial(rfc_ranger_p, train = rf_train,
                     pred.var='N_Surp_2017ws', chull= T)
 parNsurp2 <- autoplot(parNsurp, contour = TRUE, 
               ylab=ylabel, xlab='N_Surp_2017ws')+theme_bw()
+
+sept <- pdp::partial(rfc_ranger_p, train = rf_train,
+                    pred.var='Septic_km2Cat', chull= T)
+sept2 <- autoplot(sept, contour = TRUE, 
+              ylab=ylabel, xlab='Septic_km2Cat')+theme_bw()
 
 agsurp <- pdp::partial(rfc_ranger_p, train = rf_train,
                     pred.var='n_ag_surplus_kgsqkm', chull= T)
 agsurp2 <- autoplot(agsurp, contour = TRUE, 
               ylab=ylabel, xlab='n_ag_surplus_kgsqkm')+theme_bw()
 
+nani <- pdp::partial(rfc_ranger_p, train = rf_train,
+                    pred.var='NANI_kgkm2_Ws', chull= T)
+nani2 <- autoplot(nani, contour = TRUE, 
+              ylab=ylabel, xlab='NANI_kgkm2_Ws')+theme_bw()
 Nsurp <- pdp::partial(rfc_ranger_p, train = rf_train,
                     pred.var='n_surplus_kgsqkm', chull= T)
 Nsurp2 <- autoplot(Nsurp, contour = TRUE, 
@@ -3877,9 +3981,50 @@ Nsurp2 <- autoplot(Nsurp, contour = TRUE,
               ylab=ylabel, xlab='N_Surp_kgsqkm_2017cat')+theme_bw()
 
 fert <- pdp::partial(rfc_ranger_p, train = rf_train,
+                    pred.var='n_farm_fert_kgsqkm', chull= T)
+fert2 <- autoplot(fert, contour = TRUE, 
+              ylab=ylabel, xlab='n_farm_fert_kgsqkm')+theme_bw()
+fert <- pdp::partial(rfc_ranger_p, train = rf_train,
                     pred.var='FertCat', chull= T)
 fert2 <- autoplot(fert, contour = TRUE, 
               ylab=ylabel, xlab='FertCat')+theme_bw()
+fert <- pdp::partial(rfc_ranger_p, train = rf_train,
+                    pred.var='FertWs', chull= T)
+fert2 <- autoplot(fert, contour = TRUE, 
+              ylab=ylabel, xlab='FertWs')+theme_bw()
+manu <- pdp::partial(rfc_ranger_p, train = rf_train,
+                    pred.var='n_manure_kgsqkm', chull= T)
+manu2 <- autoplot(manu, contour = TRUE, 
+              ylab=ylabel, xlab='n_manure_kgsqkm')+theme_bw()
+manu <- pdp::partial(rfc_ranger_p, train = rf_train,
+                    pred.var='ManureCat', chull= T)
+manu2 <- autoplot(manu, contour = TRUE, 
+              ylab=ylabel, xlab='ManureCat')+theme_bw()
+manu <- pdp::partial(rfc_ranger_p, train = rf_train,
+                    pred.var='ManureWs', chull= T)
+manu2 <- autoplot(manu, contour = TRUE, 
+              ylab=ylabel, xlab='ManureWs')+theme_bw()
+cbnf <- pdp::partial(rfc_ranger_p, train = rf_train,
+                    pred.var='n_crop_fix_kgsqkm', chull= T)
+cbnf2 <- autoplot(cbnf, contour = TRUE, 
+              ylab=ylabel, xlab='n_crop_fix_kgsqkm')+theme_bw()
+cbnf <- pdp::partial(rfc_ranger_p, train = rf_train,
+                    pred.var='CBNFWs', chull= T)
+cbnf2 <- autoplot(cbnf, contour = TRUE, 
+              ylab=ylabel, xlab='CBNFWs')+theme_bw()
+hum <- pdp::partial(rfc_ranger_p, train = rf_train,
+                    pred.var='n_human_food_waste_kgsqkm', chull= T)
+hum2 <- autoplot(hum, contour = TRUE, 
+              ylab=ylabel, xlab='n_human_food_waste_kgsqkm')+theme_bw()
+rem <- pdp::partial(rfc_ranger_p, train = rf_train,
+                    pred.var='n_crop_rem_kgsqkm', chull= T)
+rem2 <- autoplot(rem, contour = TRUE, 
+              ylab=ylabel, xlab='n_crop_rem_kgsqkm')+theme_bw()
+crop <- pdp::partial(rfc_ranger_p, train = rf_train,
+                    pred.var='PctCrop2019Cat', chull= T)
+crop2 <- autoplot(crop, contour = TRUE, 
+              ylab=ylabel, xlab='PctCrop2019Cat')+theme_bw()
+
 
 treat1 <- pdp::partial(rfc_ranger_p, train = rf_train,
                     pred.var='Nitrate_Treatment_yn', chull= T)
@@ -4035,7 +4180,7 @@ ind_test <- sample(nrow(RFDATA), round(nrow(RFDATA)*0.2))
 rfr_test= RFDATA[ind_test, ]
 rfr_train = RFDATA[-ind_test,]
 
-rfr_train_sw = rf_train
+rfr_train_sw = rfr_train
 #-------------------------------------------------------------------------------------------------
 # Upsampling with SMOTE
 # rf_train2 = SMOTE(X=subset(rf_train,select=-c(Viol_Class)),
@@ -4155,6 +4300,148 @@ r2_test
 
 ```
 
+# Fit Conc GW model HU12
+```{r}
+
+set.seed(13) # 10 HUC12
+
+library(ranger)
+#library(mlr)
+#library(smotefamily)
+library(ROSE)
+
+#()()()()()()()()()()()()()()()()()()()()
+RFDATA = dataR_gw_huc  
+#()()()()()()()()()()()()()()()()()()()()
+
+
+ntree = 500
+#-------------------------------------------------------------------------------------------------
+# Train Test split
+ind_test <- sample(nrow(RFDATA), round(nrow(RFDATA)*0.2))
+rfr_test= RFDATA[ind_test, ]
+rfr_train = RFDATA[-ind_test,]
+
+rfr_train_gw = rfr_train
+#-------------------------------------------------------------------------------------------------
+# Upsampling with SMOTE
+# rf_train2 = SMOTE(X=subset(rf_train,select=-c(Viol_Class)),
+#                 target=subset(rf_train,select=c(Viol_Class)), 
+#                 K=5,dup_size=10)
+
+#data_balanced <- ovun.sample(Viol_Class ~ ., data = rf_train, method = "over", p = 0.5, seed = 123)$data # 0.5 give even classes
+
+#nrow(data_balanced[data_balanced$Viol_Class==1,]) # 5755
+#nrow(rf_train[rf_train$Viol_Class==1,]) # 5755
+
+#-------------------------------------------------------------------------------------------------
+
+
+# Undersampling from majority class (class = 0)
+#rf_train0 = rf_train[rf_train$Viol_Class == 0,]
+#rf_train1 = rf_train[rf_train$Viol_Class == 1,]
+#frac1 = nrow(rf_train1)/nrow(rf_train)
+
+# Balance Dataset (due to zero inflation)
+#sample.frac = c(frac1,1.0) #c(0.1, 0.5) will draw 10% from the first class and 50% 
+#case_weights <- ifelse(rf_train$Viol_Class == 1,  1000, 1) # weighting where class = 1 higher than when class equals 0
+m.try = 5
+min.node = 10
+
+#-------------------------------------------------------------------------------------------------
+# Fit Model: 
+rfr_model_gw = ranger(mean_conc ~ .,
+                      data=rfr_train, # data_balanced, rf_train
+                      num.trees=ntree,
+                      #mtry=m.try,
+                      #min.node.size=min.node,
+                      importance='impurity')
+
+
+#-------------------------------------------------------------------------------------------------
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Model Uncertainty & Bias v1 (using Ranger functions)
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+rfr_ranger = rfr_model_gw
+
+# R-squared
+rfr_ranger$r.squared # 0.9923619
+
+# Prediction Error
+rfr_ranger$prediction.error # 1.038087
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Model Uncertainty & Bias (with cross-validation)
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+# function to get r-squared
+r2 <- function(y, pred) {
+  1 - var(y - pred) / var(y)  
+}
+
+#*****************************
+# R2 Testing Set
+yobs <- rfr_test$mean_conc  # Viol.Conc for other dataset
+ypred = predict(rfr_ranger, data =rfr_test)
+test = cbind(data.frame(yobs=yobs),data.frame(ypreds=ypred$predictions))
+# remove Inf
+test <- test[is.finite(rowSums(test)),]
+
+r2_test = r2(test$yobs,test$ypreds) 
+r2_test # 0.9997797
+
+
+
+#*****************************
+# Root Mean Squared Error (RMSE) Training Dataset
+yobs <- rfr_test$mean_conc # Viol.Conc for other dataset
+ypred = predict(rfr_ranger,data = rfr_test)
+rmse = sqrt(mean((ypred$predictions - yobs)^2))
+rmse # 0.5552267
+
+#*****************************
+# Mean Bias
+yobs <- rfr_test$mean_conc # Viol.Conc for other dataset
+ypred = predict(rfr_ranger,data = rfr_test )
+bias = ( sum(ypred$predictions) - sum(yobs)) / length(yobs) 
+bias # 0.00627016
+
+#*****************************
+# Variance (standard deviation of the error (which is pred-obs))
+yobs <- rfr_test$mean_conc # Viol.Conc for other dataset
+ypred = predict(rfr_ranger,data = rfr_test)
+var = sd(ypred$predictions - yobs)
+var # 0.5579883
+
+#*****************************
+# Observed vs. Predicted
+
+yobs <- rfr_test$mean_conc # Viol.Conc for other dataset
+ypred = predict(rfr_ranger,data = rfr_test)
+tempDF = data.frame(yobs, ypred$predictions)
+
+plot(tempDF$yobs, tempDF$ypred, main='RF')
+abline(lm(tempDF$ypred~tempDF$yobs))
+abline(1,1,col='red')
+
+r2_test
+
+
+# result_df = data.frame(N=nrow(RFDATA),PCC=round(pcc,1),
+#                        sens=round(sens,1),spec=round(spec,1),
+#                        gmean=round(gmean,1),AUC=round(AUC,2)
+#                        )
+# write_clip(result_df) 
+# result_df
+
+# saveRDS(rfc_sw, file = paste0(future_dir ,'Data/Models/RF_bi_model_Future_DW_NO3_SW_HU12.rds'))
+# saveRDS(rfc_sw_p, file = paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+
+
+```
+
 
 # **Var Ranking 
 ```{r}
@@ -4163,7 +4450,7 @@ library(data.table)
 
 
 #()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
-rfr_ranger = rfr_model_sw
+rfr_ranger = rfr_model_gw # rfr_model_sw, rfr_model_gw
 #rfc_ranger = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
 
 #()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
@@ -4228,14 +4515,15 @@ ggplot(data=VarImpDF,
 
 ```
 
+#-------------------------------------------------------------------------------
 
-#----------------------------------------------------------------------------------------------------------
-s
+
+
 # Current Prediction Dataset
 ```{r}
 
 predCat_cur = StreamCat_sub
-predHUC_cur = merge(StreamCat_HU12,NNI17[,c("HUC12","n_surplus_kgsqkm")],by='HUC12')
+predHUC_cur = merge(StreamCat_HU12,NNI17[,c("HUC12","n_surplus_kgsqkm","n_ag_surplus_kgsqkm")],by='HUC12')
 
 # Add on Treatment & assign zero treatment to locations without PWS
 predHUC_cur_treat = merge(predHUC_cur,N_treat_huc12_gwsw,by='HUC12',all.x=T)
@@ -4325,6 +4613,7 @@ statkeeps = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
 predHUC_4.5G = merge(predHUC_fut,StreamCat_HU12[,statkeeps],by='HUC12')
 
 
+write.csv(predHUC_4.5G, file = paste0(future_dir,'Data/Dataset_Future_HUC12_4.5GISS.csv'), row.names=F)
 
 ```
 
@@ -4448,7 +4737,711 @@ predHUC_8.5H = merge(predHUC_fut,StreamCat_HU12[,statkeeps],by='HUC12')
 
 ```
 
-#--
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# Scenarios
+
+# 15% NUE Increase
+```{r}
+
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+NUE_INCR = 0.15
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+#scen_NUE_HUC = NDATA_huc12
+
+statkeeps = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
+              'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
+              'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
+              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat',
+              'ElevWs','AgKffactWs','AgDrain_pctWs','BFIWs',
+              'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
+              'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
+              'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs',
+              'PopDen2010Ws','PctForest2019Ws','precip9120ws',
+              'tmean9120ws','N_TW2012Ws','FertWs',
+              'ManureWs','CBNFWs')
+scen_NUE_HUC = merge(NDATA_huc12,StreamCat_HU12[,statkeeps],by='HUC12')
+
+scen_NUE_HUC$NUE = scen_NUE_HUC$n_crop_rem_kg_2010 / (scen_NUE_HUC$n_farm_fert_kg_2010 +
+                                                    scen_NUE_HUC$n_manure_kg_2010 +
+                                                    scen_NUE_HUC$n_crop_fix_kg_2010)
+summary(scen_NUE_HUC$NUE)
+#scen_huc12$NUE15 = scen_huc12$NUE + NUE_INCR # 15% increase in NUE
+#scen_NUE_HUC = subset(scen_NUE_HUC,select=-c(NUE))
+
+#scen_NUE_HUC = merge(scen_NUE_HUC,scen_huc12[,c('HUC12','NUE')],by="HUC12")
+
+scen_NUE_HUC$N_surp_kgsqkm_NUE15 = 
+  scen_NUE_HUC$N_surp_kgsqkm * ((1-(scen_NUE_HUC$NUE+NUE_INCR)) / (1-scen_NUE_HUC$NUE))
+scen_NUE_HUC$N_ag_surp_kgsqkm_NUE15 = 
+  scen_NUE_HUC$N_ag_surp_kgsqkm * ((1-(scen_NUE_HUC$NUE+NUE_INCR)) / (1-scen_NUE_HUC$NUE))
+# scen_NUE_HUC$N_surp_kgsqkm_NUE15 = 
+#   scen_NUE_HUC$N_surp_kgsqkm * ((1-(scen_NUE_HUC$NUE15)) / (1-scen_NUE_HUC$NUE))
+
+summary(scen_NUE_HUC$N_surp_kgsqkm_NUE15)
+summary(scen_NUE_HUC$N_surp_kgsqkm)
+
+#Generate Prediction Dataset
+
+
+scen_NUE_HUC = merge(scen_NUE_HUC,prec_hu12,by='HUC12')
+scen_NUE_HUC = merge(scen_NUE_HUC,temp_hu12,by='HUC12')
+scen_NUE_HUC = merge(scen_NUE_HUC,imprv_hu12,by='HUC12')
+
+scen_NUE_HUC$n_surplus_kgsqkm  = scen_NUE_HUC$N_surp_kgsqkm_NUE15
+scen_NUE_HUC$N_surp_kgsqkm = scen_NUE_HUC$N_surp_kgsqkm_NUE15
+scen_NUE_HUC$N_ag_surp_kgsqkm = scen_NUE_HUC$N_ag_surp_kgsqkm_NUE15
+scen_NUE_HUC$n_ag_surplus_kgsqkm = scen_NUE_HUC$N_ag_surp_kgsqkm_NUE15
+
+scen_NUE_HUC$N_Surp_kgsqkm_2017ws = scen_NUE_HUC$N_surp_kgsqkm_NUE15
+scen_NUE_HUC$N_Surp_kgsqkm_2017cat = scen_NUE_HUC$N_surp_kgsqkm_NUE15
+
+
+
+
+
+```
+
+# Production Increase
+* https://ageconsearch.umn.edu/record/138919/?v=pdf: Public Agricultural Research Spending and Future U.S. Agricultural Productivity Growth: Scenarios fo…---> 40 to 70% increase in ag production (USDA ERS Report).... 
+* https://www.ers.usda.gov/media/20856/oce-2026-1.pdf?v=65502 --> by 2035; 5% increase in corn, 14% increase in soy, rice down, cotton up, sugar up, chicken up 14%, beef/pork up, milk up 8%
+
+* NUE = Outputs / Inputs; Calc change in Inputs: I = Outputs / NUE
+```{r}
+
+# Going with 55% increase in Productivity
+
+#scen_prod_HUC = NDATA_huc12
+
+statkeeps = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
+              'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
+              'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
+              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat',
+              'ElevWs','AgKffactWs','AgDrain_pctWs','BFIWs',
+              'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
+              'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
+              'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs',
+              'PopDen2010Ws','PctForest2019Ws','precip9120ws',
+              'tmean9120ws','N_TW2012Ws','FertWs',
+              'ManureWs','CBNFWs','PctForest2019Cat','N_TW2012Cat',
+              'tmean9120cat','FertCat','ManureCat','CBNFCat')
+scen_prod_HUC = merge(NDATA_huc12,StreamCat_HU12[,statkeeps],by='HUC12')
+
+scen_prod_HUC$N_inputs = 
+  scen_prod_HUC$totalN_2016_kgNha *100 + # convert from ha to km2 
+  scen_prod_HUC$n_farm_fert_kgsqkm + 
+  scen_prod_HUC$n_manure_kgsqkm + 
+  scen_prod_HUC$n_crop_fix_kgsqkm +
+  scen_prod_HUC$n_human_food_waste_kgsqkm 
+
+scen_prod_HUC$N_ag_inputs = 
+  scen_prod_HUC$n_farm_fert_kgsqkm + 
+  scen_prod_HUC$n_manure_kgsqkm + 
+  scen_prod_HUC$n_crop_fix_kgsqkm 
+
+
+#NUE = crop_rem / inputs
+#inputs = crop_rem / NUE
+
+scen_prod_HUC$NUE = scen_prod_HUC$n_crop_rem_kg_2010 / (scen_prod_HUC$n_farm_fert_kg_2010 +
+                                                    scen_prod_HUC$n_manure_kg_2010 +
+                                                    scen_prod_HUC$n_crop_fix_kg_2010)
+
+scen_prod_HUC$N_inputs_Prod55 = scen_prod_HUC$n_crop_rem_kgsqkm * 1.55 / scen_prod_HUC$NUE
+
+
+# Productivity change for invidual N Inputs
+scen_prod_HUC$NUE_fert = scen_prod_HUC$n_crop_rem_kgsqkm / scen_prod_HUC$n_farm_fert_kgsqkm
+
+scen_prod_HUC$input_ratio = scen_prod_HUC$N_inputs_Prod55 / scen_prod_HUC$N_ag_inputs
+
+scen_prod_HUC$n_farm_fert_kgsqkm_prod55 = scen_prod_HUC$n_farm_fert_kgsqkm * scen_prod_HUC$input_ratio # All 1.55
+scen_prod_HUC$n_manure_kgsqkm_prod55 = scen_prod_HUC$n_manure_kgsqkm * scen_prod_HUC$input_ratio # All 1.55
+scen_prod_HUC$n_crop_fix_kgsqkm_prod55 = scen_prod_HUC$n_crop_fix_kgsqkm * scen_prod_HUC$input_ratio # All 1.55
+
+scen_prod_HUC$FertWs = scen_prod_HUC$n_farm_fert_kgsqkm * scen_prod_HUC$input_ratio # All 1.55
+scen_prod_HUC$ManureWs = scen_prod_HUC$n_manure_kgsqkm * scen_prod_HUC$input_ratio # All 1.55
+scen_prod_HUC$CBNFWs = scen_prod_HUC$n_crop_fix_kgsqkm * scen_prod_HUC$input_ratio # All 1.55
+
+
+scen_prod_HUC$N_surp_kgsqkm_prod55_ = scen_prod_HUC$N_surp_kgsqkm * scen_prod_HUC$input_ratio # All 1.55
+
+scen_prod_HUC$N_surp_kgsqkm_prod55 = 
+  scen_prod_HUC$N_inputs_Prod55 + 
+  scen_prod_HUC$totalN_2016_kgNha *100 + # convert from ha to km2
+  scen_prod_HUC$n_human_food_waste_kgsqkm - 
+  scen_prod_HUC$n_crop_rem_kgsqkm 
+
+scen_prod_HUC$N_ag_surp_kgsqkm_prod55 = 
+  scen_prod_HUC$n_farm_fert_kgsqkm_prod55 + 
+  scen_prod_HUC$n_manure_kgsqkm_prod55 +
+  scen_prod_HUC$n_crop_fix_kgsqkm_prod55 - 
+  scen_prod_HUC$n_crop_rem_kgsqkm 
+
+
+summary(scen_prod_HUC$N_surp_kgsqkm)
+summary(scen_prod_HUC$N_surp_kgsqkm_prod55)
+summary(scen_prod_HUC$N_surp_kgsqkm_prod55_)
+
+summary(scen_prod_HUC$n_farm_fert_kgsqkm)
+summary(scen_prod_HUC$n_farm_fert_kgsqkm_prod55)
+summary(scen_prod_HUC$n_manure_kgsqkm)
+summary(scen_prod_HUC$n_manure_kgsqkm_prod55)
+
+
+scen_prod_HUC$n_surplus_kgsqkm = scen_prod_HUC$N_surp_kgsqkm_prod55
+scen_prod_HUC$N_surp_kgsqkm = scen_prod_HUC$N_surp_kgsqkm_prod55
+scen_prod_HUC$N_Surp_kgsqkm_2017ws = scen_prod_HUC$N_surp_kgsqkm_prod55
+scen_prod_HUC$N_Surp_kgsqkm_2017cat = scen_prod_HUC$N_surp_kgsqkm_prod55
+
+scen_prod_HUC$n_farm_fert_kgsqkm = scen_prod_HUC$n_farm_fert_kgsqkm_prod55
+scen_prod_HUC$n_manure_kgsqkm = scen_prod_HUC$n_manure_kgsqkm_prod55
+scen_prod_HUC$n_crop_fix_kgsqkm = scen_prod_HUC$n_crop_fix_kgsqkm_prod55
+
+
+scen_prod_HUC$n_ag_surplus_kgsqkm = scen_prod_HUC$N_ag_surp_kgsqkm_prod55
+scen_prod_HUC$N_ag_surp_kgsqkm = scen_prod_HUC$N_ag_surp_kgsqkm_prod55
+
+summary(scen_prod_HUC$N_surp_kgsqkm_prod55)
+
+
+```
+
+
+
+#-----------------------------------------------------------------------------
+
+
+# ReCal - Google Code
+```{r}
+# -----------------------------------------------------------------------------
+predict1 = predict(rfc_model,data = predictData2)
+
+preds = as.data.frame(predict1$predictions[,2])
+names(preds)[1] = "Prediction"
+
+# Merge back on HUC12s
+pred_all = cbind(predictData$HUC12 ,preds)
+names(pred_all)[1] = 'HUC12'
+
+# Merge back on observed data
+pred_all2 = merge(pred_all,data_sw_huc_[,c("HUC12",'Viol_Class')],by="HUC12")
+
+plot(pred_all2$Prediction ~ pred_all2$Viol_Class)
+
+summary(pred_all2$Prediction)
+summary(pred_all2$Viol_Class)
+levels(factor(pred_all2$Viol_Class))
+
+pred_all2$Pred_Class = ifelse(pred_all2$Prediction >= 0.5,1,0)
+
+pred_all$Pred_Class = ifelse(pred_all$Prediction >= 0.5,1,0)
+
+#-------------------------------------------------------------------------------
+# Fit a logistic regression model to the uncalibrated probabilities
+#platt_model <- glm(cal_labels ~ cal_probs, family = binomial(link = "logit"))
+#platt_model <- glm(pred_all2$Viol_Class ~ pred_all2$Prediction, family = binomial(link = "logit"))
+platt_model <- glm(Viol_Class ~ Prediction, 
+                   data = pred_all2,
+                   family = binomial(link = "logit"))
+# platt_model <- glm(Viol_Class ~ Pred_Class, 
+#                    data = pred_all2,
+#                    family = binomial(link = "logit"))
+
+# Predict calibrated probabilities for the new Test data
+calibrated_test_probs <- predict(
+  platt_model, 
+  #newdata = data.frame(Prediction = pred_all$Prediction),
+  newdata = data.frame(Pred_Class = pred_all$Prediction),
+  #newdata = data.frame(cal_probs = test_probs), 
+  type = "response"
+)
+
+# Merge back on HUC12s
+pred_all = cbind(predictData$HUC12 ,preds)
+names(pred_all)[1] = 'HUC12'
+
+platt_Preds = as.data.frame(cbind(pred_all$HUC12,calibrated_test_probs))
+names(platt_Preds)[1] = 'HUC12'
+names(platt_Preds)[2] = 'Calib_Prob'
+
+platt_Preds$Calib_Prob = as.numeric(platt_Preds$Calib_Prob)
+summary(platt_Preds$Calib_Prob)
+
+
+```
+
+# TNC RF Function
+```{r}
+
+# Random forest fit object
+rf_fit <- function(df,
+                   outcome = "Viol_Class",
+                   num.trees = 500L,
+                   mtry = NULL,
+                   min.node.size = 20L,
+                   importance = "none") {
+  
+  # Set up balanced sampling given unbalanced design
+  tab  <- table(df[[outcome]])
+  frac <- as.numeric(min(tab) / tab)
+  names(frac) <- names(tab)
+  
+  # Define mtry
+  p <- ncol(df) - 1
+  mtry <- mtry %||% max(1L, floor(sqrt(p)))
+  
+  # Fit ranger model
+  ranger(
+    formula         = stats::as.formula(paste0(outcome, " ~ .")),
+    data            = df,
+    num.trees       = as.integer(num.trees),
+    mtry            = as.integer(mtry),
+    min.node.size   = as.integer(min.node.size),
+    importance      = importance,
+    write.forest    = TRUE,
+    replace         = TRUE,
+    probability     = TRUE,
+    sample.fraction = frac,
+    num.threads     = max(1L, parallel::detectCores() - 1L)
+  )
+}
+
+```
+
+# Fit GW TNC Code
+```{r}
+
+
+
+RFDATA = data_gw_huc_  
+
+RFDATA = subset(RFDATA,select=-c(viol_freq,HUC12))
+
+# Train Test split
+ind_test <- sample(nrow(RFDATA), round(nrow(RFDATA)*0.2))
+rf_test= RFDATA[ind_test, ]
+rf_train = RFDATA[-ind_test,]
+
+
+
+# Fit model
+gw_rf2 <- rf_fit(rf_train,
+                outcome = "Viol_Class",
+                importance = "permutation")
+
+```
+
+
+# ReCal GW TNC Code: Model Recalibration "Platt Scalling" (Logistic Calibration)
+* Select if to use testing or training or full dataset
+```{r}
+
+#### Libraries ####
+library(tidyverse)  # For tidy management
+library(ranger)     # For ML model
+library(caret)
+library(MLmetrics)  # For AUC
+library(yardstick)  # For plotting
+library(forcats)    # For plotting
+library(isotone)    # For prediciton calibration
+
+library(ranger)
+data_sw_huc_ = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_SW_HUC12.csv'))
+data_gw_huc_ = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_GW_HUC12.csv'))
+
+data_sw_huc_$HUC12 = formatC(as.numeric(as.character(data_sw_huc_$HUC12)), width = 12, format = "f",flag = "0",digits = 0) 
+data_gw_huc_$HUC12 = formatC(as.numeric(as.character(data_gw_huc_$HUC12)), width = 12, format = "f",flag = "0",digits = 0) 
+
+
+
+#-------------------------------------------------------------------------------
+predictData = predHUC_cur # predHUC_cur, predHUC_cur_treat 
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+predictData2 = as.data.frame(subset(predictData,select=-c(HUC12)))
+
+#RFDATA = subset(data_gw_huc_, select = -c(HUC12))
+RFDATA= data_gw_huc_
+# Train Test split
+ind_test <- sample(nrow(RFDATA), round(nrow(RFDATA)*0.2))
+rf_test= RFDATA[ind_test, ]
+rf_train = RFDATA[-ind_test,]
+
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+DataInput= rf_test # rf_test, rf_train, RFDATA
+rf_model = rfc_model # rfc_model, gw_rf2 
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+#------------------------------------------------------------------------------
+
+# Steve Wood Code (Recalibration of model prediction)
+#pred_tbl <- predict(rf_model, data = data_gw_huc_)$predictions %>% # for full dataset
+
+# If using my ranger model
+pred_tbl <- predict(rf_model, data = DataInput)$predictions %>%
+  as_tibble() %>%
+  mutate(
+    #HUC12 = data_gw_huc_$HUC12, # for full dataset
+    HUC12 = DataInput$HUC12,
+    p0 = .data[["0"]],
+    p1 = .data[["1"]],
+    binary = ifelse(p1 >= 0.5, 1, 0),
+    #Viol_yn = as.character(data_gw_huc_$Viol_Class), # for full dataset
+    Viol_yn = as.character(DataInput$Viol_Class),
+    Viol_yn_f = factor(Viol_yn, levels = c("0","1")),
+    y = as.integer(Viol_yn == "1")
+  )
+
+# if using TNC ranger model function
+# pred_tbl <- predict(rf_model, data = DataInput)$predictions %>%
+#   as_tibble() %>%
+#   mutate(
+#     #HUC12 = data_gw_huc_$HUC12, # for full dataset
+#     HUC12 = DataInput$HUC12,
+#     p0 = .data[["V1"]],
+#     p1 = .data[["V2"]],
+#     binary = ifelse(p1 >= 0.5, 1, 0),
+#     #Viol_yn = as.character(data_gw_huc_$Viol_Class), # for full dataset
+#     Viol_yn = as.character(DataInput$Viol_Class),
+#     Viol_yn_f = factor(Viol_yn, levels = c("0","1")),
+#     y = as.integer(Viol_yn == "1")
+#   )
+
+
+# Platt Model
+platt_model_gw <- glm(y ~ p1, data = pred_tbl, family = binomial())
+
+pred_tbl <- pred_tbl %>%
+  mutate(
+    p1_platt = predict(platt_model_gw, type = "response")
+)
+options(scipen = 999)
+
+summary(pred_tbl$p1_platt)
+
+# Beta Model
+eps <- 1e-6
+
+pred_tbl <- pred_tbl %>%
+  mutate(
+    p1_platt_clip = pmin(pmax(p1_platt, eps), 1 - eps),
+    logit_platt = log(p1_platt_clip / (1 - p1_platt_clip))
+  )
+
+recal_model <- glm(y ~ offset(logit_platt),
+                   data = pred_tbl,
+                   family = binomial())
+
+pred_tbl <- pred_tbl %>%
+  mutate(
+    intercept_adj = coef(recal_model)[1],
+    p1_platt_adj = plogis(intercept_adj + logit_platt)
+  )
+
+pred_tbl <- pred_tbl %>%
+  mutate(
+    p1_clip = pmin(pmax(p1, eps), 1 - eps)
+  )
+
+pred_tbl <- pred_tbl %>%
+  mutate(
+    log_p  = log(p1_clip),
+    log_1p = log(1 - p1_clip)
+  )
+
+beta_model_gw <- glm(
+  y ~ log_p + log_1p,
+  data = pred_tbl,
+  family = binomial()
+)
+
+pred_tbl <- pred_tbl %>%
+  mutate(
+    p1_beta = predict(beta_model_gw, type = "response")
+  )
+
+# pred_tbl2 <- pred_tbl %>%
+#   mutate(
+#     p1_beta = predict(beta_model_gw, newdata = predHUC_cur,type = "response")
+#   )
+
+summary(pred_tbl$p1)
+summary(pred_tbl$p1_beta)
+summary(pred_tbl$p1_clip)
+
+summary(pred_tbl$p1_platt)
+summary(pred_tbl$p1_platt_adj)
+summary(pred_tbl$p1_platt_clip)
+
+nrow(pred_tbl[pred_tbl$p0 >0.5,]) # 24168
+nrow(pred_tbl[pred_tbl$p1 >0.5,]) # 8412
+
+nrow(pred_tbl[pred_tbl$`1` == 1,]) # 491
+nrow(pred_tbl[pred_tbl$`0` != 0,]) # 32089
+
+nrow(pred_tbl[pred_tbl$p1_platt > 0.5,]) # 0
+nrow(pred_tbl[pred_tbl$p1_beta > 0.5,]) # 494
+
+# Percent of Obs with 1s
+100* nrow(pred_tbl[pred_tbl$Viol_yn == 1,])/ nrow(pred_tbl) # 4.097606
+100* nrow(pred_tbl[pred_tbl$y == 1,])/ nrow(pred_tbl) # 4.097606
+100* nrow(RFDATA[RFDATA$Viol_Class == 1,])/ nrow(RFDATA) # 4.097606
+
+
+# Percent of Pred with 1s
+100* nrow(pred_tbl[pred_tbl$p1 >0.5,]) / nrow(pred_tbl) # 25.81952
+
+# Model Performance Metrics
+roc_auc_val <- AUC(y_pred = pred_tbl$p1, y_true = pred_tbl$y)
+roc_auc_val 
+
+```
+
+# ReCal Full GW Dataset (TNC code)
+```{r}
+
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+
+pred_data = predHUC_cur # data_gw_huc_ ; predHUC_cur
+gw_rf = rfc_model # gw_rf2, rfc_model
+  
+pred_tbl <- predict(gw_rf, data = pred_data, type="response")$predictions %>%
+  as_tibble() %>%
+  mutate(
+    HUC12 = pred_data$HUC12,
+    p1 = .data[["1"]] # if using my ranger model
+    #p1 = .data[["V2"]] # if using TNC ranger model
+
+  )
+
+eps <- 1e-6
+
+pred_tbl <- pred_tbl %>%
+  mutate(
+    p1_clip = pmin(pmax(p1, eps), 1 - eps),
+    log_p   = log(p1_clip),
+    log_1p  = log(1 - p1_clip)
+  )
+
+p1_beta <- predict(
+  beta_model_gw,
+  newdata = pred_tbl,
+  type = "response"
+)
+
+gw_output <- pred_data %>% #dplyr::select(c("HUC12","n_surplus_kgsqkm")) %>%
+  mutate(
+    p1_beta = p1_beta,
+    risk_pct = percent_rank(p1_beta),
+    risk_prob = ecdf(p1_beta)(p1_beta)
+  )
+
+dim(gw_output)
+summary(gw_output$risk_prob)
+
+nrow(gw_output[gw_output$risk_prob >0.5,]) # 16290 of 32K, 40959 of all HUC12s
+nrow(gw_output[gw_output$p1_beta >0.5,]) # ~320 (if use testing, training or all PWS HUC12s)
+
+100*nrow(gw_output[gw_output$risk_prob >0.5,])/nrow(gw_output) # 50.00061
+100*nrow(data_sw_huc_[data_gw_huc_$viol_freq > 0,])/nrow(data_gw_huc_) # 4.123996
+100*nrow(gw_output[gw_output$p1_beta >0.5,])/nrow(gw_output) # 0.3906393
+
+```
+
+# ReCal SW TNC Code:
+```{r}
+
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+predictData = predHUC_cur # predHUC_cur, predHUC_cur_treat 
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+predictData2 = as.data.frame(subset(predictData,select=-c(HUC12)))
+
+RFDATA = data_sw_huc_  
+# Train Test split
+ind_test <- sample(nrow(RFDATA), round(nrow(RFDATA)*0.2))
+rf_test= RFDATA[ind_test, ]
+rf_train = RFDATA[-ind_test,]
+
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+
+#------------------------------------------------------------------------------
+DataInput= rf_test # rf_test, rf_train
+#----------------------------------------------------------------------------------
+# Generate model predictions
+pred_tbl <- predict(sw_rf, data = df_test)$predictions %>%
+  as_tibble() %>%
+  mutate(
+    HUC_12 = sw_data$data_test$HUC_12,
+    p0 = .data[["0"]],
+    p1 = .data[["1"]],
+    binary = ifelse(p1 >= 0.5, 1, 0),
+    Viol_yn = as.character(df_test$Viol_yn),
+    Viol_yn_f = factor(Viol_yn, levels = c("0","1")),
+    y = as.integer(Viol_yn == "1")
+  )
+
+## Correct model overprediction of risk
+# Platt
+## Correct model overprediction of risk
+
+# --- Platt ---
+platt_model_sw <- glm(y ~ p1, data = pred_tbl, family = binomial())
+
+pred_tbl <- pred_tbl %>%
+  mutate(
+    p1_platt = predict(platt_model_sw, type = "response")
+  )
+
+# --- Intercept-only recalibration (same as GW) ---
+eps <- 1e-6
+
+pred_tbl <- pred_tbl %>%
+  mutate(
+    p1_platt_clip = pmin(pmax(p1_platt, eps), 1 - eps),
+    logit_platt = log(p1_platt_clip / (1 - p1_platt_clip))
+  )
+
+recal_model_sw <- glm(
+  y ~ offset(logit_platt),
+  data = pred_tbl,
+  family = binomial()
+)
+
+pred_tbl <- pred_tbl %>%
+  mutate(
+    intercept_adj = coef(recal_model_sw)[1],
+    p1_platt_adj = plogis(intercept_adj + logit_platt)
+  )
+
+# --- Beta calibration (same as GW) ---
+pred_tbl <- pred_tbl %>%
+  mutate(
+    p1_clip = pmin(pmax(p1, eps), 1 - eps),
+    log_p  = log(p1_clip),
+    log_1p = log(1 - p1_clip)
+  )
+
+beta_model_sw <- glm(
+  y ~ log_p + log_1p,
+  data = pred_tbl,
+  family = binomial()
+)
+
+pred_tbl <- pred_tbl %>%
+  mutate(
+    p1_beta = predict(beta_model_sw, type = "response")
+  )
+
+pred_tbl <- pred_tbl %>%
+  mutate(
+    p1_platt = predict(platt_model_sw, type = "response")
+  )
+
+
+```
+
+
+# ReCal Full SW Dataset
+```{r}
+
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+
+pred_data = data_sw_huc_
+sw_rf = rfc_model
+  
+pred_data <- pred_data %>%
+  select(all_of(sw_rf$forest$independent.variable.names))
+
+pred_tbl <- predict(sw_rf, data = pred_data, type="response")$predictions %>%
+  as_tibble() %>%
+  mutate(
+    HUC_12 = pred_data$HUC_12,
+    p1 = .data[["1"]]
+  )
+
+pred_tbl <- pred_tbl %>%
+  mutate(
+    p1_clip = pmin(pmax(p1, eps), 1 - eps),
+    log_p   = log(p1_clip),
+    log_1p  = log(1 - p1_clip)
+  )
+
+p1_beta <- predict(
+  beta_model_sw,
+  newdata = pred_tbl,
+  type = "response"
+)
+
+sw_output <- pred_data %>% select(c("HUC_12","n_ags_norm")) %>%
+  mutate(
+    p1_beta = p1_beta,
+    risk_pct = percent_rank(p1_beta),
+    risk_prob = ecdf(p1_beta)(p1_beta)
+  )
+
+
+```
+
+# Map Platt Results
+```{r}
+map_title = "Calibrated GW Predictions"
+mapdata = gw_output # [,c('HUC12','p1_beta')]
+
+mapdata$Prediction = mapdata$risk_prob   # Calib_Prob
+
+
+map1 = merge(mapdata,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
+
+map2 = map1[complete.cases(map1[,c("Prediction")]),] 
+map2 <- st_as_sf(map2) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Prediction),]
+#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
+
+summary(map3$Prediction)
+#levels(factor(map3$Prediction))
+
+nrow(map3)
+nrow(map3[map3$Prediction > 0.5,]) # 16290 GW
+
+# Format rasters
+start_time <- Sys.time()
+map4<-st_rasterize(map3[,"Prediction"],
+                     st_as_stars(st_bbox(states_boundary),
+                                 dx = 3000, dy = 3000, values=NA_real_), na.rm=T)
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 8.113112 secs (Desktop at 1000m)
+
+
+## Plot Nitrogen Maps
+start_time <- Sys.time()
+ggplot()+
+  geom_stars(data=map4, aes(fill=Prediction))+
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  # scale_color_viridis(option="magma",name="Risk Score" 
+  #                     ,limits = c(0, 1)
+  #                     )+ # options: viridis, magma, plasma
+  binned_scale(aesthetics = "fill",
+               palette=function(x) c("#5E4FA2","#3288BD","#66C2A5","#ABDDA4","#E6F598",
+                                     "#FEE08B","#FDAE61","#F46D43","#D53E4F","#9E0142"),
+               breaks=c(.1, .2, .3, .4, .5, 0.6, .7, 0.8, 0.9)) +
+  theme (axis.text = element_blank(), axis.title = element_blank(), 
+         panel.background = element_blank(), axis.ticks = element_blank(), 
+         legend.text = element_text(size = 14), legend.title = element_text(size = 14))+
+  ggtitle(map_title)+
+  theme(plot.title = element_text(hjust=0.5))+
+  labs(fill="Risk Value")
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 33.21989 secs
+
+
+```
+
+
+
+#---------------------------------------------------------------------------------
 
 # * MAP PWS Points
 ```{r}
@@ -4457,17 +5450,17 @@ predHUC_8.5H = merge(predHUC_fut,StreamCat_HU12[,statkeeps],by='HUC12')
 #map_title = "Predicted Probability of SWDW Nitrate Violation"
 map_title = "Predicted Probability of GWDW Nitrate Violation"
 predictData = rf_gw # rf_gw, rf_sw
-rfr_pred = rfc_ranger_p  
+rfc_model = rfc_ranger_p  
 
 #()()()()()()()()()()()()()()()()
 
 predictData2 = as.data.frame(subset(predictData,select=-c(HUC12)))
 dim(predictData2)
 
-setdiff(names(rfr_pred$variable.importance),colnames(predictData)) # gives not matching
+setdiff(names(rfc_model$variable.importance),colnames(predictData)) # gives not matching
 
 
-predict1 = predict(rfr_pred,data = predictData2)
+predict1 = predict(rfc_model,data = predictData2)
 
 preds = as.data.frame(predict1$predictions[,2])
 names(preds)[1] = "Prediction"
@@ -4512,17 +5505,17 @@ end_time <- Sys.time(); end_time - start_time
 #()()()()()()()()()()()()()()()()
 
 predictData = subset(rf_gw,select=-c(viol_freq)) # rf_gw, rf_sw
-rfr_pred = rfc_ranger_p  
+rfc_model = rfc_ranger_p  
 
 #()()()()()()()()()()()()()()()()
 
 predictData2 = as.data.frame(subset(predictData,select=-c(HUC12)))
 dim(predictData2)
 
-setdiff(names(rfr_pred$variable.importance),colnames(predictData)) # gives not matching
+setdiff(names(rfc_model$variable.importance),colnames(predictData)) # gives not matching
 
 
-predict1 = predict(rfr_pred,data = predictData2)
+predict1 = predict(rfc_model,data = predictData2)
 
 preds = as.data.frame(predict1$predictions[,2])
 names(preds)[1] = "Prediction"
@@ -4579,28 +5572,28 @@ end_time <- Sys.time(); end_time - start_time
 
 ```
 
-# Raster Map Current GW HUC12
+
+# Raster Map Current SW HUC12
 ```{r}
 
 #()()()()()()()()()()()()()()()()
-map_title = "Current Probability of Violations 2020"
+map_title = "Current SWDW Probability of Violations 2020"
 
 predictData = predHUC_cur # predHUC_cur, predHUC_cur_treat 
-#rfr_pred = rfc_sw_p # rfc_gw_p, rfc_sw_p
-#rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
-#rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
-
-rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+#rfc_model = rfc_sw_p # rfc_gw_p, rfc_sw_p
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
 
 #()()()()()()()()()()()()()()()()
 
 predictData2 = as.data.frame(subset(predictData,select=-c(HUC12)))
 dim(predictData2)
 
-setdiff(names(rfr_pred$variable.importance),colnames(predictData)) # gives not matching
+setdiff(names(rfc_model$variable.importance),colnames(predictData)) # gives not matching
 
 
-predict1 = predict(rfr_pred,data = predictData2)
+predict1 = predict(rfc_model,data = predictData2)
 
 preds = as.data.frame(predict1$predictions[,2])
 names(preds)[1] = "Prediction"
@@ -4611,7 +5604,91 @@ names(pred_all)[1] = 'HUC12'
 
 nrow(pred_all)  # 82127 
 
-nrow(pred_all[pred_all$Prediction > 0.5,]) # 19244
+nrow(pred_all[pred_all$Prediction > 0.5,]) # 13996 of all HUC12s
+100*nrow(pred_all[pred_all$Prediction > 0.5,])/nrow(pred_all) # 
+summary(pred_all$Prediction)
+
+# Merge on Spatial Data
+
+map1 = merge(pred_all,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
+
+map2 = map1[complete.cases(map1[,c("Prediction")]),] 
+map2 <- st_as_sf(map2) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Prediction),]
+#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
+
+nrow(map3[map3$Prediction>0.5,]) # 19244
+summary(map3$Prediction)
+
+# Format rasters
+start_time <- Sys.time()
+map4<-st_rasterize(map3[,"Prediction"],
+                     st_as_stars(st_bbox(states_boundary),
+                                 dx = 3000, dy = 3000, values=NA_real_), na.rm=T)
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 8.113112 secs (Desktop at 1000m)
+
+
+## Plot Nitrogen Maps
+start_time <- Sys.time()
+ggplot()+
+  geom_stars(data=map4, aes(fill=Prediction))+
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  # scale_color_viridis(option="magma",name="Risk Score" 
+  #                     ,limits = c(0, 1)
+  #                     )+ # options: viridis, magma, plasma
+  binned_scale(aesthetics = "fill",
+               palette=function(x) c("#5E4FA2","#3288BD","#66C2A5","#ABDDA4","#E6F598",
+                                     "#FEE08B","#FDAE61","#F46D43","#D53E4F","#9E0142"),
+               breaks=c(.1, .2, .3, .4, .5, 0.6, .7, 0.8, 0.9)) +
+  theme (axis.text = element_blank(), axis.title = element_blank(), 
+         panel.background = element_blank(), axis.ticks = element_blank(), 
+         legend.text = element_text(size = 14), legend.title = element_text(size = 14))+
+  ggtitle(map_title)+
+  theme(plot.title = element_text(hjust=0.5))+
+  labs(fill="Risk Value")
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 33.21989 secs
+
+pred_sw_HU12 = pred_all
+
+
+```
+
+# Raster Map Current GW HUC12
+```{r}
+
+#()()()()()()()()()()()()()()()()
+map_title = "Current GWDWProbability of Violations 2020"
+
+predictData = predHUC_cur # predHUC_cur, predHUC_cur_treat 
+#rfc_model = rfc_sw_p # rfc_gw_p, rfc_sw_p
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
+
+
+#()()()()()()()()()()()()()()()()
+
+predictData2 = as.data.frame(subset(predictData,select=-c(HUC12)))
+dim(predictData2)
+
+setdiff(names(rfc_model$variable.importance),colnames(predictData)) # gives not matching
+
+
+predict1 = predict(rfc_model,data = predictData2)
+
+preds = as.data.frame(predict1$predictions[,2])
+names(preds)[1] = "Prediction"
+
+# Merge back on HUC12s
+pred_all = cbind(predictData$HUC12 ,preds)
+names(pred_all)[1] = 'HUC12'
+
+nrow(pred_all)  # 82127 
+
+nrow(pred_all[pred_all$Prediction > 0.5,]) # 13996 of all HUC12s
+100*nrow(pred_all[pred_all$Prediction > 0.5,])/nrow(pred_all)
 summary(pred_all$Prediction)
 
 # Merge on Spatial Data
@@ -4668,18 +5745,18 @@ pred_gw_HU12 = pred_all
 map_title = "Current SWDW Probability of Violations 2020"
 
 predictData = predCat_cur_treat1   # predCat_cur, predCat_cur_treat, predCat_cur_treat1
-#rfr_pred = rfc_sw_p # rfc_gw_p, rfc_sw_p
-rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
+#rfc_model = rfc_sw_p # rfc_gw_p, rfc_sw_p
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
 
 #()()()()()()()()()()()()()()()()
 
 predictData2 = as.data.frame(subset(predictData,select=-c(COMID)))
 dim(predictData2)
 
-setdiff(names(rfr_pred$variable.importance),colnames(predictData)) # gives not matching
+setdiff(names(rfc_model$variable.importance),colnames(predictData)) # gives not matching
 
 
-predict1 = predict(rfr_pred,data = predictData2)
+predict1 = predict(rfc_model,data = predictData2)
 
 preds = as.data.frame(predict1$predictions[,2])
 names(preds)[1] = "Prediction"
@@ -4753,18 +5830,18 @@ pred_sw_HU12 = pred_all2
 map_title = "Current GWDW Probability of Violations 2020"
 
 predictData = predCat_cur_treat1   # predCat_cur, predCat_cur_treat,predCat_cur_treat1
-#rfr_pred = rfc_sw_p # rfc_gw_p, rfc_sw_p
-rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
+#rfc_model = rfc_sw_p # rfc_gw_p, rfc_sw_p
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
 
 #()()()()()()()()()()()()()()()()
 
 predictData2 = as.data.frame(subset(predictData,select=-c(COMID)))
 dim(predictData2)
 
-setdiff(names(rfr_pred$variable.importance),colnames(predictData)) # gives not matching
+setdiff(names(rfc_model$variable.importance),colnames(predictData)) # gives not matching
 
 
-predict1 = predict(rfr_pred,data = predictData2)
+predict1 = predict(rfc_model,data = predictData2)
 
 preds = as.data.frame(predict1$predictions[,2])
 names(preds)[1] = "Prediction"
@@ -4840,11 +5917,11 @@ pred_gw_HU12 = pred_all2
 map_title = "Future Probability of Violations (RCP4.5 GISS)"
 
 predictData = predHUC_4.5G  
-#rfr_pred = rfc_sw_p
-#rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
-#rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
-rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
-#rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
+#rfc_model = rfc_sw_p
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
 
 
 #()()()()()()()()()()()()()()()()
@@ -4852,10 +5929,10 @@ rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_S
 predictData2 = as.data.frame(subset(predictData,select=-c(HUC12)))
 dim(predictData2)
 
-setdiff(names(rfr_pred$variable.importance),colnames(predictData)) # gives not matching
+setdiff(names(rfc_model$variable.importance),colnames(predictData)) # gives not matching
 
 
-predict1 = predict(rfr_pred,data = predictData2)
+predict1 = predict(rfc_model,data = predictData2)
 
 preds = as.data.frame(predict1$predictions[,2])
 names(preds)[1] = "Prediction"
@@ -4924,17 +6001,17 @@ end_time <- Sys.time(); end_time - start_time
 map_title = "Future Probability of Violations (RCP8.5 GISS)"
 
 predictData = predHUC_8.5G   
-rfr_pred = rfc_gw_p 
+rfc_model = rfc_gw_p 
 
 #()()()()()()()()()()()()()()()()
 
 predictData2 = as.data.frame(subset(predictData,select=-c(HUC12)))
 dim(predictData2)
 
-setdiff(names(rfr_pred$variable.importance),colnames(predictData)) # gives not matching
+setdiff(names(rfc_model$variable.importance),colnames(predictData)) # gives not matching
 
 
-predict1 = predict(rfr_pred,data = predictData2)
+predict1 = predict(rfc_model,data = predictData2)
 
 preds = as.data.frame(predict1$predictions[,2])
 names(preds)[1] = "Prediction"
@@ -5003,17 +6080,17 @@ end_time <- Sys.time(); end_time - start_time
 map_title = "Future Probability of Violations (RCP4.5 Hadgem)"
 
 predictData = predHUC_4.5H
-rfr_pred = rfc_gw_p 
+rfc_model = rfc_gw_p 
 
 #()()()()()()()()()()()()()()()()
 
 predictData2 = as.data.frame(subset(predictData,select=-c(HUC12)))
 dim(predictData2)
 
-setdiff(names(rfr_pred$variable.importance),colnames(predictData)) # gives not matching
+setdiff(names(rfc_model$variable.importance),colnames(predictData)) # gives not matching
 
 
-predict1 = predict(rfr_pred,data = predictData2)
+predict1 = predict(rfc_model,data = predictData2)
 
 preds = as.data.frame(predict1$predictions[,2])
 names(preds)[1] = "Prediction"
@@ -5082,17 +6159,17 @@ end_time <- Sys.time(); end_time - start_time
 map_title = "Future Probability of Violations (RCP8.5 Hadgem)"
 
 predictData = predHUC_8.5H  
-rfr_pred = rfc_gw_p 
+rfc_model = rfc_gw_p 
 
 #()()()()()()()()()()()()()()()()
 
 predictData2 = as.data.frame(subset(predictData,select=-c(HUC12)))
 dim(predictData2)
 
-setdiff(names(rfr_pred$variable.importance),colnames(predictData)) # gives not matching
+setdiff(names(rfc_model$variable.importance),colnames(predictData)) # gives not matching
 
 
-predict1 = predict(rfr_pred,data = predictData2)
+predict1 = predict(rfc_model,data = predictData2)
 
 preds = as.data.frame(predict1$predictions[,2])
 names(preds)[1] = "Prediction"
@@ -5161,20 +6238,20 @@ end_time <- Sys.time(); end_time - start_time
 map_title = "Future Probability of Violations (RCP4.5 GISS)"
 
 predictData = predHUC_4.5G  
-#rfr_pred = rfc_sw_p
-#rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
-#rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
-rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
+#rfc_model = rfc_sw_p
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
 
 #()()()()()()()()()()()()()()()()
 
 predictData2 = as.data.frame(subset(predictData,select=-c(COMID)))
 dim(predictData2)
 
-setdiff(names(rfr_pred$variable.importance),colnames(predictData)) # gives not matching
+setdiff(names(rfc_model$variable.importance),colnames(predictData)) # gives not matching
 
 
-predict1 = predict(rfr_pred,data = predictData2)
+predict1 = predict(rfc_model,data = predictData2)
 
 preds = as.data.frame(predict1$predictions[,2])
 names(preds)[1] = "Prediction"
@@ -5238,6 +6315,172 @@ end_time <- Sys.time(); end_time - start_time
 
 ```
 
+#---
+# Raster Map 15NUE HUC12
+```{r}
+
+#()()()()()()()()()()()()()()()()
+map_title = "Future Probability of Violations \n(15% Inrease in NUE)"
+
+predictData = scen_NUE_HUC  
+#rfc_model = rfc_sw_p
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
+
+
+#()()()()()()()()()()()()()()()()
+
+predictData2 = as.data.frame(subset(predictData,select=-c(HUC12)))
+dim(predictData2)
+
+setdiff(names(rfc_model$variable.importance),colnames(predictData)) # gives not matching
+
+
+predict1 = predict(rfc_model,data = predictData2)
+
+preds = as.data.frame(predict1$predictions[,2])
+names(preds)[1] = "Prediction"
+
+# Merge back on HUC12s
+pred_all = cbind(predictData$HUC12 ,preds)
+names(pred_all)[1] = 'HUC12'
+
+nrow(pred_all)  # 36252 
+
+nrow(pred_all[pred_all$Prediction > 0.5,])
+100*nrow(pred_all[pred_all$Prediction > 0.5,])/nrow(pred_all)
+summary(pred_all$Prediction)
+
+# Merge on Spatial Data
+
+map1 = merge(pred_all,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
+
+map2 = map1[complete.cases(map1[,c("Prediction")]),] 
+map2 <- st_as_sf(map2) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Prediction),]
+#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
+
+nrow(map3[map3$Prediction>0.5,])
+summary(map3$Prediction)
+
+# Format rasters
+start_time <- Sys.time()
+map4<-st_rasterize(map3[,"Prediction"],
+                     st_as_stars(st_bbox(states_boundary),
+                                 dx = 3000, dy = 3000, values=NA_real_), na.rm=T)
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 8.113112 secs (Desktop at 1000m)
+
+
+## Plot Nitrogen Maps
+start_time <- Sys.time()
+ggplot()+
+  geom_stars(data=map4, aes(fill=Prediction))+
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  # scale_color_viridis(option="magma",name="Risk Score" 
+  #                     ,limits = c(0, 1)
+  #                     )+ # options: viridis, magma, plasma
+  binned_scale(aesthetics = "fill",
+               palette=function(x) c("#5E4FA2","#3288BD","#66C2A5","#ABDDA4","#E6F598",
+                                     "#FEE08B","#FDAE61","#F46D43","#D53E4F","#9E0142"),
+               breaks=c(.1, .2, .3, .4, .5, 0.6, .7, 0.8, 0.9)) +
+  theme (axis.text = element_blank(), axis.title = element_blank(), 
+         panel.background = element_blank(), axis.ticks = element_blank(), 
+         legend.text = element_text(size = 14), legend.title = element_text(size = 14))+
+  ggtitle(map_title)+
+  theme(plot.title = element_text(hjust=0.5))+
+  labs(fill="Risk Value")
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 33.21989 secs
+
+
+
+```
+
+# Raster Map 55Prod HUC12
+* Increase in productivity by 55% (constant NUE)
+```{r}
+
+#()()()()()()()()()()()()()()()()
+map_title = "Future Probability of Violations \n(55% Inrease in Productivity, no change in NUE)"
+
+predictData = scen_prod_HUC  
+#rfc_model = rfc_sw_p
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
+
+
+#()()()()()()()()()()()()()()()()
+
+predictData2 = as.data.frame(subset(predictData,select=-c(HUC12)))
+dim(predictData2)
+
+setdiff(names(rfc_model$variable.importance),colnames(predictData)) # gives not matching
+
+
+predict1 = predict(rfc_model,data = predictData2)
+
+preds = as.data.frame(predict1$predictions[,2])
+names(preds)[1] = "Prediction"
+
+# Merge back on HUC12s
+pred_all = cbind(predictData$HUC12 ,preds)
+names(pred_all)[1] = 'HUC12'
+
+nrow(pred_all)  # 36252 
+
+100*nrow(pred_all[pred_all$Prediction > 0.5,])/nrow(pred_all)
+summary(pred_all$Prediction)
+
+# Merge on Spatial Data
+
+map1 = merge(pred_all,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
+
+map2 = map1[complete.cases(map1[,c("Prediction")]),] 
+map2 <- st_as_sf(map2) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Prediction),]
+#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
+
+nrow(map3[map3$Prediction>0.5,])
+summary(map3$Prediction)
+
+# Format rasters
+start_time <- Sys.time()
+map4<-st_rasterize(map3[,"Prediction"],
+                     st_as_stars(st_bbox(states_boundary),
+                                 dx = 3000, dy = 3000, values=NA_real_), na.rm=T)
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 8.113112 secs (Desktop at 1000m)
+
+
+## Plot Nitrogen Maps
+start_time <- Sys.time()
+ggplot()+
+  geom_stars(data=map4, aes(fill=Prediction))+
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  # scale_color_viridis(option="magma",name="Risk Score" 
+  #                     ,limits = c(0, 1)
+  #                     )+ # options: viridis, magma, plasma
+  binned_scale(aesthetics = "fill",
+               palette=function(x) c("#5E4FA2","#3288BD","#66C2A5","#ABDDA4","#E6F598",
+                                     "#FEE08B","#FDAE61","#F46D43","#D53E4F","#9E0142"),
+               breaks=c(.1, .2, .3, .4, .5, 0.6, .7, 0.8, 0.9)) +
+  theme (axis.text = element_blank(), axis.title = element_blank(), 
+         panel.background = element_blank(), axis.ticks = element_blank(), 
+         legend.text = element_text(size = 14), legend.title = element_text(size = 14))+
+  ggtitle(map_title)+
+  theme(plot.title = element_text(hjust=0.5))+
+  labs(fill="Risk Value")
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 33.21989 secs
+
+
+
+```
 
 #--
 # Change Map 4.5G
@@ -5251,12 +6494,12 @@ map_title = "Change in Probability of Violations (RCP4.5 GIS)"
 predictData1 = predHUC_cur 
 predictData2 = predHUC_4.5G 
 
-#rfr_pred = rfc_gw_p # rfc_gw_p, rfc_sw_p
-#rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
-#rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+#rfc_model = rfc_gw_p # rfc_gw_p, rfc_sw_p
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
 
-rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
-rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
 
 #()()()()()()()()()()()()()()()()
 
@@ -5264,10 +6507,10 @@ predictData1.2 = as.data.frame(subset(predictData1,select=-c(HUC12)))
 predictData2.2 = as.data.frame(subset(predictData2,select=-c(HUC12)))
 
 
-setdiff(names(rfr_pred$variable.importance),colnames(predictData2.2))
+setdiff(names(rfc_model$variable.importance),colnames(predictData2.2))
 
-predict1 = predict(rfr_pred,data = predictData1.2)
-predict2 = predict(rfr_pred,data = predictData2.2)
+predict1 = predict(rfc_model,data = predictData1.2)
+predict2 = predict(rfc_model,data = predictData2.2)
 
 preds1 = as.data.frame(predict1$predictions[,2])
 preds2 = as.data.frame(predict2$predictions[,2])
@@ -5414,9 +6657,9 @@ end_time <- Sys.time(); end_time - start_time
 map_title = "Error SWDW Probability of Violations Catchments"
 
 predictData = predCat_cur  
-#rfr_pred = rfc_sw_p # rfc_gw_p, rfc_sw_p
-#rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
-rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
+#rfc_model = rfc_sw_p # rfc_gw_p, rfc_sw_p
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
 ObsData = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_SW_COMIDS.csv'))
 pred_sw = pred_sw_Cat
 #()()()()()()()()()()()()()()()()
@@ -5489,8 +6732,8 @@ ggplot() +
 map_title = "Error GWDW Probability of Violations Catchments"
 
 predictData = predCat_cur  
-#rfr_pred = rfc_sw_p # rfc_gw_p, rfc_sw_p
-rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
+#rfc_model = rfc_sw_p # rfc_gw_p, rfc_sw_p
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
 ObsData = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_GW_COMIDS.csv'))
 pred_sw = pred_gw_Cat
 #()()()()()()()()()()()()()()()()
@@ -5563,8 +6806,8 @@ ggplot() +
 map_title = "Error GWDW Probability of Violations HUC12"
 
 predictData = predHUC_cur  
-#rfr_pred = rfc_sw_p # rfc_gw_p, rfc_sw_p
-#rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+#rfc_model = rfc_sw_p # rfc_gw_p, rfc_sw_p
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
 ObsData = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_GW_HUC12.csv'))
 pred_gw = pred_gw_HU12
 #()()()()()()()()()()()()()()()()
@@ -5761,9 +7004,9 @@ predHUC_4.5G = merge(predHUC_fut,StreamCat_HU12[,statkeeps],by='HUC12')
 map_title = "Future Probability of Violations (RCP4.5 GISS)"
 
 predictData = predHUC_4.5G  
-#rfr_pred = rfc_sw_p
-rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
-#rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+#rfc_model = rfc_sw_p
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
 
 
 #()()()()()()()()()()()()()()()()
@@ -5771,10 +7014,10 @@ rfr_pred = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_S
 predictData2 = as.data.frame(subset(predictData,select=-c(HUC12)))
 dim(predictData2)
 
-setdiff(names(rfr_pred$variable.importance),colnames(predictData)) # gives not matching
+setdiff(names(rfc_model$variable.importance),colnames(predictData)) # gives not matching
 
 
-predict1 = predict(rfr_pred,data = predictData2)
+predict1 = predict(rfc_model,data = predictData2)
 
 preds = as.data.frame(predict1$predictions[,2])
 names(preds)[1] = "Prediction"
@@ -6610,6 +7853,64 @@ ggplot() +
     axis.ticks = element_blank(),
     axis.title = element_blank())
 end_time <- Sys.time(); end_time - start_time
+
+
+
+```
+
+# Map Neg N Surplus
+```{r}
+
+#()()()()()()()()()()()()()()()()
+map_title = "Zero/Neg. N Surplus at HUC12"
+map_title = "Zero/Neg. Ag. N Surplus at HUC12"
+
+MapData = NNI17  
+MapData$Variable = MapData$n_ag_surplus_kgsqkm # n_surplus_kgsqkm
+#()()()()()()()()()()()()()()()()
+summary(MapData$Variable)
+
+MapData = MapData[MapData$Variable <=0,]
+
+# Remove rows where value is NA or Inf
+MapData$Variable[is.infinite(MapData$Variable)] = NA
+MapData = MapData[complete.cases(MapData[,c("Variable")]),] 
+#test = MapData[,c('HUC12','N_Surp_2017ws','N_surp_RCP4.5G')]
+
+
+# Merge on Spatial Data
+map1 <-merge(MapData,huc12_p,by="HUC12",all.x=T)
+map2 <- st_as_sf(map1) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Variable),]
+
+# Get point data for plotting
+map3<-cbind(map3, st_coordinates(st_centroid(map3$geometry)))
+dim(map3)
+summary(map3$Variable)
+
+#map3$Variable_class = NA
+map3$Variable_class = ifelse(map3$Variable ==0,"Zero Surplus","Negative Surplus")  
+#mypal =c( "0"="#56B4E9", "1"="red" )
+mypal =c( "Zero Surplus"="orange", "Negative Surplus"="purple" )
+
+ggplot() +
+  geom_sf(fill='white', data=states_conus, color='black') +
+  geom_point(data=map3, aes(x=X, y=Y, color=Variable_class)) +
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  scale_color_manual(values = mypal,name="Nitrate Violations",)+
+  #scale_color_viridis(option="rocket",name="Viol. Frequency")+ # options: viridis, magma, plasma
+  theme(panel.background = element_blank())+ # remove grey background
+  theme(axis.text = element_blank())+ # remove axis text
+  theme(axis.ticks = element_blank())+ # remove axis text
+  theme(plot.title = element_text(hjust=0.5))+
+  ggtitle(map_title)+
+  
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),     # Remove background
+    panel.grid = element_blank(),     # Remove gridlines
+    axis.text = element_blank(),     # Remove Axis ticks/text/titles
+    axis.ticks = element_blank(),
+    axis.title = element_blank())
 
 
 
@@ -9824,6 +11125,512 @@ end_time <- Sys.time(); end_time - start_time
 
 ```
 
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# spmodel
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\
+# Spatial Model Correction for Ag land
+* Goal:
+*** 1. develop relationship between 2010 Iclus and Current NLCD/StreamCat with spmodel
+*** 2. Use the fitted spmodel to predict 2050 StreamCat/NLCD Ag (Crop+Pasture)
+*** 3. Calculate change ratio based on StreamCat Values 2050 StreamCat / 2020 StreamCat
+*** 4. Use change ratio as multiplier to convert current NNI N inputs to future 2050 NNI N inputs
+```{r}
+
+library(spmodel)
+library(broom)
+library(knitr)
+library(tictoc)
+
+
+
+# Add on spatial information
+ag_sp = merge(XYplot[,c('HUC12','crop_hay_past_streamcat','Pct_crop_pasture_2010_iclus')],
+              huc12_p[,c('HUC12','geometry')],by='HUC12')
+ag_sp <- st_as_sf(ag_sp) # added this because the above didn't retain geometry
+
+# remove missing values
+ag_sp = unique(na.omit(ag_sp))
+
+#-------------------------------------------------------------------------------
+# Model calibration and prediction
+
+start_time <- Sys.time()
+m0 <- splm(crop_hay_past_streamcat ~ poly(Pct_crop_pasture_2010_iclus, 3), data=ag_sp,
+#m0 <- splm(Pct_crop_pasture_2010_iclus ~ poly(crop_hay_past_streamcat, 3), data=ag_sp,
+           spcov_type = "none",  # linear model, no accounting for spatial covariance
+           local = list(parallel = TRUE, ncores = 12))
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 50.90884 secs
+gc()
+
+start_time <- Sys.time()
+spmod0 <- splm(crop_hay_past_streamcat ~ poly(Pct_crop_pasture_2010_iclus, 3), data=ag_sp,
+#spmod0 <- splm(Pct_crop_pasture_2010_iclus ~ poly(crop_hay_past_streamcat, 3), data=ag_sp,
+              spcov_type = "exponential",
+              local = list(size = 50, method = "kmeans", parallel = TRUE, ncores = 12, var_adjust = "none"))
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 2.61594 mins
+gc()
+
+
+#saveRDS(spmod0, './tdep-tn-spatial-model-huc12.rds')
+ns.obs.prd <- data.frame(#observed = m0$obdata$Pct_crop_pasture_2010_iclus,
+                         observed = m0$obdata$crop_hay_past_streamcat,
+                      predicted = fitted(m0))
+
+obs.prd <- data.frame(#observed = spmod0$obdata$Pct_crop_pasture_2010_iclus,
+                      observed = spmod0$obdata$crop_hay_past_streamcat,
+                      predicted = fitted(spmod0) + fitted(spmod0, type = "spcov")$de)
+
+error <- ns.obs.prd$observed - ns.obs.prd$predicted
+ns.obs.prd_stats <- data.frame(Model = 'Non-spatial', bias = mean(error), MSPE = mean(error^2),
+                             RMSPE = sqrt(mean(error^2)), cor2 = cor(ns.obs.prd$observed, ns.obs.prd$predicted)^2)
+
+error <- obs.prd$observed - obs.prd$predicted
+obs.prd_stats <- data.frame(Model = 'Spatial', bias = mean(error), MSPE = mean(error^2),
+                             RMSPE = sqrt(mean(error^2)), cor2 = cor(obs.prd$observed, obs.prd$predicted)^2)
+
+kable(rbind(ns.obs.prd_stats, 
+            obs.prd_stats))
+#-------------------------------------------------------------------------------
+
+# x-y scatter for non-spatial model
+ggplot(data=ns.obs.prd, aes(x=predicted, y=observed)) + 
+  geom_hex(bins = 100) + ggtitle("Non-Spatial Model - Ag Land") +
+  xlim(0, max(ns.obs.prd)) + ylim(0, max(ns.obs.prd)) +
+  scale_fill_gradient(low = "grey", high = "red") +
+  geom_abline(color='black') + theme_bw()
+
+# x-y scatter for spatial model
+ggplot(data=obs.prd, aes(x=predicted, y=observed)) + 
+  geom_hex(bins = 100) + ggtitle("Spatial Model - Ag Land") +
+  xlim(0, max(ns.obs.prd)) + ylim(0, max(ns.obs.prd)) +
+  scale_fill_gradient(low = "grey", high = "red") +
+  geom_abline(color='black') + theme_bw()
+
+
+#-------------------------------------------------------------------------------
+# Create Future Dataset
+# create dataframe with ag_data for 2050
+ag2050 = LU_nni_hu12[,c('HUC12',#'Pct_crop_pasture_land_2010',
+                        'Pct_crop_pasture_land_RCP4.5G',
+                        'Pct_crop_pasture_land_RCP8.5G',
+                        'Pct_crop_pasture_land_RCP4.5H','Pct_crop_pasture_land_RCP8.5H'
+                        )]
+
+# remove missing values
+ag2050 = unique(na.omit(ag2050))
+
+# Add on spatial information
+ag2050_sp = merge(ag2050,
+              huc12_p[,c('HUC12','geometry')],by='HUC12')
+ag2050_sp <- st_as_sf(ag2050_sp) # added this because the above didn't retain geometry
+
+
+#-------------------------------------------------------------------------------
+# Use this model to Predict 2050 NCLD (StreamCat) Ag % 
+
+start_time <- Sys.time()
+ag_nlcd_2050_rcp4.5G <- predict(spmod0, 
+                       newdata = ag2050_sp %>% 
+                         rename(Pct_crop_pasture_2010_iclus=Pct_crop_pasture_land_RCP4.5G),# %>% slice(1:1),
+                       se.fit = FALSE,
+                       local = list(parallel = TRUE, 
+                                    ncores = 20))
+end_time <- Sys.time(); end_time - start_time
+#Time difference of 2.217358 mins
+
+start_time <- Sys.time()
+ag_nlcd_2050_rcp8.5G <- predict(spmod0, 
+                       newdata = ag2050_sp %>% 
+                         rename(Pct_crop_pasture_2010_iclus=Pct_crop_pasture_land_RCP8.5G),# %>% slice(1:1),
+                       se.fit = FALSE,
+                       local = list(parallel = TRUE, 
+                                    ncores = 20))
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 2.210448 mins
+
+start_time <- Sys.time()
+ag_nlcd_2050_rcp4.5H <- predict(spmod0, 
+                       newdata = ag2050_sp %>% 
+                         rename(Pct_crop_pasture_2010_iclus=Pct_crop_pasture_land_RCP4.5H),# %>% slice(1:1),
+                       se.fit = FALSE,
+                       local = list(parallel = TRUE, 
+                                    ncores = 20))
+end_time <- Sys.time(); end_time - start_time
+#Time difference of 2.123296 mins
+
+start_time <- Sys.time()
+ag_nlcd_2050_rcp8.5H <- predict(spmod0, 
+                       newdata = ag2050_sp %>% 
+                         rename(Pct_crop_pasture_2010_iclus=Pct_crop_pasture_land_RCP8.5H),# %>% slice(1:1),
+                       se.fit = FALSE,
+                       local = list(parallel = TRUE, 
+                                    ncores = 20))
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 2.141382 mins
+
+# Merge back on HUC12s
+ag_nlcd_2050_rcp4.5G = cbind(ag2050_sp$HUC12 ,ag_nlcd_2050_rcp4.5G)
+ag_nlcd_2050_rcp8.5G = cbind(ag2050_sp$HUC12 ,ag_nlcd_2050_rcp8.5G)
+ag_nlcd_2050_rcp4.5H = cbind(ag2050_sp$HUC12 ,ag_nlcd_2050_rcp4.5H)
+ag_nlcd_2050_rcp8.5H = cbind(ag2050_sp$HUC12 ,ag_nlcd_2050_rcp8.5H)
+
+ag_nlcd_2050_rcp4.5G = as.data.frame(ag_nlcd_2050_rcp4.5G)
+ag_nlcd_2050_rcp8.5G = as.data.frame(ag_nlcd_2050_rcp8.5G)
+ag_nlcd_2050_rcp4.5H = as.data.frame(ag_nlcd_2050_rcp4.5H)
+ag_nlcd_2050_rcp8.5H = as.data.frame(ag_nlcd_2050_rcp8.5H)
+
+names(ag_nlcd_2050_rcp4.5G)[1] = 'HUC12'
+names(ag_nlcd_2050_rcp8.5G)[1] = 'HUC12'
+names(ag_nlcd_2050_rcp4.5H)[1] = 'HUC12'
+names(ag_nlcd_2050_rcp8.5H)[1] = 'HUC12'
+
+ag_nlcd_2050_rcp4.5G$ag_nlcd_2050_rcp4.5G = 
+  as.numeric(ag_nlcd_2050_rcp4.5G$ag_nlcd_2050_rcp4.5G)
+ag_nlcd_2050_rcp8.5G$ag_nlcd_2050_rcp8.5G = 
+  as.numeric(ag_nlcd_2050_rcp8.5G$ag_nlcd_2050_rcp8.5G)
+ag_nlcd_2050_rcp4.5H$ag_nlcd_2050_rcp4.5H = 
+  as.numeric(ag_nlcd_2050_rcp4.5H$ag_nlcd_2050_rcp4.5H)
+ag_nlcd_2050_rcp8.5H$ag_nlcd_2050_rcp8.5H = 
+  as.numeric(ag_nlcd_2050_rcp8.5H$ag_nlcd_2050_rcp8.5H)
+
+# Merge
+ag_nlcd_2050 = merge(ag_nlcd_2050_rcp4.5G,ag_nlcd_2050_rcp8.5G,by="HUC12")
+ag_nlcd_2050 = merge(ag_nlcd_2050,ag_nlcd_2050_rcp4.5H,by="HUC12")
+ag_nlcd_2050 = merge(ag_nlcd_2050,ag_nlcd_2050_rcp8.5H,by="HUC12")
+
+
+#-------------------------------------------------------------------------------
+
+
+saveRDS(m0, file = paste0(future_dir ,'Data/Models/NONSPATIAL_model_ICLUS_vs_NLCD_cropland.rds'))
+saveRDS(spmod0, file = paste0(future_dir ,'Data/Models/SPATIAL_model_ICLUS_vs_NLCD_cropland.rds'))
+
+
+write.csv(ag_nlcd_2050, file = paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP_GISS_HADGEM_HU12.csv'), row.names=F)
+
+
+```
+
+# Test Scatter
+```{r}
+
+XYplot = merge(StreamCat_HU12,LU_nni_hu12,by='HUC12')  
+
+XYplot$crop_hay_past_2019streamcat = XYplot$PctHay2019Cat + XYplot$PctCrop2019Cat
+XYplot$Pct_crop_land_2010_iclus = XYplot$Pct_crop_land_2010
+XYplot$Pct_crop_pasture_2010_iclus = XYplot$Pct_crop_pasture_land_2010
+
+test = merge(ag_nlcd_2050_rcp4.5G,ag_nlcd_2050_rcp8.5G,by='HUC12')
+test = merge(test,ag2050,by='HUC12')
+test = merge(test,XYplot[,c('HUC12','Pct_crop_land_2010_iclus','crop_hay_past_2019streamcat')],by='HUC12')
+
+test$diff2 = test$Pct_crop_pasture_land_RCP4.5G - test$ag_nlcd_2050_rcp4.5G
+
+
+plot(test$ag_nlcd_2050_rcp4.5G ~ test$Pct_crop_pasture_land_RCP4.5G)
+
+ggplot(data=test, aes(x=Pct_crop_pasture_land_RCP4.5G, y=ag_nlcd_2050_rcp4.5G)) + 
+  geom_hex(bins = 100) + ggtitle("Prediced Future StreamCat") +
+  xlim(0, max(ns.obs.prd)) + ylim(0, max(ns.obs.prd)) +
+  scale_fill_gradient(low = "grey", high = "red") +
+  geom_abline(color='black') + theme_bw()
+
+ggplot(data=test, aes(x=crop_hay_past_2019streamcat, y=ag_nlcd_2050_rcp4.5G)) + 
+  geom_hex(bins = 100) + ggtitle("Prediced Future StreamCat") +
+  xlim(0, max(ns.obs.prd)) + ylim(0, max(ns.obs.prd)) +
+  scale_fill_gradient(low = "grey", high = "red") +
+  geom_abline(color='black') + theme_bw()
+
+
+# Hexplot 
+# remove the (0,0)
+test$flag0 = ifelse(test$Pct_crop_pasture_land_RCP4.5G < 1 | test$ag_nlcd_2050_rcp4.5G <1,0,1)
+test2 = test[test$flag0 !=0,]
+ggplot(test2, aes(Pct_crop_pasture_land_RCP4.5G,ag_nlcd_2050_rcp4.5G)) +
+  geom_hex()
+
+
+
+```
+
+# Map Current % Diff between ICLUS and StreamCat Land (ICLUS 2010)
+```{r}
+
+#()()()()()()()()()()()()()()()()
+map_title = "Future Difference btwn ICLUS 2050 & StreamCat Ag Land 2050"
+
+MapData = test 
+MapData$Variable = MapData$diff2
+#()()()()()()()()()()()()()()()()
+summary(MapData$Variable)
+
+
+# Remove rows where value is NA or Inf
+MapData$Variable[is.infinite(MapData$Variable)] = NA
+MapData = MapData[complete.cases(MapData[,c("Variable")]),] 
+#test = MapData[,c('HUC12','N_Surp_2017ws','N_surp_RCP4.5G')]
+
+
+# Merge on Spatial Data
+map1 = merge(MapData,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
+map2 <- st_as_sf(map1) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Variable),]
+#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
+
+summary(map3$Variable)
+
+# Format rasters
+start_time <- Sys.time()
+map4<-st_rasterize(map3[,"Variable"],
+                     st_as_stars(st_bbox(states_boundary),
+                                 dx = 10000, dy = 10000, values=NA_real_), na.rm=T)
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 8.113112 secs (Desktop at 1000m)
+
+
+start_time <- Sys.time()
+ggplot() +
+  geom_stars(data=map4, aes(fill=Variable))+
+  geom_sf(data=states_conus,fill=NA,color='black')+
+  scale_fill_viridis(option="cividis",name="Diff=ICLUS-StreamCat",na.value = "white" 
+                      #limits = c(0, 1)
+                      )+ # options: viridis, magma, plasma
+  theme(panel.background = element_blank())+ # remove grey background
+  theme(axis.text = element_blank())+ # remove axis text
+  theme(axis.ticks = element_blank())+ # remove axis text
+  theme(plot.title = element_text(hjust=0.5))+
+  ggtitle(map_title)+
+  
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),     # Remove background
+    panel.grid = element_blank(),     # Remove gridlines
+    axis.text = element_blank(),     # Remove Axis ticks/text/titles
+    axis.ticks = element_blank(),
+    axis.title = element_blank())
+end_time <- Sys.time(); end_time - start_time
+
+
+
+```
+
+#-----------------------------------------------------------------------------------
+# Old code
+
+
+# ?n_point_source_kgsqkm
+```{r}
+
+
+
+```
+
+
+# ? n_total_fert_kgsqkm vs. n_farm_fert_kgsqkm
+
+
+# ?Urban N (n_nonfarm_fert_kgsqkm)
+```{r}
+
+#!!!!!!!!!!!!!!! Need to decide on method for dealing with zero areas in 2010 because get 
+
+# Get the Land Use grouped together
+LU_nni_hu12$area_urb_2010= 
+  LU_nni_hu12$area_10.exurbanLD_landuse_2010 + 
+  LU_nni_hu12$area_11.exurbanHD_landuse_2010 +
+  LU_nni_hu12$area_12.suburban_landuse_2010 +
+  LU_nni_hu12$area_13.urbanLD_landuse_2010 +
+  LU_nni_hu12$area_14.urbanHD_landuse_2010 +
+  LU_nni_hu12$area_15.commercial_landuse_2010 +
+  LU_nni_hu12$area_16.industrial_landuse_2010 +
+  LU_nni_hu12$area_17.institutional_landuse_2010 +
+  LU_nni_hu12$area_18.transport_landuse_2010
+
+LU_nni_hu12$area_urb_RCP4.5G = 
+  LU_nni_hu12$area_10.exurbanLD_landuse_RCP4.5GISS + 
+  LU_nni_hu12$area_11.exurbanHD_landuse_RCP4.5GISS +
+  LU_nni_hu12$area_12.suburban_landuse_RCP4.5GISS +
+  LU_nni_hu12$area_13.urbanLD_landuse_RCP4.5GISS +
+  LU_nni_hu12$area_14.urbanHD_landuse_RCP4.5GISS +
+  LU_nni_hu12$area_15.commercial_landuse_RCP4.5GISS +
+  LU_nni_hu12$area_16.industrial_landuse_RCP4.5GISS +
+  LU_nni_hu12$area_17.institutional_landuse_RCP4.5GISS +
+  LU_nni_hu12$area_18.transport_landuse_RCP4.5GISS
+
+
+# Calculate Change Ratio (the multiplier for calculating how much mass of N changed)
+LU_nni_hu12$change_ratio_urb = LU_nni_hu12$area_urb_RCP4.5G / LU_nni_hu12$area_urb_2010
+summary(LU_nni_hu12$change_ratio_urb)
+
+# Get mass of N
+LU_nni_hu12$n_nonfarm_fert_kg_2010 = LU_nni_hu12$n_nonfarm_fert_kgsqkm * LU_nni_hu12$area_sqkm
+
+# Get mass of N in 2050
+LU_nni_hu12$n_nonfarm_fert_kg_RCP4.5G = LU_nni_hu12$change_ratio_urb * LU_nni_hu12$n_nonfarm_fert_kg_2010
+
+
+# Fix Hu12s with Inf (zero areas in 2010): base future kg N based on future area and 2010 N rate
+LU_nni_hu12$n_nonfarm_fert_kg_RCP4.5G = 
+  ifelse(LU_nni_hu12$n_nonfarm_fert_kg_RCP4.5G == "Inf",
+         LU_nni_hu12$n_nonfarm_fert_kgsqkm * LU_nni_hu12$area_urb_RCP4.5G,
+         LU_nni_hu12$n_nonfarm_fert_kg_RCP4.5G)
+
+# Get area weighted N
+LU_nni_hu12$n_nonfarm_fert_kgsqkm_RCP4.5G = LU_nni_hu12$n_nonfarm_fert_kg_RCP4.5G / LU_nni_hu12$area_sqkm
+
+
+summary(LU_nni_hu12$n_nonfarm_fert_kg_2010)
+summary(LU_nni_hu12$n_nonfarm_fert_kg_RCP4.5G)
+
+summary(LU_nni_hu12$n_nonfarm_fert_kgsqkm)
+summary(LU_nni_hu12$n_nonfarm_fert_kgsqkm_RCP4.5G)
+
+
+```
+
+# ?Pasture N?
+```{r}
+
+#n_pasture_rem_kgsqkm
+
+```
+
+# Future ?AgDrain pct
+
+# Future ?AgKfact 
+
+# ??Future Precip Surplus
+* Temperature, irradiance, wind speed, etc. 
+```{r}
+
+
+
+
+
+```
+
+# ? Future AgDrain
+```{r}
+
+
+
+
+```
+
+
+# Livestock? (Same as manure?)
+*Q? should change ratio be based on ag land or just pasture land? 
+```{r}
+
+  
+# Get mass of N 2010
+LU_nni_hu12$n_livestock_dem_kg_2010 = 
+  LU_nni_hu12$n_livestock_dem_kgsqkm * LU_nni_hu12$area_sqkm
+LU_nni_hu12$n_livestock_prod_kg_2010 = 
+  LU_nni_hu12$n_livestock_prod_kgsqkm * LU_nni_hu12$area_sqkm
+LU_nni_hu12$n_livestock_rec_kg_2010 = 
+  LU_nni_hu12$n_livestock_rec_kgsqkm * LU_nni_hu12$area_sqkm
+
+# Get mass of N in 2050
+LU_nni_hu12$n_livestock_dem_kg_RCP4.5G = 
+  LU_nni_hu12$change_ratio_livestock_RCP4.5G * LU_nni_hu12$n_livestock_dem_kg_2010
+LU_nni_hu12$n_livestock_dem_kg_RCP8.5G = 
+  LU_nni_hu12$change_ratio_livestock_RCP8.5G * LU_nni_hu12$n_livestock_dem_kg_2010
+LU_nni_hu12$n_livestock_dem_kg_RCP4.5H = 
+  LU_nni_hu12$change_ratio_livestock_RCP4.5H * LU_nni_hu12$n_livestock_dem_kg_2010
+LU_nni_hu12$n_livestock_dem_kg_RCP8.5H = 
+  LU_nni_hu12$change_ratio_livestock_RCP8.5H * LU_nni_hu12$n_livestock_dem_kg_2010
+
+LU_nni_hu12$n_livestock_prod_kg_RCP4.5G = 
+  LU_nni_hu12$change_ratio_livestock_RCP4.5G * LU_nni_hu12$n_livestock_prod_kg_2010
+LU_nni_hu12$n_livestock_prod_kg_RCP8.5G = 
+  LU_nni_hu12$change_ratio_livestock_RCP8.5G * LU_nni_hu12$n_livestock_prod_kg_2010
+LU_nni_hu12$n_livestock_prod_kg_RCP4.5H = 
+  LU_nni_hu12$change_ratio_livestock_RCP4.5H * LU_nni_hu12$n_livestock_prod_kg_2010
+LU_nni_hu12$n_livestock_prod_kg_RCP8.5H = 
+  LU_nni_hu12$change_ratio_livestock_RCP8.5H * LU_nni_hu12$n_livestock_prod_kg_2010
+
+LU_nni_hu12$n_livestock_rec_kg_RCP4.5G = 
+  LU_nni_hu12$change_ratio_livestock_RCP4.5G * LU_nni_hu12$n_livestock_rec_kg_2010
+LU_nni_hu12$n_livestock_rec_kg_RCP8.5G = 
+  LU_nni_hu12$change_ratio_livestock_RCP8.5G * LU_nni_hu12$n_livestock_rec_kg_2010
+LU_nni_hu12$n_livestock_rec_kg_RCP4.5H = 
+  LU_nni_hu12$change_ratio_livestock_RCP4.5H * LU_nni_hu12$n_livestock_rec_kg_2010
+LU_nni_hu12$n_livestock_rec_kg_RCP8.5H = 
+  LU_nni_hu12$change_ratio_livestock_RCP8.5H * LU_nni_hu12$n_livestock_rec_kg_2010
+
+# Get area weighted N
+LU_nni_hu12$n_livestock_dem_kgsqkm_RCP4.5G = 
+  LU_nni_hu12$n_livestock_dem_kg_RCP4.5G / LU_nni_hu12$area_sqkm
+LU_nni_hu12$n_livestock_dem_kgsqkm_RCP8.5G = 
+  LU_nni_hu12$n_livestock_dem_kg_RCP8.5G / LU_nni_hu12$area_sqkm
+LU_nni_hu12$n_livestock_dem_kgsqkm_RCP4.5H = 
+  LU_nni_hu12$n_livestock_dem_kg_RCP4.5H / LU_nni_hu12$area_sqkm
+LU_nni_hu12$n_livestock_dem_kgsqkm_RCP8.5H = 
+  LU_nni_hu12$n_livestock_dem_kg_RCP8.5H / LU_nni_hu12$area_sqkm
+
+LU_nni_hu12$n_livestock_prod_kgsqkm_RCP4.5G = 
+  LU_nni_hu12$n_livestock_prod_kg_RCP4.5G / LU_nni_hu12$area_sqkm
+LU_nni_hu12$n_livestock_prod_kgsqkm_RCP8.5G = 
+  LU_nni_hu12$n_livestock_prod_kg_RCP8.5G / LU_nni_hu12$area_sqkm
+LU_nni_hu12$n_livestock_prod_kgsqkm_RCP4.5H = 
+  LU_nni_hu12$n_livestock_prod_kg_RCP4.5H / LU_nni_hu12$area_sqkm
+LU_nni_hu12$n_livestock_prod_kgsqkm_RCP8.5H = 
+  LU_nni_hu12$n_livestock_prod_kg_RCP8.5H / LU_nni_hu12$area_sqkm
+
+LU_nni_hu12$n_livestock_rec_kgsqkm_RCP4.5G = 
+  LU_nni_hu12$n_livestock_rec_kg_RCP4.5G / LU_nni_hu12$area_sqkm
+LU_nni_hu12$n_livestock_rec_kgsqkm_RCP8.5G = 
+  LU_nni_hu12$n_livestock_rec_kg_RCP8.5G / LU_nni_hu12$area_sqkm
+LU_nni_hu12$n_livestock_rec_kgsqkm_RCP4.5H = 
+  LU_nni_hu12$n_livestock_rec_kg_RCP4.5H / LU_nni_hu12$area_sqkm
+LU_nni_hu12$n_livestock_rec_kgsqkm_RCP8.5H = 
+  LU_nni_hu12$n_livestock_rec_kg_RCP8.5H / LU_nni_hu12$area_sqkm
+
+
+
+summary(LU_nni_hu12$n_livestock_prod_kgsqkm)
+summary(LU_nni_hu12$n_livestock_prod_kgsqkm_RCP4.5G)
+summary(LU_nni_hu12$n_livestock_prod_kgsqkm_RCP8.5G)
+summary(LU_nni_hu12$n_livestock_prod_kgsqkm_RCP4.5H)
+summary(LU_nni_hu12$n_livestock_prod_kgsqkm_RCP8.5H)
+  
+
+```
+
+
+# Checks
+```{r}
+
+test = merge(LU_2010_hu12,LU_2050_4.5G_hu12,by='HUC12')
+test = merge(test,LU_chg_4.5G_hu12,by='HUC12')
+
+test2 = test %>% dplyr::select(contains("_07"))
+
+# This shows the method for calculating change_area_*
+test2$chg_area = test2$area_07.cropland_landuse_RCP4.5GISS - test2$area_07.cropland_landuse_2010
+test2$chg_area_diff = 100*(test2$chg_area - test2$change_area_07.cropland_landuse_RCP4.5GISS)/test2$chg_area
+summary(test2$chg_area_diff)
+
+# This shows the method for calculating change_count_*
+test2$chg_count = test2$count_07.cropland_landuse_RCP4.5GISS - test2$count_07.cropland_landuse_2010
+test2$chg_count_diff = 100*(test2$chg_count - test2$change_count_07.cropland_landuse_RCP4.5GISS)/test2$chg_count
+summary(test2$chg_count_diff)
+
+# This shows the method for calculating change_pctcov_* (% cover)
+test2$chg_pctcov = test2$pctcov_07.cropland_landuse_RCP4.5GISS - test2$pctcov_07.cropland_landuse_2010
+test2$chg_pctcov_diff = 100*(test2$chg_pctcov - test2$change_pctcov_07.cropland_landuse_RCP4.5GISS)/test2$chg_pctcov
+summary(test2$chg_pctcov_diff)
+
+# This shows the method for calculating % change in area, which is not same as change_pctcov
+test2$prc_chg_area = 100*(test2$area_07.cropland_landuse_RCP4.5GISS - test2$area_07.cropland_landuse_2010)/test2$area_07.cropland_landuse_2010
+test2$prc_chg_area_diff = 100*(test2$prc_chg_area - test2$change_pctcov_07.cropland_landuse_RCP4.5GISS)/test2$prc_chg_area
+summary(test2$prc_chg_area_diff)
+
+
+```
+
 
 #----------------------------------------------------------------------------------------------------------
 # QA STEPS
@@ -11293,43 +13100,207 @@ ggplot() +
 *SPEI Package
 * https://www.rdocumentation.org/packages/SPEI/versions/1.7/topics/Potential%20evapotranspiration
 * Consider incorporating wind speed or other package like: https://cran.r-project.org/web/packages/Evapotranspiration/index.html
+* May need to refine thorn... method: https://stackoverflow.com/questions/52588534/how-do-i-run-a-thornthwaite-function-which-computes-standard-precipitation-inde
 ```{r}
 
 library(SPEI)
 
 # Get the coordinates from geometry
-st_coordinates()
+#st_coordinates()
 
-huc12_coords = huc12_s 
-#huc12_coords<-cbind(huc12_coords, st_coordinates(st_centroid(huc12_coords$geometry)))
-
-huc12_coords2 = huc12_coords %>%
-  na.omit() %>%
-  st_as_sf(coords = c('UTM_X','UTM_Y'), crs = 32616) %>%
-  st_transform(crs = 4326) %>%
-  { bind_cols(st_drop_geometry(.), st_coordinates(.)) } %>% 
-  rename(lon = X, lat = Y)
-
-
-summary(huc12_coords$X)
-summary(huc12_coords$Y)
-
-huc12_coords = as.data.frame(st_drop_geometry(huc12_coords))
-
-names(huc12_coords)[which(colnames(huc12_coords)=="X")] = "LAT"
-names(huc12_coords)[which(colnames(huc12_coords)=="Y")] = "LON"
-
-
-pet = merge(temp_hu12,huc12_coords[,c('HUC12','LAT','LON')],by='HUC12')
-str(pet$LAT)
-str(pet$LON)
-
-pet$PET = thornthwaite(Tave=pet$temp_2010_C, lat = pet$LAT)
+# huc12_coords = huc12_s 
+# #huc12_coords<-cbind(huc12_coords, st_coordinates(st_centroid(huc12_coords$geometry)))
+# 
+# huc12_coords2 = huc12_coords %>%
+#   na.omit() %>%
+#   st_as_sf(coords = c('UTM_X','UTM_Y'), crs = 32616) %>%
+#   st_transform(crs = 4326) %>%
+#   { bind_cols(st_drop_geometry(.), st_coordinates(.)) } %>% 
+#   rename(lon = X, lat = Y)
+# 
+# 
+# summary(huc12_coords$X)
+# summary(huc12_coords$Y)
+# 
+# huc12_coords = as.data.frame(st_drop_geometry(huc12_coords))
+# 
+# names(huc12_coords)[which(colnames(huc12_coords)=="X")] = "LAT"
+# names(huc12_coords)[which(colnames(huc12_coords)=="Y")] = "LON"
 
 
+huc12_coords = huc12_p
+
+huc12_coords <- st_transform(huc12_coords, crs = 4326)
+
+
+# Add X and Y columns directly to the sf object
+huc12_coords$longitude <- st_coordinates(huc12_coords)[, "X"]
+huc12_coords$latitude <- st_coordinates(huc12_coords)[, "Y"]
+
+pet = merge(temp_hu12,huc12_coords[,c('HUC12','latitude','longitude')],by='HUC12')
+str(pet$latitude)
+str(pet$longitude)
+
+dim(pet)
+
+pet = pet[complete.cases(pet[,c("latitude")]),] 
+pet = pet[complete.cases(pet[,c("temp_2010_C")]),] 
+
+dim(pet)
+
+pet = pet[,c('HUC12','latitude','longitude','temp_2010_C',
+             'temp_2050_degC_RCP4.5GISS','temp_2050_degC_RCP8.5GISS',
+             'temp_2050_degC_RCP4.5Hadgem','temp_2050_degC_RCP8.5Hadgem')]
+
+pet = na.omit(pet)
+
+
+# Needs to be run on single latitudes
+#thornthwaite(20,37.6475)
+# TMED = c(18,19,20,21)
+# TMED = c(18,19)
+# tho <- thornthwaite(TMED, 37.6475)
+
+summary(pet$latitude)
+
+# round to nearest 10th 
+pet$latitude2 = round(pet$latitude,1)
+
+# Find out how many per lat group
+test = pet
+
+pet = pet %>% group_by(latitude2) %>% 
+  mutate(FREQ = n()) %>% ungroup()
+
+# for the locations with 1 unique lattitude, fix (round up or down to nearest)
+pet$latitude2[pet$latitude2 == 24.7] = 25.0
+pet$latitude2[pet$latitude2 == 25.0] = 25.0 
+pet$latitude2[pet$latitude2 == 25.1] = 25.0 
+pet$latitude2[pet$latitude2 == 25.4] = 25.5
+pet$latitude2[pet$latitude2 == 49.1] = 49.0
+
+
+lat_groups = unique(pet$latitude2)
+length(lat_groups)
+
+output = data.frame(pet[1,])
+output$HUC12 = NA
+# output$latitude = NA
+# output$longitude = NA
+# output$temp_2010_C = NA
+# output$latitude2 = NA
+output$PET_2010 = NA
+output$PET_RCP4.5G = NA
+output$PET_RCP8.5G = NA
+output$PET_RCP4.5H = NA
+output$PET_RCP8.5H = NA
+output$FREQ = NA
+
+for(i in 1:length(lat_groups)){
+  print(paste0(i," of ",length(lat_groups)))
+  group_ID = lat_groups[i]
+  pet_group = pet[pet$latitude2 == group_ID,]
+  pet_group$PET_2010 = thornthwaite(Tave=pet_group$temp_2010_C, lat = group_ID, na.rm=T) * 12 # convert to mm/year from mm/month
+  pet_group$PET_RCP4.5G = thornthwaite(Tave=pet_group$temp_2050_degC_RCP4.5GISS, lat = group_ID, na.rm=T) * 12
+  pet_group$PET_RCP8.5G = thornthwaite(Tave=pet_group$temp_2050_degC_RCP8.5GISS, lat = group_ID, na.rm=T) * 12
+  pet_group$PET_RCP4.5H = thornthwaite(Tave=pet_group$temp_2050_degC_RCP4.5Hadgem, lat = group_ID, na.rm=T) * 12
+  pet_group$PET_RCP8.5H = thornthwaite(Tave=pet_group$temp_2050_degC_RCP8.5Hadgem, lat = group_ID, na.rm=T) * 12
+  output = rbind(output,pet_group)
+}
+output = output[complete.cases(output[,c("HUC12")]),] 
+
+precip_surp = merge(output, prec_hu12[,c('HUC12','precip_2010_mm','precip_2050_mm_RCP4.5GISS','precip_2050_mm_RCP8.5GISS',
+                                 'precip_2050_mm_RCP4.5Hadgem','precip_2050_mm_RCP8.5Hadgem')],by='HUC12')
+
+precip_surp$precip_surp_2010 = precip_surp$precip_2010_mm - precip_surp$PET_2010
+precip_surp$precip_surp_RCP4.5G = precip_surp$precip_2050_mm_RCP4.5GISS - precip_surp$PET_RCP4.5G
+precip_surp$precip_surp_RCP8.5G = precip_surp$precip_2050_mm_RCP8.5GISS - precip_surp$PET_RCP8.5G
+precip_surp$precip_surp_RCP4.5H = precip_surp$precip_2050_mm_RCP4.5Hadgem - precip_surp$PET_RCP4.5H
+precip_surp$precip_surp_RCP8.5H = precip_surp$precip_2050_mm_RCP8.5Hadgem - precip_surp$PET_RCP8.5H
+
+# Compare with streamcat
+summary(StreamCat_HU12$precip9120cat)
+summary(prec_hu12$precip_2010_mm)
+
+summary(precip_surp$PET_2010)
+
+#summary(StreamCat_cats$Precip_Minus_EVTCat)
+summary(StreamCat_HU12$Precip_Minus_EVTCat)
+summary(precip_surp$precip_surp_2010)
+
+#pet$PET = thornthwaite(Tave=as.vector(pet$temp_2010_C), lat = pet$latitude[1], na.rm=T)
+#pet$PET = hargreaves(Tmin=min(pet$temp_2010_C), Tmax=max(pet$temp_2010_C), Ra = NULL, lat = pet$latitude, Pre = NULL, na.rm = FALSE,
+#verbose=TRUE)
+
+StreamCat_PET = StreamCat_HU12
+StreamCat_PET$PET_cat = StreamCat_PET$precip9120cat - StreamCat_PET$Precip_Minus_EVTCat
+summary(StreamCat_PET$PET_cat)
 
 
 ```
+
+# Map Checks
+```{r}
+
+#()()()()()()()()()()()()()()()()
+map_title = "Precip Surplus (StreamCat)"
+map_title = "PET R Package"
+map_title = "PET StreamCat"
+map_title = "Precip Surplus 2010 (R Package)"
+
+MapData = precip_surp # precip_surp, StreamCat_PET
+MapData$Variable = MapData$precip_surp_2010   # PET_2010, PET_cat, Precip_Minus_EVTCat
+#()()()()()()()()()()()()()()()()
+summary(MapData$Variable)
+
+
+# Remove rows where value is NA or Inf
+MapData$Variable[is.infinite(MapData$Variable)] = NA
+MapData = MapData[complete.cases(MapData[,c("Variable")]),] 
+#test = MapData[,c('HUC12','N_Surp_2017ws','N_surp_RCP4.5G')]
+
+
+# Merge on Spatial Data
+map1 = merge(MapData,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
+map2 <- st_as_sf(map1) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Variable),]
+#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
+
+summary(map3$Variable)
+
+# Format rasters
+start_time <- Sys.time()
+map4<-st_rasterize(map3[,"Variable"],
+                     st_as_stars(st_bbox(states_boundary),
+                                 dx = 10000, dy = 10000, values=NA_real_), na.rm=T)
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 8.113112 secs (Desktop at 1000m)
+
+
+start_time <- Sys.time()
+ggplot() +
+  geom_stars(data=map4, aes(fill=Variable))+
+  geom_sf(data=states_conus,fill=NA,color='black')+
+  scale_fill_viridis(option="viridis",name="mm",na.value = "white" 
+                      #limits = c(0, 1)
+                      )+ # options: viridis, magma, plasma
+  theme(panel.background = element_blank())+ # remove grey background
+  theme(axis.text = element_blank())+ # remove axis text
+  theme(axis.ticks = element_blank())+ # remove axis text
+  theme(plot.title = element_text(hjust=0.5))+
+  ggtitle(map_title)+
+  
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),     # Remove background
+    panel.grid = element_blank(),     # Remove gridlines
+    axis.text = element_blank(),     # Remove Axis ticks/text/titles
+    axis.ticks = element_blank(),
+    axis.title = element_blank())
+end_time <- Sys.time(); end_time - start_time
+
+
+```
+
 
 #-----------------------
 # Generate PET monthly rasters (Marc Weber code NLA17 E-I)
