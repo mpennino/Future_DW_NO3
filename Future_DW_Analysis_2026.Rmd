@@ -7,6 +7,8 @@ editor_options:
   chunk_output_type: console
 ---
 
+# Github: https://github.com/mpennino/Future_DW_NO3
+
 # Questions:
 * % forest: is it timber and conservation lands? Exurban LD? 
 * How deal with change ratio when zero in denominator? 
@@ -391,6 +393,8 @@ PWS_95in1HUC12 =PWS_95in1HUC12.
 PWS_Over0inHUC12 = PWS_Over0inHUC12.
 ```
 
+
+
 # Converter PWS-HUC12 & PWS COMID
 * Need to remove duplicates: PWSIDs found in multiple HUC12s (keeping HUC12 with most PWSIDs)
 ```{r}
@@ -552,8 +556,8 @@ length(unique(PWS_HUC12$PWSID)) # 397765 (same as nrow so no duplicates)
 # Summarize SDWIS HUC12 & Catchment
 ```{r}
 
-YYYY = 2013
-EEEE = 2017
+YYYY = 2017
+EEEE = 2023
 
 library(dplyr)
 viols = SDWIS_no3[SDWIS_no3$YEAR >= YYYY & SDWIS_no3$YEAR <= EEEE,]
@@ -620,8 +624,8 @@ length(unique(viol_sw_cat$COMID)) # 70
 # Summarize CDC Conc. HUC12 & Catchment
 ```{r}
 
-YYYY = 2013
-EEEE = 2017
+YYYY = 2017
+EEEE = 2023
 
 library(dplyr)
 cdc_sw = cdc_sw[cdc_sw$YEAR >= YYYY & cdc_sw$YEAR <= EEEE,]
@@ -672,18 +676,15 @@ T4f_dir = "C:/Users/mpennino/OneDrive - Environmental Protection Agency (EPA)/Co
 prec_hu12 = read.csv(paste0(T4f_dir,"climate_precip_HUC_final.csv"))
 temp_hu12 = read.csv(paste0(T4f_dir,"climate_temp_HUC_final.csv"))
 
-#prec_Cat = read.csv(paste0(T4f_dir,"climate_precip_cat_final.csv"))
-#temp_Cat = read.csv(paste0(T4f_dir,"climate_temp_cat_final.csv"))
-
 # Add leading zeros
 prec_hu12$HUC12 = formatC(as.numeric(as.character(prec_hu12$HUC12)), width = 12, format = "f",flag = "0",digits = 0) # add zero in front of any
-
 temp_hu12$HUC12 = formatC(as.numeric(as.character(temp_hu12$HUC12)), width = 12, format = "f",flag = "0",digits = 0) # add zero in front of any
 
+prec_Cat = read.csv(paste0(T4f_dir,"climate_precip_cat_final.csv"))
+temp_Cat = read.csv(paste0(T4f_dir,"climate_temp_cat_final.csv"))
+names(prec_Cat)[which(colnames(prec_Cat)=="Catchment.ID")] = "COMID"
+names(temp_Cat)[which(colnames(temp_Cat)=="Catchment.ID")] = "COMID"
 
-#names(prec_Cat)[which(colnames(prec_Cat)=="Catchment.ID")] = "COMID"
-
-#names(temp_Cat)[which(colnames(temp_Cat)=="Catchment.ID")] = "COMID"
 
 #-------------------------------------------------------------------------------
 # Remove -99999
@@ -699,20 +700,6 @@ temp_hu12$temp_2050_degC_RCP8.5GISS[temp_hu12$temp_2050_degC_RCP8.5GISS == -9999
 temp_hu12$temp_2050_degC_RCP4.5Hadgem[temp_hu12$temp_2050_degC_RCP4.5Hadgem == -99999] = NA
 temp_hu12$temp_2050_degC_RCP8.5Hadgem[temp_hu12$temp_2050_degC_RCP8.5Hadgem == -99999] = NA
 
-# prec_Cat$precip_2010_mm[prec_Cat$precip_2010_mm == -99999] = NA
-# prec_Cat$precip_2050_mm_RCP4.5GISS[prec_Cat$precip_2050_mm_RCP4.5GISS == -99999] = NA
-# prec_Cat$precip_2050_mm_RCP8.5GISS[prec_Cat$precip_2050_mm_RCP8.5GISS == -99999] = NA
-# prec_Cat$precip_2050_mm_RCP4.5Hadgem[prec_Cat$precip_2050_mm_RCP4.5Hadgem == -99999] = NA
-# prec_Cat$precip_2050_mm_RCP8.5Hadgem[prec_Cat$precip_2050_mm_RCP8.5Hadgem == -99999] = NA
-# 
-# temp_Cat$temp_2010_C[temp_Cat$temp_2010_C == -99999] = NA
-# temp_Cat$temp_2050_degC_RCP4.5GISS[temp_Cat$temp_2050_degC_RCP4.5GISS == -99999] = NA
-# temp_Cat$temp_2050_degC_RCP8.5GISS[temp_Cat$temp_2050_degC_RCP8.5GISS == -99999] = NA
-# temp_Cat$temp_2050_degC_RCP4.5Hadgem[temp_Cat$temp_2050_degC_RCP4.5Hadgem == -99999] = NA
-# temp_Cat$temp_2050_degC_RCP8.5Hadgem[temp_Cat$temp_2050_degC_RCP8.5Hadgem == -99999] = NA
-
-
-#--------------------------
 prec_hu12$pct_change_precip_RCP4.5GISS[prec_hu12$pct_change_precip_RCP4.5GISS == -99999] = NA
 prec_hu12$pct_change_precip_RCP8.5GISS[prec_hu12$pct_change_precip_RCP8.5GISS == -99999] = NA
 prec_hu12$pct_change_precip_RCP4.5Hadgem[prec_hu12$pct_change_precip_RCP4.5Hadgem == -99999] = NA
@@ -723,15 +710,29 @@ temp_hu12$C_change_temp_RCP8.5GISS[temp_hu12$C_change_temp_RCP8.5GISS == -99999]
 temp_hu12$C_change_temp_RCP4.5Hadgem[temp_hu12$C_change_temp_RCP4.5Hadgem == -99999] = NA
 temp_hu12$C_change_temp_RCP8.5Hadgem[temp_hu12$C_change_temp_RCP8.5Hadgem == -99999] = NA
 
-# prec_Cat$pct_change_precip_RCP4.5GISS[prec_Cat$pct_change_precip_RCP4.5GISS == -99999] = NA
-# prec_Cat$pct_change_precip_RCP8.5GISS[prec_Cat$pct_change_precip_RCP8.5GISS == -99999] = NA
-# prec_Cat$pct_change_precip_RCP4.5Hadgem[prec_Cat$pct_change_precip_RCP4.5Hadgem == -99999] = NA
-# prec_Cat$pct_change_precip_RCP8.5Hadgem[prec_Cat$pct_change_precip_RCP8.5Hadgem == -99999] = NA
-# 
-# temp_Cat$C_change_temp_RCP4.5GISS[temp_Cat$C_change_temp_RCP4.5GISS == -99999] = NA
-# temp_Cat$C_change_temp_RCP8.5GISS[temp_Cat$C_change_temp_RCP8.5GISS == -99999] = NA
-# temp_Cat$C_change_temp_RCP4.5Hadgem[temp_Cat$C_change_temp_RCP4.5Hadgem == -99999] = NA
-# temp_Cat$C_change_temp_RCP8.5Hadgem[temp_Cat$C_change_temp_RCP8.5Hadgem == -99999] = NA
+#--------------------------
+
+prec_Cat$precip_2010_mm[prec_Cat$precip_2010_mm == -99999] = NA
+prec_Cat$precip_2050_mm_RCP4.5GISS[prec_Cat$precip_2050_mm_RCP4.5GISS == -99999] = NA
+prec_Cat$precip_2050_mm_RCP8.5GISS[prec_Cat$precip_2050_mm_RCP8.5GISS == -99999] = NA
+prec_Cat$precip_2050_mm_RCP4.5Hadgem[prec_Cat$precip_2050_mm_RCP4.5Hadgem == -99999] = NA
+prec_Cat$precip_2050_mm_RCP8.5Hadgem[prec_Cat$precip_2050_mm_RCP8.5Hadgem == -99999] = NA
+
+temp_Cat$temp_2010_C[temp_Cat$temp_2010_C == -99999] = NA
+temp_Cat$temp_2050_degC_RCP4.5GISS[temp_Cat$temp_2050_degC_RCP4.5GISS == -99999] = NA
+temp_Cat$temp_2050_degC_RCP8.5GISS[temp_Cat$temp_2050_degC_RCP8.5GISS == -99999] = NA
+temp_Cat$temp_2050_degC_RCP4.5Hadgem[temp_Cat$temp_2050_degC_RCP4.5Hadgem == -99999] = NA
+temp_Cat$temp_2050_degC_RCP8.5Hadgem[temp_Cat$temp_2050_degC_RCP8.5Hadgem == -99999] = NA
+
+prec_Cat$pct_change_precip_RCP4.5GISS[prec_Cat$pct_change_precip_RCP4.5GISS == -99999] = NA
+prec_Cat$pct_change_precip_RCP8.5GISS[prec_Cat$pct_change_precip_RCP8.5GISS == -99999] = NA
+prec_Cat$pct_change_precip_RCP4.5Hadgem[prec_Cat$pct_change_precip_RCP4.5Hadgem == -99999] = NA
+prec_Cat$pct_change_precip_RCP8.5Hadgem[prec_Cat$pct_change_precip_RCP8.5Hadgem == -99999] = NA
+
+temp_Cat$C_change_temp_RCP4.5GISS[temp_Cat$C_change_temp_RCP4.5GISS == -99999] = NA
+temp_Cat$C_change_temp_RCP8.5GISS[temp_Cat$C_change_temp_RCP8.5GISS == -99999] = NA
+temp_Cat$C_change_temp_RCP4.5Hadgem[temp_Cat$C_change_temp_RCP4.5Hadgem == -99999] = NA
+temp_Cat$C_change_temp_RCP8.5Hadgem[temp_Cat$C_change_temp_RCP8.5Hadgem == -99999] = NA
 
 
 ```
@@ -743,12 +744,12 @@ T3_dir = "C:/Users/mpennino/OneDrive - Environmental Protection Agency (EPA)/Con
 T3_dir2 = "C:/Users/mpennino/OneDrive - Environmental Protection Agency (EPA)/Contracts/StRAP4_contracts/Future_DW_NO3/Deliverables/Task_3_ICLUS/Draft/"
 
 # Impervious
-#imprv_cat = read.csv(paste0(T3_dir,"iclus_impervious_cat_final.csv"))
 imprv_hu12 = read.csv(paste0(T3_dir,"iclus_impervious_HUC_final.csv"))
+imprv_cat = read.csv(paste0(T3_dir,"iclus_impervious_cat_final.csv"))
 
 # Population Data
-#popden_cat_ = read.csv(paste0(T3_dir2,"iclus_population_cat_draft.csv"))
 popden_hu12_ = read.csv(paste0(T3_dir2,"iclus_population_HUC_draft.csv"))
+popden_cat_ = read.csv(paste0(T3_dir2,"iclus_population_cat_draft.csv"))
 
 
 # Land Use HUC12
@@ -762,21 +763,20 @@ LU_chg_4.5H_hu12 = read.csv(paste0(T3_dir,"HUC12/iclus_landuse_change_RCP4.5Hadg
 LU_chg_8.5G_hu12 = read.csv(paste0(T3_dir,"HUC12/iclus_landuse_change_RCP8.5GISS_HUC_final.csv"))
 LU_chg_8.5H_hu12 = read.csv(paste0(T3_dir,"HUC12/iclus_landuse_change_RCP8.5Hadgem_HUC_final.csv"))
 
-# Land USe Catchment
-# LU_2010_cat = read.csv(paste0(T3_dir,"Catchment/iclus_landuse_2010_cat_final.csv"))
-# LU_2050_4.5G_cat = read.csv(paste0(T3_dir,"Catchment/iclus_landuse_2050_RCP4.5GISS_cat_final.csv"))
-# LU_2050_4.5H_cat = read.csv(paste0(T3_dir,"Catchment/iclus_landuse_2050_RCP4.5Hadgem_cat_final.csv"))
-# LU_2050_8.5G_cat = read.csv(paste0(T3_dir,"Catchment/iclus_landuse_2050_RCP8.5GISS_cat_final.csv"))
-# LU_2050_8.5H_cat = read.csv(paste0(T3_dir,"Catchment/iclus_landuse_2050_RCP8.5Hadgem_cat_final.csv"))
-# LU_chg_4.5G_cat = read.csv(paste0(T3_dir,"Catchment/iclus_landuse_change_RCP4.5GISS_cat_final.csv"))
-# LU_chg_4.5H_cat = read.csv(paste0(T3_dir,"Catchment/iclus_landuse_change_RCP4.5Hadgem_cat_final.csv"))
-# LU_chg_8.5G_cat = read.csv(paste0(T3_dir,"Catchment/iclus_landuse_change_RCP8.5GISS_cat_final.csv"))
-# LU_chg_8.5H_cat = read.csv(paste0(T3_dir,"Catchment/iclus_landuse_change_RCP8.5Hadgem_cat_final.csv"))
+# Land Use Catchment
+LU_2010_cat = read.csv(paste0(T3_dir,"Catchment/iclus_landuse_2010_cat_final.csv"))
+LU_2050_4.5G_cat = read.csv(paste0(T3_dir,"Catchment/iclus_landuse_2050_RCP4.5GISS_cat_final.csv"))
+LU_2050_4.5H_cat = read.csv(paste0(T3_dir,"Catchment/iclus_landuse_2050_RCP4.5Hadgem_cat_final.csv"))
+LU_2050_8.5G_cat = read.csv(paste0(T3_dir,"Catchment/iclus_landuse_2050_RCP8.5GISS_cat_final.csv"))
+LU_2050_8.5H_cat = read.csv(paste0(T3_dir,"Catchment/iclus_landuse_2050_RCP8.5Hadgem_cat_final.csv"))
+LU_chg_4.5G_cat = read.csv(paste0(T3_dir,"Catchment/iclus_landuse_change_RCP4.5GISS_cat_final.csv"))
+LU_chg_4.5H_cat = read.csv(paste0(T3_dir,"Catchment/iclus_landuse_change_RCP4.5Hadgem_cat_final.csv"))
+LU_chg_8.5G_cat = read.csv(paste0(T3_dir,"Catchment/iclus_landuse_change_RCP8.5GISS_cat_final.csv"))
+LU_chg_8.5H_cat = read.csv(paste0(T3_dir,"Catchment/iclus_landuse_change_RCP8.5Hadgem_cat_final.csv"))
 
 # Add leading zeros
 imprv_hu12$HUC12 = formatC(as.numeric(as.character(imprv_hu12$HUC12)), width = 12, format = "f",flag = "0",digits = 0) 
 popden_hu12_$HUC12 = formatC(as.numeric(as.character(popden_hu12_$HUC12)), width = 12, format = "f",flag = "0",digits = 0) 
-
 
 LU_2010_hu12$HUC12 = formatC(as.numeric(as.character(LU_2010_hu12$HUC12)), width = 12, format = "f",flag = "0",digits = 0) 
 LU_2050_4.5G_hu12$HUC12 = formatC(as.numeric(as.character(LU_2050_4.5G_hu12$HUC12)), width = 12, format = "f",flag = "0",digits = 0) 
@@ -794,36 +794,36 @@ popden_hu12_$change_pop_den_RCP4.5GISS = popden_hu12_$change_population_RCP4.5GI
 popden_hu12_$change_pop_den_RCP4.5Hadgem = popden_hu12_$change_population_RCP4.5Hadgem *10^6
 popden_hu12_$change_pop_den_RCP8.5Hadgem = popden_hu12_$change_population_RCP8.5Hadgem *10^6
 
-# names(imprv_cat)[which(colnames(imprv_cat)=="Catchment.ID")] = "COMID"
-# 
-# names(LU_2010_cat)[which(colnames(LU_2010_cat)=="Catchment.ID")] = "COMID"
-# names(LU_2050_4.5G_cat)[which(colnames(LU_2050_4.5G_cat)=="Catchment.ID")] = "COMID"
-# names(LU_2050_4.5H_cat)[which(colnames(LU_2050_4.5H_cat)=="Catchment.ID")] = "COMID"
-# names(LU_2050_8.5G_cat)[which(colnames(LU_2050_8.5G_cat)=="Catchment.ID")] = "COMID"
-# names(LU_2050_8.5H_cat)[which(colnames(LU_2050_8.5H_cat)=="Catchment.ID")] = "COMID"
-# names(LU_chg_4.5G_cat)[which(colnames(LU_chg_4.5G_cat)=="Catchment.ID")] = "COMID"
-# names(LU_chg_4.5H_cat)[which(colnames(LU_chg_4.5H_cat)=="Catchment.ID")] = "COMID"
-# names(LU_chg_8.5G_cat)[which(colnames(LU_chg_8.5G_cat)=="Catchment.ID")] = "COMID"
-# names(LU_chg_8.5H_cat)[which(colnames(LU_chg_8.5H_cat)=="Catchment.ID")] = "COMID"
+names(imprv_cat)[which(colnames(imprv_cat)=="Catchment.ID")] = "COMID"
+names(popden_cat_)[which(colnames(popden_cat_)=="Catchment.ID")] = "COMID"
+names(LU_2010_cat)[which(colnames(LU_2010_cat)=="Catchment.ID")] = "COMID"
+names(LU_2050_4.5G_cat)[which(colnames(LU_2050_4.5G_cat)=="Catchment.ID")] = "COMID"
+names(LU_2050_4.5H_cat)[which(colnames(LU_2050_4.5H_cat)=="Catchment.ID")] = "COMID"
+names(LU_2050_8.5G_cat)[which(colnames(LU_2050_8.5G_cat)=="Catchment.ID")] = "COMID"
+names(LU_2050_8.5H_cat)[which(colnames(LU_2050_8.5H_cat)=="Catchment.ID")] = "COMID"
+names(LU_chg_4.5G_cat)[which(colnames(LU_chg_4.5G_cat)=="Catchment.ID")] = "COMID"
+names(LU_chg_4.5H_cat)[which(colnames(LU_chg_4.5H_cat)=="Catchment.ID")] = "COMID"
+names(LU_chg_8.5G_cat)[which(colnames(LU_chg_8.5G_cat)=="Catchment.ID")] = "COMID"
+names(LU_chg_8.5H_cat)[which(colnames(LU_chg_8.5H_cat)=="Catchment.ID")] = "COMID"
 
 # Merge
-lu_hu12 = merge(LU_2010_hu12,subset(LU_2050_4.5G_hu12,select=-c(cells_in_HUC_12,total_cell_count,NA_cell_count)),by='HUC12')
-lu_hu12 = merge(lu_hu12,subset(LU_2050_4.5H_hu12,select=-c(cells_in_HUC_12,total_cell_count,NA_cell_count)),by='HUC12')
-lu_hu12 = merge(lu_hu12,subset(LU_2050_8.5G_hu12,select=-c(cells_in_HUC_12,total_cell_count,NA_cell_count)),by='HUC12')
-lu_hu12 = merge(lu_hu12,subset(LU_2050_8.5H_hu12,select=-c(cells_in_HUC_12,total_cell_count,NA_cell_count)),by='HUC12')
-lu_hu12 = merge(lu_hu12,LU_chg_4.5G_hu12,by='HUC12')
-lu_hu12 = merge(lu_hu12,LU_chg_4.5H_hu12,by='HUC12')
-lu_hu12 = merge(lu_hu12,LU_chg_8.5G_hu12,by='HUC12')
-lu_hu12 = merge(lu_hu12,LU_chg_8.5H_hu12,by='HUC12')
-
-#lu_cat = merge(LU_2010_cat,subset(LU_2050_4.5G_cat,select=-c(cells_in_FEATUREID,total_cell_count,NA_cell_count)),by='COMID')
-#lu_cat = merge(lu_cat,subset(LU_2050_4.5H_cat,select=-c(cells_in_FEATUREID,total_cell_count,NA_cell_count)),by='COMID')
-#lu_cat = merge(lu_cat,subset(LU_2050_8.5G_cat,select=-c(cells_in_FEATUREID,total_cell_count,NA_cell_count)),by='COMID')
-#lu_cat = merge(lu_cat,subset(LU_2050_8.5H_cat,select=-c(cells_in_FEATUREID,total_cell_count,NA_cell_count)),by='COMID')
-#lu_cat = merge(lu_cat,LU_chg_4.5G_cat,by='COMID')
-#lu_cat = merge(lu_cat,LU_chg_4.5H_cat,by='COMID')
-#lu_cat = merge(lu_cat,LU_chg_8.5G_cat,by='COMID')
-#lu_cat = merge(lu_cat,LU_chg_8.5H_cat,by='COMID')
+# lu_hu12 = merge(LU_2010_hu12,subset(LU_2050_4.5G_hu12,select=-c(cells_in_HUC_12,total_cell_count,NA_cell_count)),by='HUC12')
+# lu_hu12 = merge(lu_hu12,subset(LU_2050_4.5H_hu12,select=-c(cells_in_HUC_12,total_cell_count,NA_cell_count)),by='HUC12')
+# lu_hu12 = merge(lu_hu12,subset(LU_2050_8.5G_hu12,select=-c(cells_in_HUC_12,total_cell_count,NA_cell_count)),by='HUC12')
+# lu_hu12 = merge(lu_hu12,subset(LU_2050_8.5H_hu12,select=-c(cells_in_HUC_12,total_cell_count,NA_cell_count)),by='HUC12')
+# lu_hu12 = merge(lu_hu12,LU_chg_4.5G_hu12,by='HUC12')
+# lu_hu12 = merge(lu_hu12,LU_chg_4.5H_hu12,by='HUC12')
+# lu_hu12 = merge(lu_hu12,LU_chg_8.5G_hu12,by='HUC12')
+# lu_hu12 = merge(lu_hu12,LU_chg_8.5H_hu12,by='HUC12')
+# 
+# lu_cat = merge(LU_2010_cat,subset(LU_2050_4.5G_cat,select=-c(cells_in_FEATUREID,total_cell_count,NA_cell_count)),by='COMID')
+# lu_cat = merge(lu_cat,subset(LU_2050_4.5H_cat,select=-c(cells_in_FEATUREID,total_cell_count,NA_cell_count)),by='COMID')
+# lu_cat = merge(lu_cat,subset(LU_2050_8.5G_cat,select=-c(cells_in_FEATUREID,total_cell_count,NA_cell_count)),by='COMID')
+# lu_cat = merge(lu_cat,subset(LU_2050_8.5H_cat,select=-c(cells_in_FEATUREID,total_cell_count,NA_cell_count)),by='COMID')
+# lu_cat = merge(lu_cat,LU_chg_4.5G_cat,by='COMID')
+# lu_cat = merge(lu_cat,LU_chg_4.5H_cat,by='COMID')
+# lu_cat = merge(lu_cat,LU_chg_8.5G_cat,by='COMID')
+# lu_cat = merge(lu_cat,LU_chg_8.5H_cat,by='COMID')
 
 
 
@@ -838,7 +838,7 @@ T5f_dir = "C:/Users/mpennino/OneDrive - Environmental Protection Agency (EPA)/Co
 dep_N_hu12 = read.csv(paste0(T5f_dir,"dep_N_HUC_final.csv"))
 dep_S_hu12 = read.csv(paste0(T5f_dir,"dep_S_HUC_final.csv"))
 
-#dep_N_Cat = read.csv(paste0(T5f_dir,"dep_N_cat_final.csv"))
+dep_N_Cat = read.csv(paste0(T5f_dir,"dep_N_cat_final.csv"))
 #dep_S_Cat = read.csv(paste0(T5f_dir,"dep_S_cat_final.csv"))
 
 # Add leading zeros
@@ -847,7 +847,7 @@ dep_N_hu12$HUC12 = formatC(as.numeric(as.character(dep_N_hu12$HUC12)), width = 1
 dep_S_hu12$HUC12 = formatC(as.numeric(as.character(dep_S_hu12$HUC12)), width = 12, format = "f",flag = "0",digits = 0) 
 
 
-#names(dep_N_Cat)[which(colnames(dep_N_Cat)=="Catchment.ID")] = "COMID"
+names(dep_N_Cat)[which(colnames(dep_N_Cat)=="Catchment.ID")] = "COMID"
 
 #names(dep_S_Cat)[which(colnames(dep_S_Cat)=="Catchment.ID")] = "COMID"
 
@@ -913,9 +913,64 @@ summary(dep_N_hu12$totalN_2050ctl_kgNha)
 summary(dep_N_hu12$totalN_2050ref_kgNha)
 
 
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Remove -99999 for Catchments
+
+# Current
+dep_N_Cat$totalN_2010_kgNha[dep_N_Cat$totalN_2010_kgNha == -99999] = NA
+dep_N_Cat$wetN_2010_kgNha[dep_N_Cat$wetN_2010_kgNha == -99999] = NA
+dep_N_Cat$dryN_2010_kgNha[dep_N_Cat$dryN_2010_kgNha == -99999] = NA
+dep_N_Cat$oxiN_2010_kgNha[dep_N_Cat$oxiN_2010_kgNha == -99999] = NA
+dep_N_Cat$redN_2010_kgNha[dep_N_Cat$redN_2010_kgNha == -99999] = NA
+
+dep_N_Cat$totalN_2016_kgNha[dep_N_Cat$totalN_2016_kgNha == -99999] = NA
+dep_N_Cat$wetN_2016_kgNha[dep_N_Cat$wetN_2016_kgNha == -99999] = NA
+dep_N_Cat$dryN_2016_kgNha[dep_N_Cat$dryN_2016_kgNha == -99999] = NA
+dep_N_Cat$oxiN_2016_kgNha[dep_N_Cat$oxiN_2016_kgNha == -99999] = NA
+dep_N_Cat$redN_2016_kgNha[dep_N_Cat$redN_2016_kgNha == -99999] = NA
+
+# Future
+dep_N_Cat$totalN_2050ctl_kgNha[dep_N_Cat$totalN_2050ctl_kgNha == -99999] = NA
+dep_N_Cat$wetN_2050ctl_kgNha[dep_N_Cat$wetN_2050ctl_kgNha == -99999] = NA
+dep_N_Cat$dryN_2050ctl_kgNha[dep_N_Cat$dryN_2050ctl_kgNha == -99999] = NA
+dep_N_Cat$oxiN_2050ctl_kgNha[dep_N_Cat$oxiN_2050ctl_kgNha == -99999] = NA
+dep_N_Cat$redN_2050ctl_kgNha[dep_N_Cat$redN_2050ctl_kgNha == -99999] = NA
+
+dep_N_Cat$totalN_2050ref_kgNha[dep_N_Cat$totalN_2050ref_kgNha == -99999] = NA
+dep_N_Cat$wetN_2050ref_kgNha[dep_N_Cat$wetN_2050ref_kgNha == -99999] = NA
+dep_N_Cat$dryN_2050ref_kgNha[dep_N_Cat$dryN_2050ref_kgNha == -99999] = NA
+dep_N_Cat$oxiN_2050ref_kgNha[dep_N_Cat$oxiN_2050ref_kgNha == -99999] = NA
+dep_N_Cat$redN_2050ref_kgNha[dep_N_Cat$redN_2050ref_kgNha == -99999] = NA
+
+dep_N_Cat$totalN_2055ctl_kgNha[dep_N_Cat$totalN_2055ctl_kgNha == -99999] = NA
+dep_N_Cat$wetN_2055ctl_kgNha[dep_N_Cat$wetN_2055ctl_kgNha == -99999] = NA
+dep_N_Cat$dryN_2055ctl_kgNha[dep_N_Cat$dryN_2055ctl_kgNha == -99999] = NA
+dep_N_Cat$oxiN_2055ctl_kgNha[dep_N_Cat$oxiN_2055ctl_kgNha == -99999] = NA
+dep_N_Cat$redN_2055ctl_kgNha[dep_N_Cat$redN_2055ctl_kgNha == -99999] = NA
+
+dep_N_Cat$totalN_2055ref_kgNha[dep_N_Cat$totalN_2055ref_kgNha == -99999] = NA
+dep_N_Cat$wetN_2055ref_kgNha[dep_N_Cat$wetN_2055ref_kgNha == -99999] = NA
+dep_N_Cat$dryN_2055ref_kgNha[dep_N_Cat$dryN_2055ref_kgNha == -99999] = NA
+dep_N_Cat$oxiN_2055ref_kgNha[dep_N_Cat$oxiN_2055ref_kgNha == -99999] = NA
+dep_N_Cat$redN_2055ref_kgNha[dep_N_Cat$redN_2055ref_kgNha == -99999] = NA
+
+#-------------------------------------------------------------------------------
+dep_N_Cat$pct_change_totalN_ctl[dep_N_Cat$pct_change_totalN_ctl == -99999] = NA
+dep_N_Cat$pct_change_wetN_ctl[dep_N_Cat$pct_change_wetN_ctl == -99999] = NA
+dep_N_Cat$pct_change_dryN_ctl[dep_N_Cat$pct_change_dryN_ctl == -99999] = NA
+dep_N_Cat$pct_change_oxiN_ctl[dep_N_Cat$pct_change_oxiN_ctl == -99999] = NA
+dep_N_Cat$pct_change_redN_ctl[dep_N_Cat$pct_change_redN_ctl == -99999] = NA
+
+dep_N_Cat$pct_change_totalN_ref[dep_N_Cat$pct_change_totalN_ref == -99999] = NA
+dep_N_Cat$pct_change_wetN_ref[dep_N_Cat$pct_change_wetN_ref == -99999] = NA
+dep_N_Cat$pct_change_dryN_ref[dep_N_Cat$pct_change_dryN_ref == -99999] = NA
+dep_N_Cat$pct_change_oxiN_ref[dep_N_Cat$pct_change_oxiN_ref == -99999] = NA
+dep_N_Cat$pct_change_redN_ref[dep_N_Cat$pct_change_redN_ref == -99999] = NA
+
+
 ```
 
-# Upload NNI Data
+# Upload NNI Data (HU12)
 * Units kg N /sqkm
 ```{r}
 library(dplyr)
@@ -978,7 +1033,7 @@ NNI17$HUC12 = formatC(as.numeric(as.character(NNI17$HUC12)), width = 12, format 
 
 ```
 
-# N Surp Calc
+# N Surp Calc (HUC12)
 ```{r}
 
 NNI17$n_surplus_kgsqkm = 
@@ -1010,6 +1065,74 @@ sc_get_params(param='metric_names') # List of parameters – NNI isn’t listed 
 # names(p_dep)[which(colnames(p_dep)=="comid")] = "COMID"
 # write_fst(p_dep, 'D:/Data/StreamCat_P_deposition_2012.fst', compress = 50, uniform_encoding = TRUE)
 
+#-------------------------------------------------------------------------------------------
+# start_time <- Sys.time()
+# nsurp1 <-sc_get_data(metric='nsurp',
+#                 aoi='Ws,Cat',
+#                 conus='true')
+# end_time <- Sys.time(); end_time - start_time
+# # Time difference of 13.31083 mins
+# names(nsurp1)[which(colnames(nsurp1)=="comid")] = "COMID"
+# 
+# start_time <- Sys.time()
+# nsurp2 <-sc_get_data(metric='n_ags_2017,n_leg_2017',
+#                 aoi='Ws,Cat',
+#                 conus='true')
+# end_time <- Sys.time(); end_time - start_time
+# # Time difference of 16.51534 minss
+# names(nsurp2)[which(colnames(nsurp2)=="comid")] = "COMID"
+# 
+# nsurp = merge(nsurp1,nsurp2,by='COMID')
+# 
+# write_fst(nsurp, 'D:/Data/StreamCat_N_surplus_2017.fst', compress = 50, uniform_encoding = TRUE)
+
+#-------------------------------------------------------------------------------
+# NNI Variables
+
+# start_time <- Sys.time()
+# nni1 <-sc_get_data(metric='n_ff_2010,n_ff_2017,n_cf_2010,n_cf_2017,n_lw_2010,n_lw_2017',
+#                 aoi='Ws,Cat',
+#                 conus='true')
+# end_time <- Sys.time(); end_time - start_time
+# # Time difference of 33.95511 mins
+# 
+# start_time <- Sys.time()
+# nni2 <-sc_get_data(metric='n_cr_2010,n_cr_2017',
+#                 aoi='Ws,Cat',
+#                 conus='true')
+# end_time <- Sys.time(); end_time - start_time
+# # Time difference of 24.57507 mins
+# 
+# nni3 = merge(nni1,nni2,by='comid')
+# 
+# names(nni3)[which(colnames(nni3)=="comid")] = "COMID"
+# 
+# write_fst(nni3, 'D:/Data/StreamCat_NNI_n_ag_surp_vars.fst', compress = 50, uniform_encoding = TRUE)
+
+#--------------------------------------------
+
+# start_time <- Sys.time()
+# human <-sc_get_data(metric='n_hw_2010,n_hw_2017',
+#                 aoi='Ws,Cat',
+#                 conus='true')
+# end_time <- Sys.time(); end_time - start_time
+# # Time difference of 27.82894 mins
+# 
+# names(human)[which(colnames(human)=="comid")] = "COMID"
+# write_fst(human, 'D:/Data/StreamCat_human_food_waste.fst', compress = 50, uniform_encoding = TRUE)
+# 
+# start_time <- Sys.time()
+# ndep <-sc_get_data(metric='n_dep_2010,n_dep_2017',
+#                 aoi='Ws,Cat',
+#                 conus='true')
+# end_time <- Sys.time(); end_time - start_time
+# # Time difference of 25.37535 mins
+# 
+# names(ndep)[which(colnames(ndep)=="comid")] = "COMID"
+# write_fst(ndep, 'D:/Data/StreamCat_n_tot_deposition.fst', compress = 50, uniform_encoding = TRUE)
+
+
+
 ```
 
 # StreamCat Data
@@ -1018,7 +1141,7 @@ sc_get_params(param='metric_names') # List of parameters – NNI isn’t listed 
 
 library(fst)
 
-# Converter
+# Converter (developed in the COMID_to_HUC.Rmd file)
 Cat_HUC12 = read.csv("D:/Data/Spatial/COMID_HUC12_st_join_cat_centroids.csv") # new
 
 # Add leading zeros
@@ -1066,6 +1189,15 @@ sc_data3 <- read_fst("D:/Data/StreamCat_wetlands2011.fst"#,
 sc_n_surp <- read_fst("D:/Data/StreamCat_NNI_N_Surp_2017.fst")
 sc_runoff <- read_fst("D:/Data/StreamCat_runoff.fst")
 #sc_p_dep <- read_fst("D:/Data/StreamCat_P_deposition_2012.fst")
+nsurp2017 <- read_fst("D:/Data/StreamCat_N_surplus_2017.fst")
+nsurp2017 = subset(nsurp2017,select=c(COMID,n_leg_2017cat,n_leg_2017ws))
+
+nsurp_vars <- read_fst("D:/Data/StreamCat_NNI_n_ag_surp_vars.fst")
+sc_human <- read_fst("D:/Data/StreamCat_human_food_waste.fst")
+sc_tn_dep <- read_fst("D:/Data/StreamCat_n_tot_deposition.fst")
+
+
+
 
 StreamCat_wetland = read_fst("D:/Data/All_StreamCat_Vars_2022.fst",
                 columns =  c('COMID','PctHbWet2011Cat','PctWdWet2011Cat',
@@ -1093,8 +1225,12 @@ StreamCat_sub = merge(StreamCat_sub,sc_data,by='COMID')
 StreamCat_sub = merge(StreamCat_sub,sc_data2,by='COMID')
 StreamCat_sub = merge(StreamCat_sub,sc_data3,by='COMID')
 StreamCat_sub = merge(StreamCat_sub,sc_n_surp,by='COMID')
+StreamCat_sub = merge(StreamCat_sub,nsurp2017,by='COMID')
+StreamCat_sub = merge(StreamCat_sub,nsurp_vars,by='COMID')
 StreamCat_sub = merge(StreamCat_sub,sc_runoff,by='COMID')
 StreamCat_sub = merge(StreamCat_sub,StreamCat_wetland,by='COMID')
+StreamCat_sub = merge(StreamCat_sub,sc_human,by='COMID')
+StreamCat_sub = merge(StreamCat_sub,sc_tn_dep,by='COMID')
 
 # Get Percent Forest
 StreamCat_sub$PctForest2019Cat = StreamCat_sub$PctDecid2019Cat + 
@@ -1215,37 +1351,37 @@ huc12_df = as.data.frame(huc12_s)
 # Catchment Points
 ```{r}
 
-sp_dir = "D:/Data/Spatial/NHDPlusV2_Centroids/"
-Cat01_p = st_read(paste0(sp_dir,'NHDPlusV2_Cat01_centroid_point.shp'))
-Cat02_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat02_centroid_point.shp'))
-Cat03N_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat03N_centroid_point.shp'))
-Cat03S_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat03S_centroid_point.shp'))
-Cat03W_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat03W_centroid_point.shp'))
-Cat04_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat04_centroid_point.shp'))
-Cat05_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat05_centroid_point.shp'))
-Cat06_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat06_centroid_point.shp'))
-Cat07_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat07_centroid_point.shp'))
-Cat08_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat08_centroid_point.shp'))
-Cat09_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat09_centroid_point.shp'))
-Cat10L_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat10L_centroid_point.shp'))
-Cat10U_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat10U_centroid_point.shp'))
-Cat11_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat11_centroid_point.shp'))
-Cat12_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat12_centroid_point.shp'))
-Cat13_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat13_centroid_point.shp'))
-Cat14_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat14_centroid_point.shp'))
-Cat15_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat15_centroid_point.shp'))
-Cat16_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat16_centroid_point.shp'))
-Cat17_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat17_centroid_point.shp'))
-Cat18_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat18_centroid_point.shp'))
-
-cats_p = rbind(Cat01_p,Cat02_p,Cat03N_p,Cat03S_p,Cat03W_p,
-               Cat04_p,Cat05_p,Cat06_p,Cat07_p,Cat08_p,Cat09_p,
-               Cat10L_p,Cat10U_p,Cat11_p,Cat12_p,Cat13_p,Cat14_p,
-               Cat15_p,Cat16_p,Cat17_p,Cat18_p)
-
-
-projection(cats_p)
-projection(states_conus)
+# sp_dir = "D:/Data/Spatial/NHDPlusV2_Centroids/"
+# Cat01_p = st_read(paste0(sp_dir,'NHDPlusV2_Cat01_centroid_point.shp'))
+# Cat02_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat02_centroid_point.shp'))
+# Cat03N_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat03N_centroid_point.shp'))
+# Cat03S_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat03S_centroid_point.shp'))
+# Cat03W_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat03W_centroid_point.shp'))
+# Cat04_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat04_centroid_point.shp'))
+# Cat05_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat05_centroid_point.shp'))
+# Cat06_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat06_centroid_point.shp'))
+# Cat07_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat07_centroid_point.shp'))
+# Cat08_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat08_centroid_point.shp'))
+# Cat09_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat09_centroid_point.shp'))
+# Cat10L_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat10L_centroid_point.shp'))
+# Cat10U_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat10U_centroid_point.shp'))
+# Cat11_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat11_centroid_point.shp'))
+# Cat12_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat12_centroid_point.shp'))
+# Cat13_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat13_centroid_point.shp'))
+# Cat14_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat14_centroid_point.shp'))
+# Cat15_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat15_centroid_point.shp'))
+# Cat16_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat16_centroid_point.shp'))
+# Cat17_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat17_centroid_point.shp'))
+# Cat18_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat18_centroid_point.shp'))
+# 
+# cats_p = rbind(Cat01_p,Cat02_p,Cat03N_p,Cat03S_p,Cat03W_p,
+#                Cat04_p,Cat05_p,Cat06_p,Cat07_p,Cat08_p,Cat09_p,
+#                Cat10L_p,Cat10U_p,Cat11_p,Cat12_p,Cat13_p,Cat14_p,
+#                Cat15_p,Cat16_p,Cat17_p,Cat18_p)
+# 
+# 
+# projection(cats_p)
+# projection(states_conus)
 
 ```
 
@@ -1382,27 +1518,41 @@ length(unique(Ntreat_HU12$HUC12))
 
 ```
 
+# Testing missing HUC12s in the converter (e.g., northern NY state)
+```{r}
+
+# HUC shapefile used for created the converter
+fgd = "D:/ArcGIS/NHDplusV2/2024_Download/WBD_National_GDB/WBD_National_GDB.gdb"
+#test <- sf::st_read(dsn = fgd, layer = "WBDHU12")
+
+#nrow(test[test$HUC12])
+
+#Cat_HUC12
+
+
+```
+
 
 #------------------------------------------------------------------------------
 
 # Merge DEP & NNI
 ```{r}
 
-nni_dep = NNI[,c("HUC12","YEAR","area_sqkm",
-                 'n_total_emis_kgsqkm','n_atm_dep_kgsqkm',
-                 'nox_total_emis_kgsqkm','nox_total_emis_kgsqkm',
-                 'nhx_total_emis_kgsqkm')]
-
-levels(factor(nni_dep$YEAR))
-
-dep_N_hu12_nni_ = merge(dep_N_hu12,nni_dep,by='HUC12')
-
-dep_N_hu12_nni = dep_N_hu12_nni_[,c('HUC12','totalN_2010_kgNha','totalN_2055ctl_kgNha','totalN_2055ref_kgNha')]
+# nni_dep = NNI[,c("HUC12","YEAR","area_sqkm",
+#                  'n_total_emis_kgsqkm','n_atm_dep_kgsqkm',
+#                  'nox_total_emis_kgsqkm','nox_total_emis_kgsqkm',
+#                  'nhx_total_emis_kgsqkm')]
+# 
+# levels(factor(nni_dep$YEAR))
+# 
+# dep_N_hu12_nni_ = merge(dep_N_hu12,nni_dep,by='HUC12')
+# 
+# dep_N_hu12_nni = dep_N_hu12_nni_[,c('HUC12','totalN_2010_kgNha','totalN_2055ctl_kgNha','totalN_2055ref_kgNha')]
 
 
 ```
 
-# Merge ICLUS & NNI
+# Merge ICLUS & NNI (HUC12)
 ```{r}
 
 
@@ -1415,7 +1565,7 @@ nni_n_LU = NNI[,c("HUC12","YEAR","area_sqkm",
                  'n_human_food_dem_kgsqkm','n_human_food_waste_kgsqkm',
                  'n_point_source_kgsqkm')]
 
-temp = noquote(c('cells_in_HUC_12','total_cell_count','NA_cell_count'))
+#temp = noquote(c('cells_in_HUC_12','total_cell_count','NA_cell_count'))
 
 LU_2050_4.5G_hu12. = 
   subset(LU_2050_4.5G_hu12, select=-c(cells_in_HUC_12,total_cell_count,NA_cell_count))
@@ -1442,8 +1592,627 @@ LU_nni_hu12 = merge(LU_nni_hu12,imprv_hu12,by='HUC12')
 
 ```
 
+# Merge ICLUS & StremCat_NNI (Catchments)
+```{r}
+
+
+nni_n_LU = StreamCat_cats[,c("COMID","CatAreaSqKm",'WsAreaSqKm'
+                             ,'n_dep_2010cat','n_dep_2017cat','n_dep_2010ws','n_dep_2017ws'
+                             ,'n_hw_2010cat','n_hw_2017cat','n_hw_2010ws','n_hw_2017ws'
+                             ,'n_cr_2010cat','n_cr_2017cat','n_cr_2010ws','n_cr_2017ws'
+                             ,'n_ff_2010cat','n_ff_2017cat','n_ff_2010ws','n_ff_2017ws'
+                             ,'n_cf_2010cat','n_cf_2017cat','n_cf_2010ws','n_cf_2017ws'
+                             ,'n_lw_2010cat','n_lw_2017cat','n_lw_2010ws','n_lw_2017ws'
+                             #,'n_ags_2010cat','n_ags_2017cat','n_ags_2010ws','n_ags_2017ws',
+                             #,'n_leg_2010cat','n_leg_2017cat' ,'n_leg_2010ws','n_leg_2017ws'
+                             )]
+
+#temp = noquote(c('cells_in_HUC_12','total_cell_count','NA_cell_count'))
+
+LU_2050_4.5G_cat. = 
+  subset(LU_2050_4.5G_cat, select=-c(cells_in_FEATUREID,total_cell_count,NA_cell_count))
+LU_2050_8.5G_cat. = 
+  subset(LU_2050_8.5G_cat, select=-c(cells_in_FEATUREID,total_cell_count,NA_cell_count))
+LU_2050_4.5H_cat. = 
+  subset(LU_2050_4.5H_cat, select=-c(cells_in_FEATUREID,total_cell_count,NA_cell_count))
+LU_2050_8.5H_cat. = 
+  subset(LU_2050_8.5H_cat, select=-c(cells_in_FEATUREID,total_cell_count,NA_cell_count))
+
+
+LU_nni_cat = merge(nni_n_LU,LU_2010_cat,by='COMID')
+LU_nni_cat = merge(LU_nni_cat,LU_2050_4.5G_cat.,by='COMID')
+LU_nni_cat = merge(LU_nni_cat,LU_chg_4.5G_cat,by='COMID')
+LU_nni_cat = merge(LU_nni_cat,LU_2050_8.5G_cat.,by='COMID')
+LU_nni_cat = merge(LU_nni_cat,LU_chg_8.5G_cat,by='COMID')
+
+LU_nni_cat = merge(LU_nni_cat,LU_2050_4.5H_cat.,by='COMID')
+LU_nni_cat = merge(LU_nni_cat,LU_chg_4.5H_cat,by='COMID')
+LU_nni_cat = merge(LU_nni_cat,LU_2050_8.5H_cat.,by='COMID')
+LU_nni_cat = merge(LU_nni_cat,LU_chg_8.5H_cat,by='COMID')
+
+LU_nni_cat = merge(LU_nni_cat,imprv_cat,by='COMID')
+
+```
+
+#----
+
+# % Land Use (HU12)
+* Area is in units of m2 originally
+```{r}
+
+
+# merge on area
+temp. = LU_nni_hu12
+
+temp = merge(temp.,huc12_df[,c('HUC12','huc12_area_m2')],by='HUC12')
+
+
+#-------------------------------------------------------------------------------
+# % Wetlands
+temp$Pct_wetlands_2010 = 
+  100*temp$area_02.wetlands_landuse_2010 / temp$huc12_area_m2
+temp$Pct_wetlands_RCP4.5G = 
+  100*temp$area_02.wetlands_landuse_RCP4.5GISS / temp$huc12_area_m2
+temp$Pct_wetlands_RCP8.5G = 
+  100*temp$area_02.wetlands_landuse_RCP8.5GISS / temp$huc12_area_m2
+temp$Pct_wetlands_RCP4.5H = 
+  100*temp$area_02.wetlands_landuse_RCP4.5Hadgem / temp$huc12_area_m2
+temp$Pct_wetlands_RCP8.5H = 
+  100*temp$area_02.wetlands_landuse_RCP8.5Hadgem / temp$huc12_area_m2
+
+#-------------------------------------------------------------------------------
+# % Forest
+temp$area_forest_2010 = 
+  temp$area_03.rec.conserv_landuse_2010 +
+  temp$area_04.timber_landuse_2010 
+temp$area_forest_RCP4.5G = 
+  temp$area_03.rec.conserv_landuse_RCP4.5GISS +
+  temp$area_04.timber_landuse_RCP4.5GISS
+temp$area_forest_RCP8.5G = 
+  temp$area_03.rec.conserv_landuse_RCP8.5GISS +
+  temp$area_04.timber_landuse_RCP8.5GISS
+temp$area_forest_RCP4.5H = 
+  temp$area_03.rec.conserv_landuse_RCP4.5Hadgem +
+  temp$area_04.timber_landuse_RCP4.5Hadgem
+temp$area_forest_RCP8.5H = 
+  temp$area_03.rec.conserv_landuse_RCP8.5Hadgem +
+  temp$area_04.timber_landuse_RCP8.5Hadgem
+
+temp$Pct_forest_2010 = 
+  100*temp$area_forest_2010 / temp$huc12_area_m2
+temp$Pct_forest_RCP4.5G = 
+  100*temp$area_forest_RCP4.5G / temp$huc12_area_m2
+temp$Pct_forest_RCP8.5G = 
+  100*temp$area_forest_RCP8.5G / temp$huc12_area_m2
+temp$Pct_forest_RCP4.5H = 
+  100*temp$area_forest_RCP4.5H / temp$huc12_area_m2
+temp$Pct_forest_RCP8.5H = 
+  100*temp$area_forest_RCP8.5H / temp$huc12_area_m2
+
+# % Timber
+temp$Pct_timber_2010 = 
+    100*temp$area_04.timber_landuse_2010 / temp$huc12_area_m2
+
+# % Exurban
+temp$Pct_exurbanLD_2010 = 
+    100*temp$area_10.exurbanLD_landuse_2010/ temp$huc12_area_m2
+
+
+#-------------------------------------------------------------------------------
+# % Cropland
+temp$Pct_crop_land_2010 = 
+  100*temp$area_07.cropland_landuse_2010 / temp$huc12_area_m2
+temp$Pct_crop_land_RCP4.5G = 
+  100*temp$area_07.cropland_landuse_RCP4.5GISS / temp$huc12_area_m2
+temp$Pct_crop_land_RCP8.5G = 
+  100*temp$area_07.cropland_landuse_RCP8.5GISS / temp$huc12_area_m2
+temp$Pct_crop_land_RCP4.5H = 
+  100*temp$area_07.cropland_landuse_RCP4.5Hadgem / temp$huc12_area_m2
+temp$Pct_crop_land_RCP8.5H = 
+  100*temp$area_07.cropland_landuse_RCP8.5Hadgem / temp$huc12_area_m2
+
+#-------------------------------------------------------------------------------
+# % Crop + Pasture Land
+temp$Pct_crop_pasture_land_2010 = 
+  100*(temp$area_07.cropland_landuse_2010 + temp$area_06.pasture_landuse_2010) / temp$huc12_area_m2
+temp$Pct_crop_pasture_land_RCP4.5G = 
+  100*(temp$area_07.cropland_landuse_RCP4.5GISS + temp$area_06.pasture_landuse_RCP4.5GISS) / temp$huc12_area_m2
+temp$Pct_crop_pasture_land_RCP8.5G = 
+  100*(temp$area_07.cropland_landuse_RCP8.5GISS + temp$area_06.pasture_landuse_RCP8.5GISS) / temp$huc12_area_m2
+temp$Pct_crop_pasture_land_RCP4.5H = 
+  100*(temp$area_07.cropland_landuse_RCP4.5Hadgem + temp$area_06.pasture_landuse_RCP4.5Hadgem) / temp$huc12_area_m2
+temp$Pct_crop_pasture_land_RCP8.5H = 
+  100*(temp$area_07.cropland_landuse_RCP8.5Hadgem + temp$area_06.pasture_landuse_RCP8.5Hadgem) / temp$huc12_area_m2
+
+#-------------------------------------------------------------------------------
+# % Pasture
+temp$Pct_pasture_land_2010 = 
+  100*temp$area_06.pasture_landuse_2010 / temp$huc12_area_m2
+temp$Pct_pasture_land_RCP4.5G = 
+  100*temp$area_06.pasture_landuse_RCP4.5GISS/ temp$huc12_area_m2
+temp$Pct_pasture_land_RCP8.5G = 
+  100*temp$area_06.pasture_landuse_RCP8.5GISS / temp$huc12_area_m2
+temp$Pct_pasture_land_RCP4.5H = 
+  100*temp$area_06.pasture_landuse_RCP4.5Hadgem / temp$huc12_area_m2
+temp$Pct_pasture_land_RCP8.5H = 
+  100*temp$area_06.pasture_landuse_RCP8.5Hadgem / temp$huc12_area_m2
+
+
+#-------------------------------------------------------------------------------
+# % Grazing
+temp$Pct_grazing_land_2010 = 
+  100*temp$area_05.grazing_landuse_2010/ temp$huc12_area_m2
+temp$Pct_grazing_land_RCP4.5G = 
+  100*temp$area_05.grazing_landuse_RCP4.5GISS/ temp$huc12_area_m2
+temp$Pct_grazing_land_RCP8.5G = 
+  100*temp$area_05.grazing_landuse_RCP8.5GISS / temp$huc12_area_m2
+temp$Pct_grazing_land_RCP4.5H = 
+  100*temp$area_05.grazing_landuse_RCP4.5Hadgem / temp$huc12_area_m2
+temp$Pct_grazing_land_RCP8.5H = 
+  100*temp$area_05.grazing_landuse_RCP8.5Hadgem / temp$huc12_area_m2
+
+
+
+#-------------------------------------------------------------------------------
+# % Ag
+# temp$Pct_ag_land_2010 = 
+#   100*temp$area_ag_2010 / temp$huc12_area_m2
+# temp$Pct_ag_land_RCP4.5G = 
+#   100*temp$area_ag_RCP4.5G / temp$huc12_area_m2
+# temp$Pct_ag_land_RCP8.5G = 
+#   100*temp$area_ag_RCP8.5G / temp$huc12_area_m2
+# temp$Pct_ag_land_RCP4.5H = 
+#   100*temp$area_ag_RCP4.5H / temp$huc12_area_m2
+# temp$Pct_ag_land_RCP8.5H = 
+#   100*temp$area_ag_RCP8.5H / temp$huc12_area_m2
+
+
+#-------------------------------------------------------------------------------
+# Change Calculations
+# temp$Change_ag_land_pct_RCP4.5G = temp$Pct_ag_land_RCP4.5G - temp$Pct_ag_land_2010
+# temp$Change_ag_land_pct_RCP8.5G = temp$Pct_ag_land_RCP8.5G - temp$Pct_ag_land_2010
+# temp$Change_ag_land_pct_RCP4.5H = temp$Pct_ag_land_RCP4.5H - temp$Pct_ag_land_2010
+# temp$Change_ag_land_pct_RCP8.5H = temp$Pct_ag_land_RCP8.5H - temp$Pct_ag_land_2010
+
+temp$Change_grazing_land_pct_RCP4.5G = temp$Pct_grazing_land_RCP4.5G - temp$Pct_grazing_land_2010
+temp$Change_grazing_land_pct_RCP8.5G = temp$Pct_grazing_land_RCP8.5G - temp$Pct_grazing_land_2010
+temp$Change_grazing_land_pct_RCP4.5H = temp$Pct_grazing_land_RCP4.5H - temp$Pct_grazing_land_2010
+temp$Change_grazing_land_pct_RCP8.5H = temp$Pct_grazing_land_RCP8.5H - temp$Pct_grazing_land_2010
+
+temp$Change_pasture_land_pct_RCP4.5G = temp$Pct_pasture_land_RCP4.5G - temp$Pct_pasture_land_2010
+temp$Change_pasture_land_pct_RCP8.5G = temp$Pct_pasture_land_RCP8.5G - temp$Pct_pasture_land_2010
+temp$Change_pasture_land_pct_RCP4.5H = temp$Pct_pasture_land_RCP4.5H - temp$Pct_pasture_land_2010
+temp$Change_pasture_land_pct_RCP8.5H = temp$Pct_pasture_land_RCP8.5H - temp$Pct_pasture_land_2010
+
+temp$Change_crop_land_pct_RCP4.5G = temp$Pct_crop_land_RCP4.5G - temp$Pct_crop_land_2010
+temp$Change_crop_land_pct_RCP8.5G = temp$Pct_crop_land_RCP8.5G - temp$Pct_crop_land_2010
+temp$Change_crop_land_pct_RCP4.5H = temp$Pct_crop_land_RCP4.5H - temp$Pct_crop_land_2010
+temp$Change_crop_land_pct_RCP8.5H = temp$Pct_crop_land_RCP8.5H - temp$Pct_crop_land_2010
+
+temp$Change_crop_land_pct_RCP4.5G = temp$Pct_crop_land_RCP4.5G - temp$Pct_crop_land_2010
+temp$Change_crop_land_pct_RCP8.5G = temp$Pct_crop_land_RCP8.5G - temp$Pct_crop_land_2010
+temp$Change_crop_land_pct_RCP4.5H = temp$Pct_crop_land_RCP4.5H - temp$Pct_crop_land_2010
+temp$Change_crop_land_pct_RCP8.5H = temp$Pct_crop_land_RCP8.5H - temp$Pct_crop_land_2010
+
+temp$Change_crop_pasture_land_pct_RCP4.5G = 
+  temp$Pct_crop_pasture_land_RCP4.5G - temp$Pct_crop_pasture_land_2010
+temp$Change_crop_pasture_land_pct_RCP8.5G = 
+  temp$Pct_crop_pasture_land_RCP8.5G - temp$Pct_crop_pasture_land_2010
+temp$Change_crop_pasture_land_pct_RCP4.5H = 
+  temp$Pct_crop_pasture_land_RCP4.5H - temp$Pct_crop_pasture_land_2010
+temp$Change_crop_pasture_land_pct_RCP8.5H = 
+  temp$Pct_crop_pasture_land_RCP8.5H - temp$Pct_crop_pasture_land_2010
+ 
+
+temp$Change_forest_pct_RCP4.5G = temp$Pct_forest_RCP4.5G - temp$Pct_forest_2010
+temp$Change_forest_pct_RCP8.5G = temp$Pct_forest_RCP8.5G - temp$Pct_forest_2010
+temp$Change_forest_pct_RCP4.5H = temp$Pct_forest_RCP4.5H - temp$Pct_forest_2010
+temp$Change_forest_pct_RCP8.5H = temp$Pct_forest_RCP8.5H - temp$Pct_forest_2010
+
+temp$Change_wetlands_pct_RCP4.5G = temp$Pct_wetlands_RCP4.5G - temp$Pct_wetlands_2010
+temp$Change_wetlands_pct_RCP8.5G = temp$Pct_wetlands_RCP8.5G - temp$Pct_wetlands_2010
+temp$Change_wetlands_pct_RCP4.5H = temp$Pct_wetlands_RCP4.5H - temp$Pct_wetlands_2010
+temp$Change_wetlands_pct_RCP8.5H = temp$Pct_wetlands_RCP8.5H - temp$Pct_wetlands_2010
+
+
+LU_nni_hu12 = temp
+
+```
+
+
+# % Land Use (Cats)
+* Area is in units of m2 originally
+```{r}
+
+
+# merge on area
+temp = LU_nni_cat
+
+#temp = merge(temp.,StreamCat_cats[,c('COMID','CatAreaSqKm','WsAreaSqKm')],by='COMID')
+
+
+#-------------------------------------------------------------------------------
+# % Wetlands
+temp$Pct_wetlands_2010 = 
+  100*temp$area_02.wetlands_landuse_2010 / temp$CatAreaSqKm / 10^6 # converting from m2 to km2
+temp$Pct_wetlands_RCP4.5G = 
+  100*temp$area_02.wetlands_landuse_RCP4.5GISS / temp$CatAreaSqKm / 10^6
+temp$Pct_wetlands_RCP8.5G = 
+  100*temp$area_02.wetlands_landuse_RCP8.5GISS / temp$CatAreaSqKm / 10^6
+temp$Pct_wetlands_RCP4.5H = 
+  100*temp$area_02.wetlands_landuse_RCP4.5Hadgem / temp$CatAreaSqKm / 10^6
+temp$Pct_wetlands_RCP8.5H = 
+  100*temp$area_02.wetlands_landuse_RCP8.5Hadgem / temp$CatAreaSqKm / 10^6
+
+#-------------------------------------------------------------------------------
+# % Forest
+temp$area_forest_2010 = 
+  temp$area_03.rec.conserv_landuse_2010 +
+  temp$area_04.timber_landuse_2010 
+temp$area_forest_RCP4.5G = 
+  temp$area_03.rec.conserv_landuse_RCP4.5GISS +
+  temp$area_04.timber_landuse_RCP4.5GISS
+temp$area_forest_RCP8.5G = 
+  temp$area_03.rec.conserv_landuse_RCP8.5GISS +
+  temp$area_04.timber_landuse_RCP8.5GISS
+temp$area_forest_RCP4.5H = 
+  temp$area_03.rec.conserv_landuse_RCP4.5Hadgem +
+  temp$area_04.timber_landuse_RCP4.5Hadgem
+temp$area_forest_RCP8.5H = 
+  temp$area_03.rec.conserv_landuse_RCP8.5Hadgem +
+  temp$area_04.timber_landuse_RCP8.5Hadgem
+
+temp$Pct_forest_2010 = 
+  100*temp$area_forest_2010 / temp$CatAreaSqKm / 10^6
+temp$Pct_forest_RCP4.5G = 
+  100*temp$area_forest_RCP4.5G / temp$CatAreaSqKm / 10^6
+temp$Pct_forest_RCP8.5G = 
+  100*temp$area_forest_RCP8.5G / temp$CatAreaSqKm / 10^6
+temp$Pct_forest_RCP4.5H = 
+  100*temp$area_forest_RCP4.5H / temp$CatAreaSqKm / 10^6
+temp$Pct_forest_RCP8.5H = 
+  100*temp$area_forest_RCP8.5H / temp$CatAreaSqKm / 10^6
+
+# % Timber
+temp$Pct_timber_2010 = 
+    100*temp$area_04.timber_landuse_2010 / temp$CatAreaSqKm / 10^6
+
+# % Exurban
+temp$Pct_exurbanLD_2010 = 
+    100*temp$area_10.exurbanLD_landuse_2010/ temp$CatAreaSqKm / 10^6
+
+
+#-------------------------------------------------------------------------------
+# % Cropland
+temp$Pct_crop_land_2010 = 
+  100*temp$area_07.cropland_landuse_2010 / temp$CatAreaSqKm / 10^6
+temp$Pct_crop_land_RCP4.5G = 
+  100*temp$area_07.cropland_landuse_RCP4.5GISS / temp$CatAreaSqKm / 10^6
+temp$Pct_crop_land_RCP8.5G = 
+  100*temp$area_07.cropland_landuse_RCP8.5GISS / temp$CatAreaSqKm / 10^6
+temp$Pct_crop_land_RCP4.5H = 
+  100*temp$area_07.cropland_landuse_RCP4.5Hadgem / temp$CatAreaSqKm / 10^6
+temp$Pct_crop_land_RCP8.5H = 
+  100*temp$area_07.cropland_landuse_RCP8.5Hadgem / temp$CatAreaSqKm / 10^6
+
+#-------------------------------------------------------------------------------
+# % Crop + Pasture Land
+temp$Pct_crop_pasture_land_2010 = 
+  100*(temp$area_07.cropland_landuse_2010 + temp$area_06.pasture_landuse_2010) / temp$CatAreaSqKm / 10^6
+temp$Pct_crop_pasture_land_RCP4.5G = 
+  100*(temp$area_07.cropland_landuse_RCP4.5GISS + temp$area_06.pasture_landuse_RCP4.5GISS) / temp$CatAreaSqKm / 10^6
+temp$Pct_crop_pasture_land_RCP8.5G = 
+  100*(temp$area_07.cropland_landuse_RCP8.5GISS + temp$area_06.pasture_landuse_RCP8.5GISS) / temp$CatAreaSqKm / 10^6
+temp$Pct_crop_pasture_land_RCP4.5H = 
+  100*(temp$area_07.cropland_landuse_RCP4.5Hadgem + temp$area_06.pasture_landuse_RCP4.5Hadgem) / temp$CatAreaSqKm / 10^6
+temp$Pct_crop_pasture_land_RCP8.5H = 
+  100*(temp$area_07.cropland_landuse_RCP8.5Hadgem + temp$area_06.pasture_landuse_RCP8.5Hadgem) / temp$CatAreaSqKm / 10^6
+
+#-------------------------------------------------------------------------------
+# % Pasture
+temp$Pct_pasture_land_2010 = 
+  100*temp$area_06.pasture_landuse_2010 / temp$CatAreaSqKm / 10^6
+temp$Pct_pasture_land_RCP4.5G = 
+  100*temp$area_06.pasture_landuse_RCP4.5GISS/ temp$CatAreaSqKm / 10^6
+temp$Pct_pasture_land_RCP8.5G = 
+  100*temp$area_06.pasture_landuse_RCP8.5GISS / temp$CatAreaSqKm / 10^6
+temp$Pct_pasture_land_RCP4.5H = 
+  100*temp$area_06.pasture_landuse_RCP4.5Hadgem / temp$CatAreaSqKm / 10^6
+temp$Pct_pasture_land_RCP8.5H = 
+  100*temp$area_06.pasture_landuse_RCP8.5Hadgem / temp$CatAreaSqKm / 10^6
+
+
+#-------------------------------------------------------------------------------
+# % Grazing
+temp$Pct_grazing_land_2010 = 
+  100*temp$area_05.grazing_landuse_2010/ temp$CatAreaSqKm / 10^6
+temp$Pct_grazing_land_RCP4.5G = 
+  100*temp$area_05.grazing_landuse_RCP4.5GISS/ temp$CatAreaSqKm / 10^6
+temp$Pct_grazing_land_RCP8.5G = 
+  100*temp$area_05.grazing_landuse_RCP8.5GISS / temp$CatAreaSqKm / 10^6
+temp$Pct_grazing_land_RCP4.5H = 
+  100*temp$area_05.grazing_landuse_RCP4.5Hadgem / temp$CatAreaSqKm / 10^6
+temp$Pct_grazing_land_RCP8.5H = 
+  100*temp$area_05.grazing_landuse_RCP8.5Hadgem / temp$CatAreaSqKm / 10^6
+
+
+
+#-------------------------------------------------------------------------------
+# % Ag
+# temp$Pct_ag_land_2010 = 
+#   100*temp$area_ag_2010 / temp$CatAreaSqKm / 10^6
+# temp$Pct_ag_land_RCP4.5G = 
+#   100*temp$area_ag_RCP4.5G / temp$CatAreaSqKm / 10^6
+# temp$Pct_ag_land_RCP8.5G = 
+#   100*temp$area_ag_RCP8.5G / temp$CatAreaSqKm / 10^6
+# temp$Pct_ag_land_RCP4.5H = 
+#   100*temp$area_ag_RCP4.5H / temp$CatAreaSqKm / 10^6
+# temp$Pct_ag_land_RCP8.5H = 
+#   100*temp$area_ag_RCP8.5H / temp$CatAreaSqKm / 10^6
+
+
+#-------------------------------------------------------------------------------
+# Change Calculations
+# temp$Change_ag_land_pct_RCP4.5G = temp$Pct_ag_land_RCP4.5G - temp$Pct_ag_land_2010
+# temp$Change_ag_land_pct_RCP8.5G = temp$Pct_ag_land_RCP8.5G - temp$Pct_ag_land_2010
+# temp$Change_ag_land_pct_RCP4.5H = temp$Pct_ag_land_RCP4.5H - temp$Pct_ag_land_2010
+# temp$Change_ag_land_pct_RCP8.5H = temp$Pct_ag_land_RCP8.5H - temp$Pct_ag_land_2010
+
+temp$Change_grazing_land_pct_RCP4.5G = temp$Pct_grazing_land_RCP4.5G - temp$Pct_grazing_land_2010
+temp$Change_grazing_land_pct_RCP8.5G = temp$Pct_grazing_land_RCP8.5G - temp$Pct_grazing_land_2010
+temp$Change_grazing_land_pct_RCP4.5H = temp$Pct_grazing_land_RCP4.5H - temp$Pct_grazing_land_2010
+temp$Change_grazing_land_pct_RCP8.5H = temp$Pct_grazing_land_RCP8.5H - temp$Pct_grazing_land_2010
+
+temp$Change_pasture_land_pct_RCP4.5G = temp$Pct_pasture_land_RCP4.5G - temp$Pct_pasture_land_2010
+temp$Change_pasture_land_pct_RCP8.5G = temp$Pct_pasture_land_RCP8.5G - temp$Pct_pasture_land_2010
+temp$Change_pasture_land_pct_RCP4.5H = temp$Pct_pasture_land_RCP4.5H - temp$Pct_pasture_land_2010
+temp$Change_pasture_land_pct_RCP8.5H = temp$Pct_pasture_land_RCP8.5H - temp$Pct_pasture_land_2010
+
+temp$Change_crop_land_pct_RCP4.5G = temp$Pct_crop_land_RCP4.5G - temp$Pct_crop_land_2010
+temp$Change_crop_land_pct_RCP8.5G = temp$Pct_crop_land_RCP8.5G - temp$Pct_crop_land_2010
+temp$Change_crop_land_pct_RCP4.5H = temp$Pct_crop_land_RCP4.5H - temp$Pct_crop_land_2010
+temp$Change_crop_land_pct_RCP8.5H = temp$Pct_crop_land_RCP8.5H - temp$Pct_crop_land_2010
+
+temp$Change_crop_land_pct_RCP4.5G = temp$Pct_crop_land_RCP4.5G - temp$Pct_crop_land_2010
+temp$Change_crop_land_pct_RCP8.5G = temp$Pct_crop_land_RCP8.5G - temp$Pct_crop_land_2010
+temp$Change_crop_land_pct_RCP4.5H = temp$Pct_crop_land_RCP4.5H - temp$Pct_crop_land_2010
+temp$Change_crop_land_pct_RCP8.5H = temp$Pct_crop_land_RCP8.5H - temp$Pct_crop_land_2010
+
+temp$Change_crop_pasture_land_pct_RCP4.5G = 
+  temp$Pct_crop_pasture_land_RCP4.5G - temp$Pct_crop_pasture_land_2010
+temp$Change_crop_pasture_land_pct_RCP8.5G = 
+  temp$Pct_crop_pasture_land_RCP8.5G - temp$Pct_crop_pasture_land_2010
+temp$Change_crop_pasture_land_pct_RCP4.5H = 
+  temp$Pct_crop_pasture_land_RCP4.5H - temp$Pct_crop_pasture_land_2010
+temp$Change_crop_pasture_land_pct_RCP8.5H = 
+  temp$Pct_crop_pasture_land_RCP8.5H - temp$Pct_crop_pasture_land_2010
+ 
+
+temp$Change_forest_pct_RCP4.5G = temp$Pct_forest_RCP4.5G - temp$Pct_forest_2010
+temp$Change_forest_pct_RCP8.5G = temp$Pct_forest_RCP8.5G - temp$Pct_forest_2010
+temp$Change_forest_pct_RCP4.5H = temp$Pct_forest_RCP4.5H - temp$Pct_forest_2010
+temp$Change_forest_pct_RCP8.5H = temp$Pct_forest_RCP8.5H - temp$Pct_forest_2010
+
+temp$Change_wetlands_pct_RCP4.5G = temp$Pct_wetlands_RCP4.5G - temp$Pct_wetlands_2010
+temp$Change_wetlands_pct_RCP8.5G = temp$Pct_wetlands_RCP8.5G - temp$Pct_wetlands_2010
+temp$Change_wetlands_pct_RCP4.5H = temp$Pct_wetlands_RCP4.5H - temp$Pct_wetlands_2010
+temp$Change_wetlands_pct_RCP8.5H = temp$Pct_wetlands_RCP8.5H - temp$Pct_wetlands_2010
+
+
+LU_nni_cat = temp
+
+rm(temp)
+gc()
+
+```
+
+
 #------------------------------------------------------------------------------
 
+
+# Spatial Model (Catchment Level) Correction for Ag land
+* Goal:
+*** 1. develop relationship between 2010 Iclus and Current NLCD/StreamCat with spmodel
+*** 2. Use the fitted spmodel to predict 2050 StreamCat/NLCD Ag (Crop+Pasture)
+*** 3. Calculate change ratio based on StreamCat Values 2050 StreamCat / 2020 StreamCat
+*** 4. Use change ratio as multiplier to convert current NNI N inputs to future 2050 NNI N inputs
+```{r}
+
+library(spmodel)
+library(broom)
+library(knitr)
+
+
+
+# Can't seem to create new spmodel based on catchment scale data, so uploading HU12-based model
+spmod0 = readRDS(paste0(future_dir ,'Data/Models/SPATIAL_model_ICLUS_vs_NLCD_cropland.rds'))
+
+
+vars1 = c('COMID','PctHay2019Cat','PctHay2019Ws'
+          ,'PctCrop2019Cat','PctCrop2019Ws')
+
+vars2 = c('COMID','Pct_crop_land_2010','Pct_crop_pasture_land_2010')
+
+XYplot = merge(StreamCat_cats[,vars1],LU_nni_cat[,vars2],by='COMID')
+
+XYplot$crop_hay_past_2019streamcat = XYplot$PctHay2019Cat + XYplot$PctCrop2019Cat
+XYplot$Pct_crop_land_2010_iclus = XYplot$Pct_crop_land_2010
+XYplot$Pct_crop_pasture_2010_iclus = XYplot$Pct_crop_pasture_land_2010
+# 
+# # Add on spatial information
+# ag_sp = merge(XYplot[,c('COMID','crop_hay_past_2019streamcat','Pct_crop_pasture_2010_iclus')],
+#               cats_p[,c('COMID','geometry')],by='COMID')
+# ag_sp <- st_as_sf(ag_sp) # added this because the above didn't retain geometry
+# 
+# # remove missing values
+# ag_sp = unique(na.omit(ag_sp))
+# 
+# #-------------------------------------------------------------------------------
+# # Model calibration and prediction
+# 
+# start_time <- Sys.time()
+# m0 <- splm(crop_hay_past_2019streamcat ~ poly(Pct_crop_pasture_2010_iclus, 3), data=ag_sp,
+# #m0 <- splm(Pct_crop_pasture_2010_iclus ~ poly(crop_hay_past_streamcat, 3), data=ag_sp,
+#            spcov_type = "none",  # linear model, no accounting for spatial covariance
+#            local = list(parallel = TRUE, ncores = 12))
+# end_time <- Sys.time(); end_time - start_time
+# # Time difference of 50.90884 secs
+# gc()
+# 
+# start_time <- Sys.time()
+# spmod0 <- splm(crop_hay_past_2019streamcat ~ poly(Pct_crop_pasture_2010_iclus, 3), data=ag_sp,
+# #spmod0 <- splm(Pct_crop_pasture_2010_iclus ~ poly(crop_hay_past_streamcat, 3), data=ag_sp,
+#               spcov_type = "exponential",
+#               local = list(size = 50, method = "kmeans", parallel = TRUE, ncores = 12, var_adjust = "none"))
+# end_time <- Sys.time(); end_time - start_time
+# # Time difference of 2.61594 mins
+# gc()
+# 
+# 
+# #saveRDS(spmod0, './tdep-tn-spatial-model-huc12.rds')
+# ns.obs.prd <- data.frame(#observed = m0$obdata$Pct_crop_pasture_2010_iclus,
+#                          observed = m0$obdata$crop_hay_past_streamcat,
+#                       predicted = fitted(m0))
+# 
+# obs.prd <- data.frame(#observed = spmod0$obdata$Pct_crop_pasture_2010_iclus,
+#                       observed = spmod0$obdata$crop_hay_past_streamcat,
+#                       predicted = fitted(spmod0) + fitted(spmod0, type = "spcov")$de)
+# 
+# error <- ns.obs.prd$observed - ns.obs.prd$predicted
+# ns.obs.prd_stats <- data.frame(Model = 'Non-spatial', bias = mean(error), MSPE = mean(error^2),
+#                              RMSPE = sqrt(mean(error^2)), cor2 = cor(ns.obs.prd$observed, ns.obs.prd$predicted)^2)
+# 
+# error <- obs.prd$observed - obs.prd$predicted
+# obs.prd_stats <- data.frame(Model = 'Spatial', bias = mean(error), MSPE = mean(error^2),
+#                              RMSPE = sqrt(mean(error^2)), cor2 = cor(obs.prd$observed, obs.prd$predicted)^2)
+# 
+# kable(rbind(ns.obs.prd_stats, 
+#             obs.prd_stats))
+# #-------------------------------------------------------------------------------
+# 
+# # x-y scatter for non-spatial model
+# ggplot(data=ns.obs.prd, aes(x=predicted, y=observed)) + 
+#   geom_hex(bins = 100) + ggtitle("Non-Spatial Model - Ag Land") +
+#   xlim(0, max(ns.obs.prd)) + ylim(0, max(ns.obs.prd)) +
+#   scale_fill_gradient(low = "grey", high = "red") +
+#   geom_abline(color='black') + theme_bw()
+# 
+# # x-y scatter for spatial model
+# ggplot(data=obs.prd, aes(x=predicted, y=observed)) + 
+#   geom_hex(bins = 100) + ggtitle("Spatial Model - Ag Land") +
+#   xlim(0, max(ns.obs.prd)) + ylim(0, max(ns.obs.prd)) +
+#   scale_fill_gradient(low = "grey", high = "red") +
+#   geom_abline(color='black') + theme_bw()
+
+
+#-------------------------------------------------------------------------------
+# Create Future Dataset
+# create dataframe with ag_data for 2050
+ag2050 = LU_nni_cat[,c('COMID',#'Pct_crop_pasture_land_2010',
+                        'Pct_crop_pasture_land_RCP4.5G',
+                        'Pct_crop_pasture_land_RCP8.5G',
+                        'Pct_crop_pasture_land_RCP4.5H','Pct_crop_pasture_land_RCP8.5H'
+                        )]
+
+# remove missing values
+ag2050 = unique(na.omit(ag2050))
+
+nrow(ag2050) # 2643993
+
+# Add on spatial information
+ag2050_sp = merge(ag2050,
+              cats_p[,c('COMID','geometry')],by='COMID')
+ag2050_sp <- st_as_sf(ag2050_sp) # added this because the above didn't retain geometry
+
+
+#-------------------------------------------------------------------------------
+# Use this model to Predict 2050 NCLD (StreamCat) Ag % 
+
+start_time <- Sys.time()
+ag_nlcd_2050_rcp4.5G <- predict(spmod0, 
+                       newdata = ag2050_sp %>% 
+                         rename(Pct_crop_pasture_2010_iclus=Pct_crop_pasture_land_RCP4.5G),# %>% slice(1:1),
+                       se.fit = FALSE,
+                       local = list(parallel = TRUE, 
+                                    ncores = 12))
+end_time <- Sys.time(); end_time - start_time
+#Time difference of 1.052804 hours
+
+start_time <- Sys.time()
+ag_nlcd_2050_rcp8.5G <- predict(spmod0, 
+                       newdata = ag2050_sp %>% 
+                         rename(Pct_crop_pasture_2010_iclus=Pct_crop_pasture_land_RCP8.5G),# %>% slice(1:1),
+                       se.fit = FALSE,
+                       local = list(parallel = TRUE, 
+                                    ncores = 20))
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 2.210448 mins
+
+start_time <- Sys.time()
+ag_nlcd_2050_rcp4.5H <- predict(spmod0, 
+                       newdata = ag2050_sp %>% 
+                         rename(Pct_crop_pasture_2010_iclus=Pct_crop_pasture_land_RCP4.5H),# %>% slice(1:1),
+                       se.fit = FALSE,
+                       local = list(parallel = TRUE, 
+                                    ncores = 20))
+end_time <- Sys.time(); end_time - start_time
+#Time difference of 2.123296 mins
+
+start_time <- Sys.time()
+ag_nlcd_2050_rcp8.5H <- predict(spmod0, 
+                       newdata = ag2050_sp %>% 
+                         rename(Pct_crop_pasture_2010_iclus=Pct_crop_pasture_land_RCP8.5H),# %>% slice(1:1),
+                       se.fit = FALSE,
+                       local = list(parallel = TRUE, 
+                                    ncores = 20))
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 2.141382 mins
+
+# Merge back on HUC12s
+ag_nlcd_2050_rcp4.5G_ = cbind(ag2050_sp$COMID ,ag_nlcd_2050_rcp4.5G)
+ag_nlcd_2050_rcp8.5G = cbind(ag2050_sp$COMID ,ag_nlcd_2050_rcp8.5G)
+ag_nlcd_2050_rcp4.5H = cbind(ag2050_sp$COMID ,ag_nlcd_2050_rcp4.5H)
+ag_nlcd_2050_rcp8.5H = cbind(ag2050_sp$HUC12 ,ag_nlcd_2050_rcp8.5H)
+
+ag_nlcd_2050_rcp4.5G_ = as.data.frame(ag_nlcd_2050_rcp4.5G_)
+ag_nlcd_2050_rcp8.5G = as.data.frame(ag_nlcd_2050_rcp8.5G)
+ag_nlcd_2050_rcp4.5H = as.data.frame(ag_nlcd_2050_rcp4.5H)
+ag_nlcd_2050_rcp8.5H = as.data.frame(ag_nlcd_2050_rcp8.5H)
+
+names(ag_nlcd_2050_rcp4.5G_)[1] = 'COMID'
+names(ag_nlcd_2050_rcp8.5G)[1] = 'COMID'
+names(ag_nlcd_2050_rcp4.5H)[1] = 'COMID'
+names(ag_nlcd_2050_rcp8.5H)[1] = 'COMID'
+
+ag_nlcd_2050_rcp4.5G_$ag_nlcd_2050_rcp4.5G = 
+  as.numeric(ag_nlcd_2050_rcp4.5G_$ag_nlcd_2050_rcp4.5G)
+ag_nlcd_2050_rcp8.5G$ag_nlcd_2050_rcp8.5G = 
+  as.numeric(ag_nlcd_2050_rcp8.5G$ag_nlcd_2050_rcp8.5G)
+ag_nlcd_2050_rcp4.5H$ag_nlcd_2050_rcp4.5H = 
+  as.numeric(ag_nlcd_2050_rcp4.5H$ag_nlcd_2050_rcp4.5H)
+ag_nlcd_2050_rcp8.5H$ag_nlcd_2050_rcp8.5H = 
+  as.numeric(ag_nlcd_2050_rcp8.5H$ag_nlcd_2050_rcp8.5H)
+
+summary(ag_nlcd_2050_rcp4.5G_$ag_nlcd_2050_rcp4.5G)
+
+# Merge
+ag_nlcd_2050 = merge(ag_nlcd_2050_rcp4.5G_,ag_nlcd_2050_rcp8.5G,by="HUC12")
+ag_nlcd_2050 = merge(ag_nlcd_2050,ag_nlcd_2050_rcp4.5H,by="HUC12")
+ag_nlcd_2050 = merge(ag_nlcd_2050,ag_nlcd_2050_rcp8.5H,by="HUC12")
+
+
+#-------------------------------------------------------------------------------
+
+
+#saveRDS(m0, file = paste0(future_dir ,'Data/Models/NONSPATIAL_model_ICLUS_vs_NLCD_cropland_cats.rds'))
+#saveRDS(spmod0, file = paste0(future_dir ,'Data/Models/SPATIAL_model_ICLUS_vs_NLCD_cropland_cats.rds'))
+
+write.csv(ag_nlcd_2050_rcp4.5G_, file = paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCPG4.5_COMID.csv'), row.names=F)
+
+write.csv(ag_nlcd_2050, file = paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP_GISS_HADGEM_COMID.csv'), row.names=F)
+
+
+```
 
 
 # Change Ratio spmodel - Based on NLCD Ag Land
@@ -1978,188 +2747,6 @@ summary(popden_hu12$n_human_food_waste_kg_RCP4.5G)
 
 ```
 
-# % Land Use
-* Area is in units of m2 originally
-```{r}
-
-
-# merge on area
-temp. = LU_nni_hu12
-
-temp = merge(temp.,huc12_df[,c('HUC12','huc12_area_m2')],by='HUC12')
-
-
-#-------------------------------------------------------------------------------
-# % Wetlands
-temp$Pct_wetlands_2010 = 
-  100*temp$area_02.wetlands_landuse_2010 / temp$huc12_area_m2
-temp$Pct_wetlands_RCP4.5G = 
-  100*temp$area_02.wetlands_landuse_RCP4.5GISS / temp$huc12_area_m2
-temp$Pct_wetlands_RCP8.5G = 
-  100*temp$area_02.wetlands_landuse_RCP8.5GISS / temp$huc12_area_m2
-temp$Pct_wetlands_RCP4.5H = 
-  100*temp$area_02.wetlands_landuse_RCP4.5Hadgem / temp$huc12_area_m2
-temp$Pct_wetlands_RCP8.5H = 
-  100*temp$area_02.wetlands_landuse_RCP8.5Hadgem / temp$huc12_area_m2
-
-#-------------------------------------------------------------------------------
-# % Forest
-temp$area_forest_2010 = 
-  temp$area_03.rec.conserv_landuse_2010 +
-  temp$area_04.timber_landuse_2010 
-temp$area_forest_RCP4.5G = 
-  temp$area_03.rec.conserv_landuse_RCP4.5GISS +
-  temp$area_04.timber_landuse_RCP4.5GISS
-temp$area_forest_RCP8.5G = 
-  temp$area_03.rec.conserv_landuse_RCP8.5GISS +
-  temp$area_04.timber_landuse_RCP8.5GISS
-temp$area_forest_RCP4.5H = 
-  temp$area_03.rec.conserv_landuse_RCP4.5Hadgem +
-  temp$area_04.timber_landuse_RCP4.5Hadgem
-temp$area_forest_RCP8.5H = 
-  temp$area_03.rec.conserv_landuse_RCP8.5Hadgem +
-  temp$area_04.timber_landuse_RCP8.5Hadgem
-
-temp$Pct_forest_2010 = 
-  100*temp$area_forest_2010 / temp$huc12_area_m2
-temp$Pct_forest_RCP4.5G = 
-  100*temp$area_forest_RCP4.5G / temp$huc12_area_m2
-temp$Pct_forest_RCP8.5G = 
-  100*temp$area_forest_RCP8.5G / temp$huc12_area_m2
-temp$Pct_forest_RCP4.5H = 
-  100*temp$area_forest_RCP4.5H / temp$huc12_area_m2
-temp$Pct_forest_RCP8.5H = 
-  100*temp$area_forest_RCP8.5H / temp$huc12_area_m2
-
-# % Timber
-temp$Pct_timber_2010 = 
-    100*temp$area_04.timber_landuse_2010 / temp$huc12_area_m2
-
-# % Exurban
-temp$Pct_exurbanLD_2010 = 
-    100*temp$area_10.exurbanLD_landuse_2010/ temp$huc12_area_m2
-
-
-#-------------------------------------------------------------------------------
-# % Cropland
-temp$Pct_crop_land_2010 = 
-  100*temp$area_07.cropland_landuse_2010 / temp$huc12_area_m2
-temp$Pct_crop_land_RCP4.5G = 
-  100*temp$area_07.cropland_landuse_RCP4.5GISS / temp$huc12_area_m2
-temp$Pct_crop_land_RCP8.5G = 
-  100*temp$area_07.cropland_landuse_RCP8.5GISS / temp$huc12_area_m2
-temp$Pct_crop_land_RCP4.5H = 
-  100*temp$area_07.cropland_landuse_RCP4.5Hadgem / temp$huc12_area_m2
-temp$Pct_crop_land_RCP8.5H = 
-  100*temp$area_07.cropland_landuse_RCP8.5Hadgem / temp$huc12_area_m2
-
-#-------------------------------------------------------------------------------
-# % Crop + Pasture Land
-temp$Pct_crop_pasture_land_2010 = 
-  100*(temp$area_07.cropland_landuse_2010 + temp$area_06.pasture_landuse_2010) / temp$huc12_area_m2
-temp$Pct_crop_pasture_land_RCP4.5G = 
-  100*(temp$area_07.cropland_landuse_RCP4.5GISS + temp$area_06.pasture_landuse_RCP4.5GISS) / temp$huc12_area_m2
-temp$Pct_crop_pasture_land_RCP8.5G = 
-  100*(temp$area_07.cropland_landuse_RCP8.5GISS + temp$area_06.pasture_landuse_RCP8.5GISS) / temp$huc12_area_m2
-temp$Pct_crop_pasture_land_RCP4.5H = 
-  100*(temp$area_07.cropland_landuse_RCP4.5Hadgem + temp$area_06.pasture_landuse_RCP4.5Hadgem) / temp$huc12_area_m2
-temp$Pct_crop_pasture_land_RCP8.5H = 
-  100*(temp$area_07.cropland_landuse_RCP8.5Hadgem + temp$area_06.pasture_landuse_RCP8.5Hadgem) / temp$huc12_area_m2
-
-#-------------------------------------------------------------------------------
-# % Pasture
-temp$Pct_pasture_land_2010 = 
-  100*temp$area_06.pasture_landuse_2010 / temp$huc12_area_m2
-temp$Pct_pasture_land_RCP4.5G = 
-  100*temp$area_06.pasture_landuse_RCP4.5GISS/ temp$huc12_area_m2
-temp$Pct_pasture_land_RCP8.5G = 
-  100*temp$area_06.pasture_landuse_RCP8.5GISS / temp$huc12_area_m2
-temp$Pct_pasture_land_RCP4.5H = 
-  100*temp$area_06.pasture_landuse_RCP4.5Hadgem / temp$huc12_area_m2
-temp$Pct_pasture_land_RCP8.5H = 
-  100*temp$area_06.pasture_landuse_RCP8.5Hadgem / temp$huc12_area_m2
-
-
-#-------------------------------------------------------------------------------
-# % Grazing
-temp$Pct_grazing_land_2010 = 
-  100*temp$area_05.grazing_landuse_2010/ temp$huc12_area_m2
-temp$Pct_grazing_land_RCP4.5G = 
-  100*temp$area_05.grazing_landuse_RCP4.5GISS/ temp$huc12_area_m2
-temp$Pct_grazing_land_RCP8.5G = 
-  100*temp$area_05.grazing_landuse_RCP8.5GISS / temp$huc12_area_m2
-temp$Pct_grazing_land_RCP4.5H = 
-  100*temp$area_05.grazing_landuse_RCP4.5Hadgem / temp$huc12_area_m2
-temp$Pct_grazing_land_RCP8.5H = 
-  100*temp$area_05.grazing_landuse_RCP8.5Hadgem / temp$huc12_area_m2
-
-
-
-#-------------------------------------------------------------------------------
-# % Ag
-# temp$Pct_ag_land_2010 = 
-#   100*temp$area_ag_2010 / temp$huc12_area_m2
-# temp$Pct_ag_land_RCP4.5G = 
-#   100*temp$area_ag_RCP4.5G / temp$huc12_area_m2
-# temp$Pct_ag_land_RCP8.5G = 
-#   100*temp$area_ag_RCP8.5G / temp$huc12_area_m2
-# temp$Pct_ag_land_RCP4.5H = 
-#   100*temp$area_ag_RCP4.5H / temp$huc12_area_m2
-# temp$Pct_ag_land_RCP8.5H = 
-#   100*temp$area_ag_RCP8.5H / temp$huc12_area_m2
-
-
-#-------------------------------------------------------------------------------
-# Change Calculations
-# temp$Change_ag_land_pct_RCP4.5G = temp$Pct_ag_land_RCP4.5G - temp$Pct_ag_land_2010
-# temp$Change_ag_land_pct_RCP8.5G = temp$Pct_ag_land_RCP8.5G - temp$Pct_ag_land_2010
-# temp$Change_ag_land_pct_RCP4.5H = temp$Pct_ag_land_RCP4.5H - temp$Pct_ag_land_2010
-# temp$Change_ag_land_pct_RCP8.5H = temp$Pct_ag_land_RCP8.5H - temp$Pct_ag_land_2010
-
-temp$Change_grazing_land_pct_RCP4.5G = temp$Pct_grazing_land_RCP4.5G - temp$Pct_grazing_land_2010
-temp$Change_grazing_land_pct_RCP8.5G = temp$Pct_grazing_land_RCP8.5G - temp$Pct_grazing_land_2010
-temp$Change_grazing_land_pct_RCP4.5H = temp$Pct_grazing_land_RCP4.5H - temp$Pct_grazing_land_2010
-temp$Change_grazing_land_pct_RCP8.5H = temp$Pct_grazing_land_RCP8.5H - temp$Pct_grazing_land_2010
-
-temp$Change_pasture_land_pct_RCP4.5G = temp$Pct_pasture_land_RCP4.5G - temp$Pct_pasture_land_2010
-temp$Change_pasture_land_pct_RCP8.5G = temp$Pct_pasture_land_RCP8.5G - temp$Pct_pasture_land_2010
-temp$Change_pasture_land_pct_RCP4.5H = temp$Pct_pasture_land_RCP4.5H - temp$Pct_pasture_land_2010
-temp$Change_pasture_land_pct_RCP8.5H = temp$Pct_pasture_land_RCP8.5H - temp$Pct_pasture_land_2010
-
-temp$Change_crop_land_pct_RCP4.5G = temp$Pct_crop_land_RCP4.5G - temp$Pct_crop_land_2010
-temp$Change_crop_land_pct_RCP8.5G = temp$Pct_crop_land_RCP8.5G - temp$Pct_crop_land_2010
-temp$Change_crop_land_pct_RCP4.5H = temp$Pct_crop_land_RCP4.5H - temp$Pct_crop_land_2010
-temp$Change_crop_land_pct_RCP8.5H = temp$Pct_crop_land_RCP8.5H - temp$Pct_crop_land_2010
-
-temp$Change_crop_land_pct_RCP4.5G = temp$Pct_crop_land_RCP4.5G - temp$Pct_crop_land_2010
-temp$Change_crop_land_pct_RCP8.5G = temp$Pct_crop_land_RCP8.5G - temp$Pct_crop_land_2010
-temp$Change_crop_land_pct_RCP4.5H = temp$Pct_crop_land_RCP4.5H - temp$Pct_crop_land_2010
-temp$Change_crop_land_pct_RCP8.5H = temp$Pct_crop_land_RCP8.5H - temp$Pct_crop_land_2010
-
-temp$Change_crop_pasture_land_pct_RCP4.5G = 
-  temp$Pct_crop_pasture_land_RCP4.5G - temp$Pct_crop_pasture_land_2010
-temp$Change_crop_pasture_land_pct_RCP8.5G = 
-  temp$Pct_crop_pasture_land_RCP8.5G - temp$Pct_crop_pasture_land_2010
-temp$Change_crop_pasture_land_pct_RCP4.5H = 
-  temp$Pct_crop_pasture_land_RCP4.5H - temp$Pct_crop_pasture_land_2010
-temp$Change_crop_pasture_land_pct_RCP8.5H = 
-  temp$Pct_crop_pasture_land_RCP8.5H - temp$Pct_crop_pasture_land_2010
- 
-
-temp$Change_forest_pct_RCP4.5G = temp$Pct_forest_RCP4.5G - temp$Pct_forest_2010
-temp$Change_forest_pct_RCP8.5G = temp$Pct_forest_RCP8.5G - temp$Pct_forest_2010
-temp$Change_forest_pct_RCP4.5H = temp$Pct_forest_RCP4.5H - temp$Pct_forest_2010
-temp$Change_forest_pct_RCP8.5H = temp$Pct_forest_RCP8.5H - temp$Pct_forest_2010
-
-temp$Change_wetlands_pct_RCP4.5G = temp$Pct_wetlands_RCP4.5G - temp$Pct_wetlands_2010
-temp$Change_wetlands_pct_RCP8.5G = temp$Pct_wetlands_RCP8.5G - temp$Pct_wetlands_2010
-temp$Change_wetlands_pct_RCP4.5H = temp$Pct_wetlands_RCP4.5H - temp$Pct_wetlands_2010
-temp$Change_wetlands_pct_RCP8.5H = temp$Pct_wetlands_RCP8.5H - temp$Pct_wetlands_2010
-
-
-LU_nni_hu12 = temp
-
-```
 
 # method check
 * Checking issue of change ratio when 2010 value is zero
@@ -2444,31 +3031,56 @@ NDATA_huc12$change_N_ag_surp_RCP8.5H = NDATA_huc12$N_ag_surp_RCP8.5H - NDATA_huc
 
 ```
 
+# N Surp Catchments
+```{r}
+
+
+StreamCat_cats
+
+StreamCat_cats$n_ag_surp_kg_2017cat = 
+  StreamCat_cats$n_ff_2017cat + # fertilizer (kg)
+  StreamCat_cats$n_lw_2017cat +  # Manure (kg)
+  StreamCat_cats$n_cf_2017cat - # Crop fixation (kg)
+  StreamCat_cats$n_cr_2017cat # crop removal (kg)
+
+StreamCat_cats$n_ag_surp_kg_2017ws = 
+  StreamCat_cats$n_ff_2017ws + # fertilizer (kg)
+  StreamCat_cats$n_lw_2017ws +  # Manure (kg)
+  StreamCat_cats$n_cf_2017ws - # Crop fixation (kg)
+  StreamCat_cats$n_cr_2017ws # crop removal (kg)
+
+StreamCat_cats$n_ag_surp_kgsqkm_2017cat= StreamCat_cats$n_ag_surp_kg_2017cat / StreamCat_cats$CatAreaSqKm
+StreamCat_cats$n_ag_surp_kgsqkm_2017ws= StreamCat_cats$n_ag_surp_kg_2017ws / StreamCat_cats$WsAreaSqKm
+
+```
+
+
+
 # NANI Calc
 * NANI = N_dep + N_fert + N_ag_fix + N_crop_prod + N_human + N_livestock - N_exports (N_emissions + N_animal_prod + N_animal_consumption + N_human_cons)
 ```{r}
 
-NANI_huc12 = LU_nni_hu12[,c('HUC12','n_farm_fert_kgsqkm_RCP4.5G','n_manure_kgsqkm_RCP4.5G',
-                             'n_crop_fix_kgsqkm_RCP4.5G','n_crop_rem_kgsqkm_RCP4.5G',
-                            'n_livestock_rec_kgsqkm_RCP4.5G','n_livestock_dem_kgsqkm_RCP4.5G',
-                            'n_livestock_prod_kgsqkm_RCP4.5G')]
-
-NANI_huc12 = merge(NANI_huc12,dep_N_hu12_nni,by='HUC12')
-NANI_huc12 = merge(NANI_huc12,popden_hu12,by='HUC12')
-
-
-
-NANI_huc12$NANI_RCP4.5G = 
-  NANI_huc12$totalN_2055ctl_kgNha +  # Input
-  NANI_huc12$n_farm_fert_kgsqkm_RCP4.5G + # Input 
-  NANI_huc12$n_crop_fix_kgsqkm_RCP4.5G + # Input
-  NANI_huc12$n_livestock_prod_kgsqkm_RCP4.5G + # Input
-  NANI_huc12$n_human_food_waste_kg_RCP4.5G - # Input
-  
-  NANI_huc12$n_crop_rem_kgsqkm_RCP4.5G - # Loss
-  NANI_huc12$n_human_food_dem_kg_RCP4.5G -  # Loss 
-  NANI_huc12$n_livestock_dem_kgsqkm_RCP4.5G -  # Loss
-  NANI_huc12$n_livestock_rec_kgsqkm_RCP4.5G  # Loss
+# NANI_huc12 = LU_nni_hu12[,c('HUC12','n_farm_fert_kgsqkm_RCP4.5G','n_manure_kgsqkm_RCP4.5G',
+#                              'n_crop_fix_kgsqkm_RCP4.5G','n_crop_rem_kgsqkm_RCP4.5G',
+#                             'n_livestock_rec_kgsqkm_RCP4.5G','n_livestock_dem_kgsqkm_RCP4.5G',
+#                             'n_livestock_prod_kgsqkm_RCP4.5G')]
+# 
+# NANI_huc12 = merge(NANI_huc12,dep_N_hu12_nni,by='HUC12')
+# NANI_huc12 = merge(NANI_huc12,popden_hu12,by='HUC12')
+# 
+# 
+# 
+# NANI_huc12$NANI_RCP4.5G = 
+#   NANI_huc12$totalN_2055ctl_kgNha +  # Input
+#   NANI_huc12$n_farm_fert_kgsqkm_RCP4.5G + # Input 
+#   NANI_huc12$n_crop_fix_kgsqkm_RCP4.5G + # Input
+#   NANI_huc12$n_livestock_prod_kgsqkm_RCP4.5G + # Input
+#   NANI_huc12$n_human_food_waste_kg_RCP4.5G - # Input
+#   
+#   NANI_huc12$n_crop_rem_kgsqkm_RCP4.5G - # Loss
+#   NANI_huc12$n_human_food_dem_kg_RCP4.5G -  # Loss 
+#   NANI_huc12$n_livestock_dem_kgsqkm_RCP4.5G -  # Loss
+#   NANI_huc12$n_livestock_rec_kgsqkm_RCP4.5G  # Loss
 
 
 
@@ -2497,7 +3109,7 @@ rf_sw = merge(rf_sw,subset(NNI17,select=-c(n_human_food_waste_kgsqkm,n_crop_rem_
 keeps = c("HUC12","viol_freq"
 
           # Land Use
-          ,"PopDen2010Ws","PctForest2019Ws","PctCrop2019Ws"
+          ,"PopDen2010Ws","PctCrop2019Ws"#,"PctForest2019Ws"
           #,"AgKffactWs"
           ,"AgDrain_pctWs"#,"PctImp2016Ws"
 
@@ -2509,6 +3121,7 @@ keeps = c("HUC12","viol_freq"
           # N Inputs
           ,"N_TW2012Ws","RockNWs","FertWs","CBNFWs","ManureWs"
           #,"n_human_food_waste_kgsqkm"
+          ,'Septic_km2Cat'
           ,"n_surplus_kgsqkm"#
           #,"n_ag_surplus_kgsqkm"#,"N_Surp_2017ws","NANI_kgkm2_Ws"
           #,"n_crop_rem_kgsqkm"
@@ -2558,23 +3171,23 @@ rf_gw = merge(rf_gw,N_treat_huc12_gw,by='HUC12')
 # Original
 keeps = c("HUC12","viol_freq"
           # Land Use
-          ,"PopDen2010Cat","PctForest2019Cat","PctCrop2019Cat"
+          ,"PopDen2010Cat","PctCrop2019Cat"#,"PctForest2019Cat"
           ,"AgKffactCat","AgDrain_pctCat"
 
           # Weather/Hydro
-          ,"precip9120ws","tmean9120cat","BFICat","Precip_Minus_EVTCat"
+          ,"precip9120cat","tmean9120cat","BFICat"#,"Precip_Minus_EVTCat"
           ,"WaterInputCat","wdrw_LDCat"#,"PctImp2016Cat"#
           ,"permcat"#,"HydrlCondCat"#,"runoffcat"
 
           # N Inputs
-          ,"RockNCat","N_TW2012Cat","FertWs","CBNFCat","ManureCat"
+          ,"RockNCat","N_TW2012Cat"#,"FertWs","CBNFCat","ManureCat"
           ,"n_surplus_kgsqkm"#
           ,'Septic_km2Cat'
-          ,"n_ag_surplus_kgsqkm"#"N_Surp_2017ws" #
+          #,"n_ag_surplus_kgsqkm"#"N_Surp_2017ws" #
           #,"NANI_kgkm2_Ws"
 
           # Other
-          ,"Fe2O3Cat","WtDepCat","Hillslope_PctCat","ElevCat","SandCat"
+          ,"Fe2O3Cat","WtDepCat","Hillslope_PctCat","ElevCat"#,"SandCat"
           #,"rckdepcat" #,"S_TW2012Cat"##,"NHDslope_Pct_Cat"
           #,'Nitrate_Treatment_freq'
 
@@ -2637,20 +3250,20 @@ rf_sw = merge(viol_sw_cat,StreamCat_sub,by='COMID')
 keeps_sw = c("COMID","viol_freq"
 
           # Land Use
-          ,"PopDen2010Ws","PctForest2019Ws"#,"PctCrop2019Ws"
-          ,"AgKffactWs","AgDrain_pctWs"#,"PctImp2016Ws"
+          ,"PopDen2010Ws","PctForest2019Ws","PctCrop2019Ws"
+          #,"AgKffactWs"#,"AgDrain_pctWs"#,"PctImp2016Ws"
 
           # Weather/Hydro
-          ,"precip9120ws","tmean9120ws","BFIWs","Precip_Minus_EVTWs"
-          ,"WaterInputWs","wdrw_LDWs"#,"HydrlCondWs"
+          ,"precip9120ws","tmean9120ws","BFIWs"#,"Precip_Minus_EVTWs"
+          #,"WaterInputWs"#,"wdrw_LDWs"#,"HydrlCondWs"
           ,"permws"#,"runoffWs"
 
           # N Inputs
-          ,"N_TW2012Ws","FertWs","ManureWs","RockNWs","CBNFWs"
+          ,"N_TW2012Ws","RockNWs"#,"FertWs","ManureWs","CBNFWs"
           ,"N_Surp_kgsqkm_2017ws"#,"n_surplus_kgsqkm"#,"n_ag_surplus_kgsqkm"#,"NANI_kgkm2_Ws"
 
           # Other
-          ,"Fe2O3Ws","ElevWs"#,"WtDepWs","SandWs"
+          ,"ElevWs","Fe2O3Ws"#,"WtDepWs","SandWs"
           ,"NHDslope_Pct_Ws"#,"Hillslope_PctWs"#,"S_TW2012Ws","rckdepWs"
           #,'Nitrate_Treatment_yn'
 
@@ -2710,20 +3323,21 @@ rf_gw = merge(viol_gw_cat,StreamCat_sub,by='COMID')
 keeps_gw = c("COMID","viol_freq"
           
           # Land Use
-          ,"PopDen2010Cat","PctForest2019Cat"#,"PctCrop2019Cat",
+          ,"PopDen2010Cat","PctForest2019Cat","PctCrop2019Cat"
           ,"AgKffactCat"#,"AgDrain_pctCat",
           
           # Weather/Hydro
-          ,"precip9120ws","tmean9120cat","BFICat","Precip_Minus_EVTCat"
-          ,"WaterInputCat","wdrw_LDCat"#,"PctImp2016Cat"#"HydrlCondCat",
-          ,"permcat","runoffcat"
+          ,"precip9120ws","tmean9120cat"#,"BFICat"#,"Precip_Minus_EVTCat"
+          #,"WaterInputCat","wdrw_LDCat"#,"PctImp2016Cat"#"HydrlCondCat",
+          ,"permcat"#,"runoffcat"
           
           # N Inputs
-          ,"RockNCat","N_TW2012Cat","FertCat"#,"ManureCat","CBNFCat",
+          ,"RockNCat","N_TW2012Cat"#,"FertCat"#,"ManureCat","CBNFCat",
           ,"N_Surp_kgsqkm_2017cat"#,"n_ags_kgsqkm_2017cat"
+          #,"n_ags_2017cat" # Ag N surp
           
           # Other
-          ,"Fe2O3Cat","WtDepCat","SandCat","Hillslope_PctCat","ElevCat"
+          ,"WtDepCat","Hillslope_PctCat","ElevCat","Fe2O3Cat","SandCat"
           #,"S_TW2012Cat"#,"rckdepcat" #,"NHDslope_Pct_Cat"
           #,'Nitrate_Treatment_yn'
 
@@ -2902,6 +3516,139 @@ cor_matrix2 = as.data.frame(cor_matrix)
 
 ```
 
+
+#--
+# Check with hex
+```{r}
+
+# Hexplot 
+ggplot(data_balanced, aes(n_surplus_kgsqkm,Viol_Class)) +
+  geom_hex()
+
+ggplot(data_sw_huc_, aes(n_surplus_kgsqkm,Viol_Class)) +
+  geom_hex()
+
+ggplot(data_sw_huc_, aes(n_surplus_kgsqkm,viol_freq)) +
+  geom_hex()
+
+
+ggplot(data_sw_huc_, aes(n_farm_fert_kgsqkm,Viol_Class)) +
+  geom_hex()
+
+test = data_sw_huc_[data_sw_huc_$n_farm_fert_kgsqkm == 0,]
+
+
+```
+
+# Check why Fert or N surp has V-shape relationship
+```{r}
+
+
+# Fert SW
+test = data_sw_huc_[data_sw_huc_$FertWs == 0,]
+nrow(test[test$Viol_Class == 1,]) # 1
+
+test2 = data_sw_huc_[data_sw_huc_$FertWs > 0,]
+nrow(test2[test2$Viol_Class == 1,]) # 1316
+
+# Fert GW
+test = data_gw_huc_[data_gw_huc_$FertWs == 0,]
+nrow(test[test$Viol_Class == 1,]) # 28
+
+test2 = data_gw_huc_[data_gw_huc_$FertWs > 0,]
+nrow(test2[test2$Viol_Class == 1,]) # 1316
+
+
+
+#---------------------------------------------------
+# N Surp SW
+test = data_sw_huc_[data_sw_huc_$n_ag_surplus_kgsqkm <= 0,]
+nrow(test[test$Viol_Class == 1,]) # 42
+
+test2 = data_sw_huc_[data_sw_huc_$n_ag_surplus_kgsqkm > 0,]
+nrow(test2[test2$Viol_Class == 1,]) # 1302
+
+# N Surp GW
+test = data_gw_huc_[data_gw_huc_$n_ag_surplus_kgsqkm <= 0,]
+nrow(test[test$Viol_Class == 1,]) # 42
+
+test2 = data_gw_huc_[data_gw_huc_$n_ag_surplus_kgsqkm > 0,]
+nrow(test2[test2$Viol_Class == 1,]) # 1302
+
+
+#---------------------------------------------------
+# % Crop SW
+test = data_sw_huc_[data_sw_huc_$PctCrop2019Cat <= 0,]
+nrow(test[test$Viol_Class == 1,]) # 42
+
+test2 = data_sw_huc_[data_sw_huc_$PctCrop2019Cat > 0,]
+nrow(test2[test2$Viol_Class == 1,]) # 1302
+
+# % Crop GW
+test = data_gw_huc_[data_gw_huc_$PctCrop2019Cat <= 0,]
+nrow(test[test$Viol_Class == 1,]) # 60
+
+test2 = data_gw_huc_[data_gw_huc_$PctCrop2019Cat > 0,]
+nrow(test2[test2$Viol_Class == 1,]) # 833
+
+
+```
+
+# Check 2020 paper numbers
+```{r}
+
+dir_20= 'C:/Users/MPennino/OneDrive - Environmental Protection Agency (EPA)/Projects/Manuscripts/3_NO3_Model/Datasets_Publication/'
+#gw_data20. = read.csv(paste0(dir_20,'Model_Inputs/RF_Catchments_Conc_All_Variables_GW.csv'))
+#sw_data20. = read.csv(paste0(dir_20,'Model_Inputs/RF_Catchments_Conc_All_Variables_SW.csv'))
+gw_data20 = read.csv(paste0(dir_20,'Model_Inputs/RF_Catchments_Viol_Freq_All_Variables_GW.csv'))
+sw_data20 = read.csv(paste0(dir_20,'Model_Inputs/RF_Catchments_Viol_Freq_All_Variables_SW.csv'))
+
+
+#---------------------------------------------------
+# % Crop SW
+test = sw_data20[sw_data20$PctCrop2011Cat <= 0,]
+nrow(test[test$Viol.Freq > 0,]) # 33
+
+test2 = sw_data20[sw_data20$PctCrop2011Cat > 0,]
+nrow(test2[test2$Viol.Freq > 0,]) # 67
+
+100*nrow(test[test$Viol.Freq > 0,])/(nrow(test[test$Viol.Freq > 0,])+nrow(test2[test2$Viol.Freq > 0,])) # 33%
+
+# % Crop GW
+test = gw_data20[gw_data20$PctCrop2011Cat <= 0,]
+nrow(test[test$Viol.Freq > 0,]) # 112
+100*nrow(test[test$Viol.Freq > 0,])/nrow(gw_data20) # 0.19%
+
+test2 = gw_data20[gw_data20$PctCrop2011Cat > 0,]
+nrow(test2[test2$Viol.Freq > 0,]) # 714
+
+100*nrow(test[test$Viol.Freq > 0,])/(nrow(test[test$Viol.Freq > 0,])+nrow(test2[test2$Viol.Freq > 0,])) # 13.55932%
+
+#---------------------------------------------------
+# % N Surp SW
+test = sw_data20[sw_data20$Nsurp_kgkm2_Cat <= 0,]
+nrow(test[test$Viol.Freq > 0,]) # 157
+
+test2 = sw_data20[sw_data20$Nsurp_kgkm2_Cat > 0,]
+nrow(test2[test2$Viol.Freq > 0,]) # 221
+
+100*nrow(test[test$Viol.Freq > 0,])/(nrow(test[test$Viol.Freq > 0,])+nrow(test2[test2$Viol.Freq > 0,])) # 41.53439%
+
+# % N Surp GW
+test = gw_data20[gw_data20$Nsurp_kgkm2_Cat <= 0,]
+nrow(test[test$Viol.Freq > 0,]) # 1078
+
+test2 = gw_data20[gw_data20$Nsurp_kgkm2_Cat > 0,]
+nrow(test2[test2$Viol.Freq > 0,]) # 1850
+
+100*nrow(test[test$Viol.Freq > 0,])/(nrow(test[test$Viol.Freq > 0,])+nrow(test2[test2$Viol.Freq > 0,])) # 36.81694%
+
+
+
+
+```
+
+
 #--
 
 # Fit RandomForest
@@ -2912,19 +3659,28 @@ library(randomForest)
 set.seed(10)
 
 #()()()()()()()()()()()()()()()()()()()()
-RFDATA = data_sw_huc # data_sw_huc, data_gw_huc, data_sw_cat, data_gw_cat
+RFDATA = gw_data20 # data_sw_huc, data_gw_huc, data_sw_cat, data_gw_cat (OLD Datasets: gw_data20)
 ntree = 500
 
 #()()()()()()()()()()()()()()()()()()()()
 
+RFDATA$Viol_Class = ifelse(RFDATA$Viol.Freq >0,1,0)
+RFDATA = subset(RFDATA,select=-c(Viol.Freq))
+
+
+keeps = c('Viol_Class','AgDrain_pctCat','Nsurp_kgkm2_Cat','WtDepCat'
+          ,'Precip8110Cat','Tmean8110Cat'
+          ,'Hillslope_PctCat','PctCrop2011Cat'
+          ,'FertCat','ManureCat','CBNFCat'
+          )
+
+RFDATA2 = unique(na.omit(RFDATA[,keeps]))
 
 #-------------------------------------------------------------------------------------------------
 # Train Test split
-ind_test <- sample(nrow(RFDATA), round(nrow(RFDATA)*0.2))
-rf_test= RFDATA[ind_test, ]
-rf_train = RFDATA[-ind_test,]
-
-rf_train_sw = rf_train
+ind_test <- sample(nrow(RFDATA2), round(nrow(RFDATA2)*0.2))
+rf_test= RFDATA2[ind_test, ]
+rf_train = RFDATA2[-ind_test,]
 
 
 cmin_ <- min(table(rf_train$Viol_Class))  
@@ -3069,111 +3825,111 @@ par.p1 <- pdp::partial(RFC_model, train = rf_train,which.class=2,
 p1 <- autoplot(par.p1, contour = TRUE, 
               ylab=ylabel, xlab=paste0(partialvars[1,1]))+theme_bw()
 
-par.p2 <- pdp::partial(RFC_model, train = rf_train, 
+par.p2 <- pdp::partial(RFC_model, train = rf_train,which.class=2, 
                     pred.var=paste0(partialvars[2,1]), chull= T)
 p2 <- autoplot(par.p2, contour = TRUE, 
               ylab=ylabel, xlab=paste0(partialvars[2,1]))+theme_bw()
 
-par.p3 <- pdp::partial(RFC_model, train = rf_train,
+par.p3 <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var=paste0(partialvars[3,1]), chull= T)
 p3 <- autoplot(par.p3, contour = TRUE, 
               ylab=ylabel, xlab=paste0(partialvars[3,1]))+theme_bw()
 
-par.p4 <- pdp::partial(RFC_model, train = rf_train,
+par.p4 <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var=paste0(partialvars[4,1]), chull= T)
 p4 <- autoplot(par.p4, contour = TRUE, 
               ylab=ylabel, xlab=paste0(partialvars[4,1]))+theme_bw()
 
-par.p5 <- pdp::partial(RFC_model, train = rf_train,
+par.p5 <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var=paste0(partialvars[5,1]), chull= T)
 p5 <- autoplot(par.p5, contour = TRUE, 
               ylab=ylabel, xlab=paste0(partialvars[5,1]))+theme_bw()
 
-par.p6 <- pdp::partial(RFC_model, train = rf_train,
+par.p6 <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var=paste0(partialvars[6,1]), chull= T)
 p6 <- autoplot(par.p6, contour = TRUE, 
               ylab=ylabel, xlab=paste0(partialvars[6,1]))+theme_bw()
 
-par.p7 <- pdp::partial(RFC_model, train = rf_train,
+par.p7 <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var=paste0(partialvars[7,1]), chull= T)
 p7 <- autoplot(par.p7, contour = TRUE, 
               ylab=ylabel, xlab=paste0(partialvars[7,1]))+theme_bw()
 
-par.p8 <- pdp::partial(RFC_model, train = rf_train,
+par.p8 <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var=paste0(partialvars[8,1]), chull= T)
 p8 <- autoplot(par.p8, contour = TRUE, 
               ylab=ylabel, xlab=paste0(partialvars[8,1]))+theme_bw()
 
-precip_surp <- pdp::partial(RFC_model, train = rf_train,
+precip_surp <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var='Precip_Minus_EVTWs', chull= T)
 precip_surp2 <- autoplot(precip_surp, contour = TRUE, 
               ylab=ylabel, xlab='Precip_Minus_EVTWs')+theme_bw()
 
-parNsurp <- pdp::partial(RFC_model, train = rf_train,
+parNsurp <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var='N_Surp_2017ws', chull= T)
 parNsurp2 <- autoplot(parNsurp, contour = TRUE, 
               ylab=ylabel, xlab='N_Surp_2017ws')+theme_bw()
 
-agsurp <- pdp::partial(RFC_model, train = rf_train,
+agsurp <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var='n_ag_surplus_kgsqkm', chull= T)
 agsurp2 <- autoplot(agsurp, contour = TRUE, 
               ylab=ylabel, xlab='n_ag_surplus_kgsqkm')+theme_bw()
 
-nani <- pdp::partial(RFC_model, train = rf_train,
+nani <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var='NANI_kgkm2_Ws', chull= T)
 nani2 <- autoplot(nani, contour = TRUE, 
               ylab=ylabel, xlab='NANI_kgkm2_Ws')+theme_bw()
-Nsurp <- pdp::partial(RFC_model, train = rf_train,
+Nsurp <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var='n_surplus_kgsqkm', chull= T)
 Nsurp2 <- autoplot(Nsurp, contour = TRUE, 
               ylab=ylabel, xlab='n_surplus_kgsqkm')+theme_bw()
 
-Nsurp <- pdp::partial(RFC_model, train = rf_train,
+Nsurp <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var='N_Surp_kgsqkm_2017ws', chull= T)
 Nsurp2 <- autoplot(Nsurp, contour = TRUE, 
               ylab=ylabel, xlab='N_Surp_kgsqkm_2017ws')+theme_bw()
-Nsurp <- pdp::partial(RFC_model, train = rf_train,
+Nsurp <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var='N_Surp_kgsqkm_2017cat', chull= T)
 Nsurp2 <- autoplot(Nsurp, contour = TRUE, 
               ylab=ylabel, xlab='N_Surp_kgsqkm_2017cat')+theme_bw()
 
-fert <- pdp::partial(RFC_model, train = rf_train,
+fert <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var='n_farm_fert_kgsqkm', chull= T)
 fert2 <- autoplot(fert, contour = TRUE, 
               ylab=ylabel, xlab='n_farm_fert_kgsqkm')+theme_bw()
-fert <- pdp::partial(RFC_model, train = rf_train,
+fert <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var='FertCat', chull= T)
 fert2 <- autoplot(fert, contour = TRUE, 
               ylab=ylabel, xlab='FertCat')+theme_bw()
-fert <- pdp::partial(RFC_model, train = rf_train,
+fert <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var='FertWs', chull= T)
 fert2 <- autoplot(fert, contour = TRUE, 
               ylab=ylabel, xlab='FertWs')+theme_bw()
-manu <- pdp::partial(RFC_model, train = rf_train,
+manu <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var='n_manure_kgsqkm', chull= T)
 manu2 <- autoplot(manu, contour = TRUE, 
               ylab=ylabel, xlab='n_manure_kgsqkm')+theme_bw()
-manu <- pdp::partial(RFC_model, train = rf_train,
+manu <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var='ManureCat', chull= T)
 manu2 <- autoplot(manu, contour = TRUE, 
               ylab=ylabel, xlab='ManureCat')+theme_bw()
-manu <- pdp::partial(RFC_model, train = rf_train,
+manu <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var='ManureWs', chull= T)
 manu2 <- autoplot(manu, contour = TRUE, 
               ylab=ylabel, xlab='ManureWs')+theme_bw()
-cbnf <- pdp::partial(RFC_model, train = rf_train,
+cbnf <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var='n_crop_fix_kgsqkm', chull= T)
 cbnf2 <- autoplot(cbnf, contour = TRUE, 
               ylab=ylabel, xlab='n_crop_fix_kgsqkm')+theme_bw()
-cbnf <- pdp::partial(RFC_model, train = rf_train,
+cbnf <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var='CBNFWs', chull= T)
 cbnf2 <- autoplot(cbnf, contour = TRUE, 
               ylab=ylabel, xlab='CBNFWs')+theme_bw()
-hum <- pdp::partial(RFC_model, train = rf_train,
+hum <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var='n_human_food_waste_kgsqkm', chull= T)
 hum2 <- autoplot(hum, contour = TRUE, 
               ylab=ylabel, xlab='n_human_food_waste_kgsqkm')+theme_bw()
-rem <- pdp::partial(RFC_model, train = rf_train,
+rem <- pdp::partial(RFC_model, train = rf_train,which.class=2,
                     pred.var='n_crop_rem_kgsqkm', chull= T)
 rem2 <- autoplot(rem, contour = TRUE, 
               ylab=ylabel, xlab='n_crop_rem_kgsqkm')+theme_bw()
@@ -3204,144 +3960,73 @@ grid.arrange(p1,p2,Nsurp2,fert2,nrow=2,ncol=2)
 
 ```
 
-#--
-# Check with hex
+# PDD with DALEX
 ```{r}
 
-# Hexplot 
-ggplot(data_balanced, aes(n_surplus_kgsqkm,Viol_Class)) +
-  geom_hex()
+library(DALEX)
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
 
-ggplot(data_sw_huc_, aes(n_surplus_kgsqkm,Viol_Class)) +
-  geom_hex()
+#partialvars <- as.data.frame(VarImpDF[order(-VarImpDF$PercIncMSE),])
 
-ggplot(data_sw_huc_, aes(n_surplus_kgsqkm,viol_freq)) +
-  geom_hex()
+#rf_train = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_SW_HUC12.csv'))
+#rf_train = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_GW_HUC12.csv'))
+rf_train = rf_train
+#model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+#model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+model = RFC_model
 
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
 
-ggplot(data_sw_huc_, aes(n_farm_fert_kgsqkm,Viol_Class)) +
-  geom_hex()
+# 1. Fit a model
+#model <- ranger(Sepal.Length ~ ., data = iris)
 
-test = data_sw_huc_[data_sw_huc_$n_farm_fert_kgsqkm == 0,]
+# 2. Create a DALEX explainer
+explainer <- DALEX::explain(model, 
+                     #data = subset(rf_train,select=-c(HUC12,viol_freq)),
+                     data = rf_train, 
 
+                     y = rf_train$Viol_Class, 
+                     label = "Random Forest")
 
-```
+# 3a. Calculate Partial Dependence Profiles
+#pdp_profile <- model_profile(explainer, type = "partial")
 
-# Check why Fert or N surp has V-shape relationship
-```{r}
+# 4a. Plot the PDPs
+#plot(pdp_profile$cp_profiles$PctCrop2019Ws)
+#plot(pdp_profile)
 
+# 3b. Compute & plot profiles for a specific variable
+pdp_var <- model_profile(explainer, variables = "PctCrop2019Ws")
+plot(pdp_var)
+pdp_var <- model_profile(explainer, variables = "PctCrop2011Cat")
+plot(pdp_var)
 
-# Fert SW
-test = data_sw_huc_[data_sw_huc_$FertWs == 0,]
-nrow(test[test$Viol_Class == 1,]) # 1
+pdp_var <- model_profile(explainer, variables = "n_surplus_kgsqkm")
+plot(pdp_var)
 
-test2 = data_sw_huc_[data_sw_huc_$FertWs > 0,]
-nrow(test2[test2$Viol_Class == 1,]) # 1316
+pdp_var <- model_profile(explainer, variables = "FertCat")
+plot(pdp_var)
 
-# Fert GW
-test = data_gw_huc_[data_gw_huc_$FertWs == 0,]
-nrow(test[test$Viol_Class == 1,]) # 28
+pdp_var <- model_profile(explainer, variables = "FertWs")
+plot(pdp_var)
 
-test2 = data_gw_huc_[data_gw_huc_$FertWs > 0,]
-nrow(test2[test2$Viol_Class == 1,]) # 1316
+pdp_var <- model_profile(explainer, variables = "CBNFWs")
+plot(pdp_var)
 
+pdp_var <- model_profile(explainer, variables = "Nsurp_kgkm2_Cat")
+plot(pdp_var)
 
-
-#---------------------------------------------------
-# N Surp SW
-test = data_sw_huc_[data_sw_huc_$n_ag_surplus_kgsqkm <= 0,]
-nrow(test[test$Viol_Class == 1,]) # 42
-
-test2 = data_sw_huc_[data_sw_huc_$n_ag_surplus_kgsqkm > 0,]
-nrow(test2[test2$Viol_Class == 1,]) # 1302
-
-# N Surp GW
-test = data_gw_huc_[data_gw_huc_$n_ag_surplus_kgsqkm <= 0,]
-nrow(test[test$Viol_Class == 1,]) # 42
-
-test2 = data_gw_huc_[data_gw_huc_$n_ag_surplus_kgsqkm > 0,]
-nrow(test2[test2$Viol_Class == 1,]) # 1302
-
-
-#---------------------------------------------------
-# % Crop SW
-test = data_sw_huc_[data_sw_huc_$PctCrop2019Cat <= 0,]
-nrow(test[test$Viol_Class == 1,]) # 42
-
-test2 = data_sw_huc_[data_sw_huc_$PctCrop2019Cat > 0,]
-nrow(test2[test2$Viol_Class == 1,]) # 1302
-
-# % Crop GW
-test = data_gw_huc_[data_gw_huc_$PctCrop2019Cat <= 0,]
-nrow(test[test$Viol_Class == 1,]) # 60
-
-test2 = data_gw_huc_[data_gw_huc_$PctCrop2019Cat > 0,]
-nrow(test2[test2$Viol_Class == 1,]) # 833
-
+pdp_var <- model_profile(explainer, variables = "ManureCat")
+plot(pdp_var)
 
 ```
-
-# Check 2020 paper numbers
-```{r}
-
-dir_20= 'C:/Users/MPennino/OneDrive - Environmental Protection Agency (EPA)/Projects/Manuscripts/3_NO3_Model/Datasets_Publication/'
-#gw_data20. = read.csv(paste0(dir_20,'Model_Inputs/RF_Catchments_Conc_All_Variables_GW.csv'))
-#sw_data20. = read.csv(paste0(dir_20,'Model_Inputs/RF_Catchments_Conc_All_Variables_SW.csv'))
-gw_data20 = read.csv(paste0(dir_20,'Model_Inputs/RF_Catchments_Viol_Freq_All_Variables_GW.csv'))
-sw_data20 = read.csv(paste0(dir_20,'Model_Inputs/RF_Catchments_Viol_Freq_All_Variables_SW.csv'))
-
-
-#---------------------------------------------------
-# % Crop SW
-test = sw_data20[sw_data20$PctCrop2011Cat <= 0,]
-nrow(test[test$Viol.Freq > 0,]) # 33
-
-test2 = sw_data20[sw_data20$PctCrop2011Cat > 0,]
-nrow(test2[test2$Viol.Freq > 0,]) # 67
-
-100*nrow(test[test$Viol.Freq > 0,])/(nrow(test[test$Viol.Freq > 0,])+nrow(test2[test2$Viol.Freq > 0,])) # 33%
-
-# % Crop GW
-test = gw_data20[gw_data20$PctCrop2011Cat <= 0,]
-nrow(test[test$Viol.Freq > 0,]) # 112
-100*nrow(test[test$Viol.Freq > 0,])/nrow(gw_data20) # 0.19%
-
-test2 = gw_data20[gw_data20$PctCrop2011Cat > 0,]
-nrow(test2[test2$Viol.Freq > 0,]) # 714
-
-100*nrow(test[test$Viol.Freq > 0,])/(nrow(test[test$Viol.Freq > 0,])+nrow(test2[test2$Viol.Freq > 0,])) # 13.55932%
-
-#---------------------------------------------------
-# % N Surp SW
-test = sw_data20[sw_data20$Nsurp_kgkm2_Cat <= 0,]
-nrow(test[test$Viol.Freq > 0,]) # 157
-
-test2 = sw_data20[sw_data20$Nsurp_kgkm2_Cat > 0,]
-nrow(test2[test2$Viol.Freq > 0,]) # 221
-
-100*nrow(test[test$Viol.Freq > 0,])/(nrow(test[test$Viol.Freq > 0,])+nrow(test2[test2$Viol.Freq > 0,])) # 41.53439%
-
-# % N Surp GW
-test = gw_data20[gw_data20$Nsurp_kgkm2_Cat <= 0,]
-nrow(test[test$Viol.Freq > 0,]) # 1078
-
-test2 = gw_data20[gw_data20$Nsurp_kgkm2_Cat > 0,]
-nrow(test2[test2$Viol.Freq > 0,]) # 1850
-
-100*nrow(test[test$Viol.Freq > 0,])/(nrow(test[test$Viol.Freq > 0,])+nrow(test2[test2$Viol.Freq > 0,])) # 36.81694%
-
-
-
-
-```
-
 
 #-- 
 # Fit  SW model HU12
 *!! note I'm multiplying sample faction by a constant - change constant back to 1, for original method
 ```{r}
 
-#set.seed(10) # 10 HUC12
+set.seed(10) # 10 HUC12
 
 library(ranger)
 #library(mlr)
@@ -3461,7 +4146,7 @@ saveRDS(rfc_sw_p, file = paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW
 # Fit  GW model HU12
 ```{r}
 
-#set.seed(12)
+set.seed(12)
 
 library(ranger)
 
@@ -3790,12 +4475,12 @@ library(data.table)
 
 
 #()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
-rfc_ranger = rfc_gw_p # rfc_sw_p, rfc_gw_p, RFC_model
+#rfc_ranger = rfc_sw_p # rfc_sw_p, rfc_gw_p, RFC_model
 #rfc_ranger = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
 #rfc_ranger = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
 
 #rfc_ranger = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
-#rfc_ranger = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
+rfc_ranger = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
 
 #()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
 
@@ -3898,140 +4583,143 @@ par.p1 <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
 p1 <- autoplot(par.p1, contour = TRUE, 
               ylab=ylabel, xlab=paste0(partialvars[1,1]))+theme_bw()
 
-par.p2 <- pdp::partial(rfc_ranger_p, train = rf_train, 
+par.p2 <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2, 
                     pred.var=paste0(partialvars[2,1]), chull= T)
 p2 <- autoplot(par.p2, contour = TRUE, 
               ylab=ylabel, xlab=paste0(partialvars[2,1]))+theme_bw()
 
-par.p3 <- pdp::partial(rfc_ranger_p, train = rf_train,
+par.p3 <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var=paste0(partialvars[3,1]), chull= T)
 p3 <- autoplot(par.p3, contour = TRUE, 
               ylab=ylabel, xlab=paste0(partialvars[3,1]))+theme_bw()
 
-par.p4 <- pdp::partial(rfc_ranger_p, train = rf_train,
+par.p4 <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var=paste0(partialvars[4,1]), chull= T)
 p4 <- autoplot(par.p4, contour = TRUE, 
               ylab=ylabel, xlab=paste0(partialvars[4,1]))+theme_bw()
 
-par.p5 <- pdp::partial(rfc_ranger_p, train = rf_train,
+par.p5 <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var=paste0(partialvars[5,1]), chull= T)
 p5 <- autoplot(par.p5, contour = TRUE, 
               ylab=ylabel, xlab=paste0(partialvars[5,1]))+theme_bw()
 
-par.p6 <- pdp::partial(rfc_ranger_p, train = rf_train,
+par.p6 <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var=paste0(partialvars[6,1]), chull= T)
 p6 <- autoplot(par.p6, contour = TRUE, 
               ylab=ylabel, xlab=paste0(partialvars[6,1]))+theme_bw()
 
-par.p7 <- pdp::partial(rfc_ranger_p, train = rf_train,
+par.p7 <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var=paste0(partialvars[7,1]), chull= T)
 p7 <- autoplot(par.p7, contour = TRUE, 
               ylab=ylabel, xlab=paste0(partialvars[7,1]))+theme_bw()
 
-par.p8 <- pdp::partial(rfc_ranger_p, train = rf_train,
+par.p8 <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var=paste0(partialvars[8,1]), chull= T)
 p8 <- autoplot(par.p8, contour = TRUE, 
               ylab=ylabel, xlab=paste0(partialvars[8,1]))+theme_bw()
 
-precip_surp <- pdp::partial(rfc_ranger_p, train = rf_train,
+precip_surp <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='Precip_Minus_EVTWs', chull= T)
 precip_surp2 <- autoplot(precip_surp, contour = TRUE, 
               ylab=ylabel, xlab='Precip_Minus_EVTWs')+theme_bw()
 
-rock <- pdp::partial(rfc_ranger_p, train = rf_train,
+rock <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='RockNCat', chull= T)
 rock2 <- autoplot(rock, contour = TRUE, 
               ylab=ylabel, xlab='RockNCat')+theme_bw()
-rock <- pdp::partial(rfc_ranger_p, train = rf_train,
+rock <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='RockNWs', chull= T)
 rock2 <- autoplot(rock, contour = TRUE, 
               ylab=ylabel, xlab='RockNWs')+theme_bw()
 
-parNsurp <- pdp::partial(rfc_ranger_p, train = rf_train,
+parNsurp <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='N_Surp_2017ws', chull= T)
 parNsurp2 <- autoplot(parNsurp, contour = TRUE, 
               ylab=ylabel, xlab='N_Surp_2017ws')+theme_bw()
 
-sept <- pdp::partial(rfc_ranger_p, train = rf_train,
+sept <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='Septic_km2Cat', chull= T)
 sept2 <- autoplot(sept, contour = TRUE, 
               ylab=ylabel, xlab='Septic_km2Cat')+theme_bw()
 
-agsurp <- pdp::partial(rfc_ranger_p, train = rf_train,
+agsurp <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='n_ag_surplus_kgsqkm', chull= T)
 agsurp2 <- autoplot(agsurp, contour = TRUE, 
               ylab=ylabel, xlab='n_ag_surplus_kgsqkm')+theme_bw()
 
-nani <- pdp::partial(rfc_ranger_p, train = rf_train,
+nani <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='NANI_kgkm2_Ws', chull= T)
 nani2 <- autoplot(nani, contour = TRUE, 
               ylab=ylabel, xlab='NANI_kgkm2_Ws')+theme_bw()
-Nsurp <- pdp::partial(rfc_ranger_p, train = rf_train,
+Nsurp <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='n_surplus_kgsqkm', chull= T)
 Nsurp2 <- autoplot(Nsurp, contour = TRUE, 
               ylab=ylabel, xlab='n_surplus_kgsqkm')+theme_bw()
 
-Nsurp <- pdp::partial(rfc_ranger_p, train = rf_train,
+Nsurp <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='N_Surp_kgsqkm_2017ws', chull= T)
 Nsurp2 <- autoplot(Nsurp, contour = TRUE, 
               ylab=ylabel, xlab='N_Surp_kgsqkm_2017ws')+theme_bw()
-Nsurp <- pdp::partial(rfc_ranger_p, train = rf_train,
+Nsurp <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='N_Surp_kgsqkm_2017cat', chull= T)
 Nsurp2 <- autoplot(Nsurp, contour = TRUE, 
               ylab=ylabel, xlab='N_Surp_kgsqkm_2017cat')+theme_bw()
 
-fert <- pdp::partial(rfc_ranger_p, train = rf_train,
+fert <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='n_farm_fert_kgsqkm', chull= T)
 fert2 <- autoplot(fert, contour = TRUE, 
               ylab=ylabel, xlab='n_farm_fert_kgsqkm')+theme_bw()
-fert <- pdp::partial(rfc_ranger_p, train = rf_train,
+fert <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='FertCat', chull= T)
 fert2 <- autoplot(fert, contour = TRUE, 
               ylab=ylabel, xlab='FertCat')+theme_bw()
-fert <- pdp::partial(rfc_ranger_p, train = rf_train,
+fert <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='FertWs', chull= T)
 fert2 <- autoplot(fert, contour = TRUE, 
               ylab=ylabel, xlab='FertWs')+theme_bw()
-manu <- pdp::partial(rfc_ranger_p, train = rf_train,
+manu <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='n_manure_kgsqkm', chull= T)
 manu2 <- autoplot(manu, contour = TRUE, 
               ylab=ylabel, xlab='n_manure_kgsqkm')+theme_bw()
-manu <- pdp::partial(rfc_ranger_p, train = rf_train,
+manu <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='ManureCat', chull= T)
 manu2 <- autoplot(manu, contour = TRUE, 
               ylab=ylabel, xlab='ManureCat')+theme_bw()
-manu <- pdp::partial(rfc_ranger_p, train = rf_train,
+manu <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='ManureWs', chull= T)
 manu2 <- autoplot(manu, contour = TRUE, 
               ylab=ylabel, xlab='ManureWs')+theme_bw()
-cbnf <- pdp::partial(rfc_ranger_p, train = rf_train,
+cbnf <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='n_crop_fix_kgsqkm', chull= T)
 cbnf2 <- autoplot(cbnf, contour = TRUE, 
               ylab=ylabel, xlab='n_crop_fix_kgsqkm')+theme_bw()
-cbnf <- pdp::partial(rfc_ranger_p, train = rf_train,
+cbnf <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='CBNFWs', chull= T)
 cbnf2 <- autoplot(cbnf, contour = TRUE, 
               ylab=ylabel, xlab='CBNFWs')+theme_bw()
-hum <- pdp::partial(rfc_ranger_p, train = rf_train,
+hum <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='n_human_food_waste_kgsqkm', chull= T)
 hum2 <- autoplot(hum, contour = TRUE, 
               ylab=ylabel, xlab='n_human_food_waste_kgsqkm')+theme_bw()
-rem <- pdp::partial(rfc_ranger_p, train = rf_train,
+rem <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='n_crop_rem_kgsqkm', chull= T)
 rem2 <- autoplot(rem, contour = TRUE, 
               ylab=ylabel, xlab='n_crop_rem_kgsqkm')+theme_bw()
-crop <- pdp::partial(rfc_ranger_p, train = rf_train,
+crop <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='PctCrop2019Cat', chull= T)
 crop2 <- autoplot(crop, contour = TRUE, 
               ylab=ylabel, xlab='PctCrop2019Cat')+theme_bw()
+crop <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
+                    pred.var='PctCrop2019Ws', chull= T)
+crop2 <- autoplot(crop, contour = TRUE, 
+              ylab=ylabel, xlab='PctCrop2019Ws')+theme_bw()
 
-
-treat1 <- pdp::partial(rfc_ranger_p, train = rf_train,
+treat1 <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='Nitrate_Treatment_yn', chull= T)
 treat2 <- autoplot(treat1, contour = TRUE, 
               ylab=ylabel, xlab='Nitrate_Treatment_yn')+theme_bw()
 
-treat1. <- pdp::partial(rfc_ranger_p, train = rf_train,
+treat1. <- pdp::partial(rfc_ranger_p, train = rf_train,which.class=2,
                     pred.var='Nitrate_Treatment_freq', chull= T)
 treat2. <- autoplot(treat1., contour = TRUE, 
               ylab=ylabel, xlab='Nitrate_Treatment_freq')+theme_bw()
@@ -4049,6 +4737,58 @@ grid.arrange(p1,p2,Nsurp2,fert2,nrow=2,ncol=2)
 
 
 ```
+
+# PDD with DALEX
+```{r}
+
+library(DALEX)
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+#partialvars <- as.data.frame(VarImpDF[order(-VarImpDF$PercIncMSE),])
+
+rf_train = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_SW_HUC12.csv'))
+rf_train = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_GW_HUC12.csv'))
+
+
+model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+
+
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+# 1. Fit a model
+#model <- ranger(Sepal.Length ~ ., data = iris)
+
+# 2. Create a DALEX explainer
+explainer <- DALEX::explain(model, 
+                     data = subset(rf_train,select=-c(HUC12,viol_freq)), 
+                     y = rf_train$Viol_Class, 
+                     label = "Random Forest")
+
+# 3. Calculate Partial Dependence Profiles
+pdp_profile <- model_profile(explainer, type = "partial")
+
+# 4. Plot the PDPs
+#plot(pdp_profile$cp_profiles$PctCrop2019Ws)
+#plot(pdp_profile)
+
+# 2. Compute & plot profiles for a specific variable
+pdp_var <- model_profile(explainer, variables = "PctCrop2019Ws")
+plot(pdp_var)
+
+pdp_var <- model_profile(explainer, variables = "n_surplus_kgsqkm")
+plot(pdp_var)
+
+pdp_var <- model_profile(explainer, variables = "FertWs")
+plot(pdp_var)
+
+pdp_var <- model_profile(explainer, variables = "CBNFWs")
+plot(pdp_var)
+
+
+
+```
+
 
 # Scatter Testing
 ```{r}
@@ -4604,6 +5344,7 @@ predHUC_fut$precip9120cat = predHUC_fut$precip_2050_mm_RCP4.5GISS
 # Merge on static variables
 statkeeps = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
+              'PctCrop2019Ws','PctCrop2019Cat',
               'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
               'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat',
               'ElevWs','AgKffactWs','AgDrain_pctWs','BFIWs',
@@ -4649,8 +5390,13 @@ predHUC_fut$precip9120ws = predHUC_fut$precip_2050_mm_RCP8.5GISS
 # Merge on static variables
 statkeeps = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
+              'PctCrop2019Ws','PctCrop2019Cat',
               'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
-              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat')
+              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat',
+              'ElevWs','AgKffactWs','AgDrain_pctWs','BFIWs',
+              'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
+              'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
+              'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs')
 predHUC_8.5G = merge(predHUC_fut,StreamCat_HU12[,statkeeps],by='HUC12')
 
 
@@ -4689,8 +5435,13 @@ predHUC_fut$precip9120ws = predHUC_fut$precip_2050_mm_RCP4.5Hadgem
 # Merge on static variables
 statkeeps = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
+              'PctCrop2019Ws','PctCrop2019Cat',
               'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
-              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat')
+              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat',
+              'ElevWs','AgKffactWs','AgDrain_pctWs','BFIWs',
+              'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
+              'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
+              'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs')
 predHUC_4.5H = merge(predHUC_fut,StreamCat_HU12[,statkeeps],by='HUC12')
 
 
@@ -4729,11 +5480,84 @@ predHUC_fut$precip9120ws = predHUC_fut$precip_2050_mm_RCP8.5Hadgem
 # Merge on static variables
 statkeeps = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
+              'PctCrop2019Ws','PctCrop2019Cat',
               'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
-              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat')
+              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat',
+              'ElevWs','AgKffactWs','AgDrain_pctWs','BFIWs',
+              'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
+              'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
+              'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs')
 predHUC_8.5H = merge(predHUC_fut,StreamCat_HU12[,statkeeps],by='HUC12')
 
 
+
+```
+
+# Future-4.5G Catchment Prediction Dataset
+```{r}
+
+
+predCat_fut = StreamCat_cats
+#predHUC_fut = merge(predHUC_fut,dep_N_hu12,by='HUC12')
+#predHUC_fut = merge(predHUC_fut,prec_hu12,by='HUC12')
+#predHUC_fut = merge(predHUC_fut,temp_hu12,by='HUC12')
+#predHUC_fut = merge(predHUC_fut,imprv_hu12,by='HUC12')
+#predHUC_fut = merge(predHUC_fut,popden_hu12,by='HUC12')
+
+
+predCat_fut$N_Surp_kgsqkm_2017ws = predCat_fut$N_surp_RCP4.5G
+predCat_fut$N_Surp_kgsqkm_2017cat = predCat_fut$N_surp_RCP4.5G
+
+predCat_fut$PctCrop2019Ws = predCat_fut$Pct_ag_land_RCP4.5G
+predCat_fut$PctCrop2019Cat = predCat_fut$Pct_ag_land_RCP4.5G
+
+predCat_fut$FertWs = predCat_fut$n_farm_fert_kgsqkm_RCP4.5G
+predCat_fut$FertCat = predCat_fut$n_farm_fert_kgsqkm_RCP4.5G
+
+predCat_fut$PopDen2010Ws = predCat_fut$pop_den_RCP4.5G
+predCat_fut$PopDen2010Cat = predCat_fut$pop_den_RCP4.5G
+
+predCat_fut$PctImp2016Ws = predCat_fut$impervious_2050_RCP4.5GISS
+predCat_fut$PctImp2016Cat = predCat_fut$impervious_2050_RCP4.5GISS
+
+predCat_fut$N_TW2012Ws = predCat_fut$totalN_2050ctl_kgNha
+predCat_fut$N_TW2012Cat = predCat_fut$totalN_2050ctl_kgNha
+
+predCat_fut$CBNFWs = predCat_fut$n_crop_fix_kgsqkm_RCP4.5G
+predCat_fut$CBNFCat = predCat_fut$n_crop_fix_kgsqkm_RCP4.5G
+
+predCat_fut$ManureWs = predCat_fut$n_manure_kgsqkm_RCP4.5G
+predCat_fut$ManureCat = predCat_fut$n_manure_kgsqkm_RCP4.5G
+
+predCat_fut$PctForest2019Ws = predCat_fut$Pct_forest_RCP4.5G
+predCat_fut$PctForest2019Cat = predCat_fut$Pct_forest_RCP4.5G
+
+predCat_fut$tmean9120ws = predCat_fut$temp_2050_degC_RCP4.5GISS
+predCat_fut$tmean9120cat = predCat_fut$temp_2050_degC_RCP4.5GISS
+
+predCat_fut$precip9120ws = predCat_fut$precip_2050_mm_RCP4.5GISS
+predCat_fut$precip9120cat = predCat_fut$precip_2050_mm_RCP4.5GISS
+
+#predCat_fut$n_ags_2017ws = predCat_fut$N_ag_surp_RCP4.5G
+#predCat_fut$n_surplus_kgsqkm = predCat_fut$N_surp_RCP4.5G
+
+
+#"N_Surp_2017ws" "n_ags_2017ws" 
+
+# Merge on static variables
+statkeeps = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
+              'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
+              'PctCrop2019Ws','PctCrop2019Cat',
+              'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
+              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat',
+              'ElevWs','AgKffactWs','AgDrain_pctWs','BFIWs',
+              'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
+              'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
+              'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs')
+predCat_4.5G = merge(predCat_fut,StreamCat_HU12[,statkeeps],by='HUC12')
+
+
+write.csv(predCat_4.5G, file = paste0(future_dir,'Data/Dataset_Future_Catchment_4.5GISS.csv'), row.names=F)
 
 ```
 
@@ -4759,12 +5583,21 @@ statkeeps = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs',
               'PopDen2010Ws','PctForest2019Ws','precip9120ws',
               'tmean9120ws','N_TW2012Ws','FertWs',
-              'ManureWs','CBNFWs')
+              'ManureWs','CBNFWs','PctCrop2019Cat','PctCrop2019Ws',
+              
+              )
+
+
 scen_NUE_HUC = merge(NDATA_huc12,StreamCat_HU12[,statkeeps],by='HUC12')
+scen_NUE_CAT = StreamCat_cats
 
 scen_NUE_HUC$NUE = scen_NUE_HUC$n_crop_rem_kg_2010 / (scen_NUE_HUC$n_farm_fert_kg_2010 +
                                                     scen_NUE_HUC$n_manure_kg_2010 +
                                                     scen_NUE_HUC$n_crop_fix_kg_2010)
+scen_NUE_CAT$NUE = scen_NUE_CAT$n_cr_2017cat / (scen_NUE_CAT$n_ff_2017cat +
+                                                    scen_NUE_CAT$n_lw_2017cat +
+                                                    scen_NUE_CAT$n_cf_2017cat)
+
 summary(scen_NUE_HUC$NUE)
 #scen_huc12$NUE15 = scen_huc12$NUE + NUE_INCR # 15% increase in NUE
 #scen_NUE_HUC = subset(scen_NUE_HUC,select=-c(NUE))
@@ -4775,8 +5608,19 @@ scen_NUE_HUC$N_surp_kgsqkm_NUE15 =
   scen_NUE_HUC$N_surp_kgsqkm * ((1-(scen_NUE_HUC$NUE+NUE_INCR)) / (1-scen_NUE_HUC$NUE))
 scen_NUE_HUC$N_ag_surp_kgsqkm_NUE15 = 
   scen_NUE_HUC$N_ag_surp_kgsqkm * ((1-(scen_NUE_HUC$NUE+NUE_INCR)) / (1-scen_NUE_HUC$NUE))
-# scen_NUE_HUC$N_surp_kgsqkm_NUE15 = 
-#   scen_NUE_HUC$N_surp_kgsqkm * ((1-(scen_NUE_HUC$NUE15)) / (1-scen_NUE_HUC$NUE))
+
+scen_NUE_CAT$N_surp_kgsqkm_catNUE15 = 
+  scen_NUE_CAT$N_Surp_kgsqkm_2017cat * ((1-(scen_NUE_CAT$NUE+NUE_INCR)) / (1-scen_NUE_CAT$NUE))
+scen_NUE_CAT$N_ag_surp_kgsqkm_catNUE15 = 
+  scen_NUE_CAT$n_ag_surp_kgsqkm_2017cat * ((1-(scen_NUE_CAT$NUE+NUE_INCR)) / (1-scen_NUE_CAT$NUE))
+
+scen_NUE_CAT$N_surp_kgsqkm_wsNUE15 = 
+  scen_NUE_CAT$N_Surp_kgsqkm_2017ws * ((1-(scen_NUE_CAT$NUE+NUE_INCR)) / (1-scen_NUE_CAT$NUE))
+scen_NUE_CAT$N_ag_surp_kgsqkm_wsNUE15 = 
+  scen_NUE_CAT$n_ag_surp_kgsqkm_2017ws * ((1-(scen_NUE_CAT$NUE+NUE_INCR)) / (1-scen_NUE_CAT$NUE))
+
+
+
 
 summary(scen_NUE_HUC$N_surp_kgsqkm_NUE15)
 summary(scen_NUE_HUC$N_surp_kgsqkm)
@@ -4796,13 +5640,25 @@ scen_NUE_HUC$n_ag_surplus_kgsqkm = scen_NUE_HUC$N_ag_surp_kgsqkm_NUE15
 scen_NUE_HUC$N_Surp_kgsqkm_2017ws = scen_NUE_HUC$N_surp_kgsqkm_NUE15
 scen_NUE_HUC$N_Surp_kgsqkm_2017cat = scen_NUE_HUC$N_surp_kgsqkm_NUE15
 
+scen_NUE_CAT$N_Surp_kgsqkm_2017cat = scen_NUE_CAT$N_surp_kgsqkm_catNUE15
+scen_NUE_CAT$n_ag_surp_kgsqkm_2017cat = scen_NUE_CAT$N_ag_surp_kgsqkm_catNUE15
+scen_NUE_CAT$N_Surp_kgsqkm_2017ws = scen_NUE_CAT$N_surp_kgsqkm_wsNUE15
+scen_NUE_CAT$n_ag_surp_kgsqkm_2017ws = scen_NUE_CAT$N_ag_surp_kgsqkm_wsNUE15
+
+
+summary(NDATA_huc12$N_surp_kgsqkm)
+summary(scen_NUE_HUC$N_surp_kgsqkm_NUE15)
+
+summary(StreamCat_sub$N_Surp_kgsqkm_2017ws)
+summary(scen_NUE_HUC$N_surp_kgsqkm_NUE15)
+
 
 
 
 
 ```
 
-# Production Increase
+# 55% Production Increase (constant NUE, thus increase in inputs)
 * https://ageconsearch.umn.edu/record/138919/?v=pdf: Public Agricultural Research Spending and Future U.S. Agricultural Productivity Growth: Scenarios fo…---> 40 to 70% increase in ag production (USDA ERS Report).... 
 * https://www.ers.usda.gov/media/20856/oce-2026-1.pdf?v=65502 --> by 2035; 5% increase in corn, 14% increase in soy, rice down, cotton up, sugar up, chicken up 14%, beef/pork up, milk up 8%
 
@@ -4824,8 +5680,10 @@ statkeeps = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'PopDen2010Ws','PctForest2019Ws','precip9120ws',
               'tmean9120ws','N_TW2012Ws','FertWs',
               'ManureWs','CBNFWs','PctForest2019Cat','N_TW2012Cat',
-              'tmean9120cat','FertCat','ManureCat','CBNFCat')
+              'tmean9120cat','FertCat','ManureCat','CBNFCat','PctCrop2019Cat','PctCrop2019Ws')
 scen_prod_HUC = merge(NDATA_huc12,StreamCat_HU12[,statkeeps],by='HUC12')
+scen_prod_CAT = StreamCat_cats
+
 
 scen_prod_HUC$N_inputs = 
   scen_prod_HUC$totalN_2016_kgNha *100 + # convert from ha to km2 
@@ -4846,25 +5704,31 @@ scen_prod_HUC$N_ag_inputs =
 scen_prod_HUC$NUE = scen_prod_HUC$n_crop_rem_kg_2010 / (scen_prod_HUC$n_farm_fert_kg_2010 +
                                                     scen_prod_HUC$n_manure_kg_2010 +
                                                     scen_prod_HUC$n_crop_fix_kg_2010)
+scen_prod_CAT$NUEcat = scen_prod_CAT$n_cr_2017cat / (scen_prod_CAT$n_ff_2017cat +
+                                                    scen_prod_CAT$n_lw_2017cat +
+                                                    scen_prod_CAT$n_cf_2017cat)
+scen_prod_CAT$NUEws = scen_prod_CAT$n_cr_2017ws / (scen_prod_CAT$n_ff_2017ws +
+                                                    scen_prod_CAT$n_lw_2017ws +
+                                                    scen_prod_CAT$n_cf_2017ws)
 
 scen_prod_HUC$N_inputs_Prod55 = scen_prod_HUC$n_crop_rem_kgsqkm * 1.55 / scen_prod_HUC$NUE
+scen_prod_CAT$N_inputs_kgsqkm_Prod55cat = (scen_prod_CAT$n_cr_2017cat * 1.55 / scen_prod_CAT$NUE) / scen_prod_CAT$CatAreaSqKm
+scen_prod_CAT$N_inputs_kgsqkm_Prod55cat = (scen_prod_CAT$n_cr_2017cat * 1.55 / scen_prod_CAT$NUE) / scen_prod_CAT$CatAreaSqKm
 
 
-# Productivity change for invidual N Inputs
-scen_prod_HUC$NUE_fert = scen_prod_HUC$n_crop_rem_kgsqkm / scen_prod_HUC$n_farm_fert_kgsqkm
+# # Productivity change for invidual N Inputs
+# scen_prod_HUC$NUE_fert = scen_prod_HUC$n_crop_rem_kgsqkm / scen_prod_HUC$n_farm_fert_kgsqkm
+# scen_prod_HUC$input_ratio = scen_prod_HUC$N_inputs_Prod55 / scen_prod_HUC$N_ag_inputs
+#
+# scen_prod_HUC$n_farm_fert_kgsqkm_prod55 = scen_prod_HUC$n_farm_fert_kgsqkm * scen_prod_HUC$input_ratio # All 1.55
+# scen_prod_HUC$n_manure_kgsqkm_prod55 = scen_prod_HUC$n_manure_kgsqkm * scen_prod_HUC$input_ratio # All 1.55
+# scen_prod_HUC$n_crop_fix_kgsqkm_prod55 = scen_prod_HUC$n_crop_fix_kgsqkm * scen_prod_HUC$input_ratio # All 1.55
+# 
+# scen_prod_HUC$FertWs = scen_prod_HUC$n_farm_fert_kgsqkm * scen_prod_HUC$input_ratio # All 1.55
+# scen_prod_HUC$ManureWs = scen_prod_HUC$n_manure_kgsqkm * scen_prod_HUC$input_ratio # All 1.55
+# scen_prod_HUC$CBNFWs = scen_prod_HUC$n_crop_fix_kgsqkm * scen_prod_HUC$input_ratio # All 1.55
 
-scen_prod_HUC$input_ratio = scen_prod_HUC$N_inputs_Prod55 / scen_prod_HUC$N_ag_inputs
-
-scen_prod_HUC$n_farm_fert_kgsqkm_prod55 = scen_prod_HUC$n_farm_fert_kgsqkm * scen_prod_HUC$input_ratio # All 1.55
-scen_prod_HUC$n_manure_kgsqkm_prod55 = scen_prod_HUC$n_manure_kgsqkm * scen_prod_HUC$input_ratio # All 1.55
-scen_prod_HUC$n_crop_fix_kgsqkm_prod55 = scen_prod_HUC$n_crop_fix_kgsqkm * scen_prod_HUC$input_ratio # All 1.55
-
-scen_prod_HUC$FertWs = scen_prod_HUC$n_farm_fert_kgsqkm * scen_prod_HUC$input_ratio # All 1.55
-scen_prod_HUC$ManureWs = scen_prod_HUC$n_manure_kgsqkm * scen_prod_HUC$input_ratio # All 1.55
-scen_prod_HUC$CBNFWs = scen_prod_HUC$n_crop_fix_kgsqkm * scen_prod_HUC$input_ratio # All 1.55
-
-
-scen_prod_HUC$N_surp_kgsqkm_prod55_ = scen_prod_HUC$N_surp_kgsqkm * scen_prod_HUC$input_ratio # All 1.55
+#scen_prod_HUC$N_surp_kgsqkm_prod55_ = scen_prod_HUC$N_surp_kgsqkm * scen_prod_HUC$input_ratio # All 1.55
 
 scen_prod_HUC$N_surp_kgsqkm_prod55 = 
   scen_prod_HUC$N_inputs_Prod55 + 
@@ -4878,6 +5742,22 @@ scen_prod_HUC$N_ag_surp_kgsqkm_prod55 =
   scen_prod_HUC$n_crop_fix_kgsqkm_prod55 - 
   scen_prod_HUC$n_crop_rem_kgsqkm 
 
+scen_prod_CAT$N_surp_kgsqkm_prod55 = 
+  scen_prod_CAT$N_inputs_Prod55 + 
+  scen_prod_CAT$totalN_2016_kgNha *100 + # convert from ha to km2
+  scen_prod_CAT$n_human_food_waste_kgsqkm - 
+  scen_prod_CAT$n_crop_rem_kgsqkm 
+
+scen_prod_CAT$N_ag_surp_kgsqkm_prod55 = 
+  scen_prod_CAT$n_ff_2017cat + 
+  scen_prod_CAT$n_lw_2017cat +
+  scen_prod_CAT$n_cf_2017cat - 
+  scen_prod_CAT$n_cr_2017cat 
+
+
+scen_NUE_CAT$NUE = scen_NUE_CAT$n_cr_2017cat / (scen_NUE_CAT$n_ff_2017cat +
+                                                    scen_NUE_CAT$n_lw_2017cat +
+                                                    scen_NUE_CAT$n_cf_2017cat)
 
 summary(scen_prod_HUC$N_surp_kgsqkm)
 summary(scen_prod_HUC$N_surp_kgsqkm_prod55)
@@ -4903,6 +5783,156 @@ scen_prod_HUC$n_ag_surplus_kgsqkm = scen_prod_HUC$N_ag_surp_kgsqkm_prod55
 scen_prod_HUC$N_ag_surp_kgsqkm = scen_prod_HUC$N_ag_surp_kgsqkm_prod55
 
 summary(scen_prod_HUC$N_surp_kgsqkm_prod55)
+
+
+```
+
+# Prod Incr. (& Increase NUE)
+* 55% increase in productivity and 15% increase in NUE
+```{r}
+
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+NUE_INCR = 0.15
+PRO_INCR = 1.55
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+scen_p55n15_HUC = scen_NUE_HUC
+
+scen_p55n15_HUC$NUE15 = scen_p55n15_HUC$NUE + NUE_INCR # 15% increase in NUE
+
+scen_p55n15_HUC$N_ag_inputs_Prod1 = scen_p55n15_HUC$n_crop_rem_kgsqkm * 1 / scen_p55n15_HUC$NUE # regular productivity
+scen_p55n15_HUC$N_ag_inputs_Prod55 = scen_p55n15_HUC$n_crop_rem_kgsqkm * PRO_INCR / scen_p55n15_HUC$NUE
+scen_p55n15_HUC$N_ag_inputs_Prod55nue15 = scen_p55n15_HUC$n_crop_rem_kgsqkm * PRO_INCR / scen_p55n15_HUC$NUE15
+
+summary(scen_p55n15_HUC$N_ag_inputs_Prod1)
+summary(scen_p55n15_HUC$N_ag_inputs_Prod55)
+summary(scen_p55n15_HUC$N_ag_inputs_Prod55nue15)
+
+scen_p55n15_HUC$N_surp_kgsqkm_p55_n15 = scen_p55n15_HUC$N_ag_inputs_Prod55nue15 - scen_p55n15_HUC$n_crop_rem_kgsqkm
+
+
+summary(scen_p55n15_HUC$N_surp_kgsqkm_p55_n15)
+
+```
+
+# 55% Prod. Incr. / >=80% NUE (if already over, leave as is)
+* NUE = Outputs / Inputs; Calc change in Inputs: I = Outputs / NUE
+* Make sure N surplus doesn't increase (if >)
+NUE = O/I
+I = O/NUE
+* use areal normalized in order to convert to future values. divide by ag land area
+```{r}
+
+#NUE80+ = 0.8 or above
+#output55 = output * 1.55
+#inputs2 = output55 / NUE80+
+
+#NSurp = inputs2 - output55 * 1.55
+
+```
+
+
+# 55% Crop Removal Increase and 0% change in N inputs
+* can you increase in crop removal without increase in N inputs? 
+* NUE = Outputs / Inputs; Calc change in Inputs: I = Outputs / NUE
+
+```{r}
+
+statkeeps = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
+              'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
+              'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
+              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat',
+              'ElevWs','AgKffactWs','AgDrain_pctWs','BFIWs',
+              'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
+              'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
+              'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs',
+              'PopDen2010Ws','PctForest2019Ws','precip9120ws',
+              'tmean9120ws','N_TW2012Ws','FertWs',
+              'ManureWs','CBNFWs','PctForest2019Cat','N_TW2012Cat',
+              'tmean9120cat','FertCat','ManureCat','CBNFCat','PctCrop2019Cat','PctCrop2019Ws')
+scen_prod_HUC3 = merge(NDATA_huc12,StreamCat_HU12[,statkeeps],by='HUC12')
+
+scen_prod_HUC2$NUE = scen_prod_HUC2$n_crop_rem_kg_2010 / (scen_prod_HUC2$n_farm_fert_kg_2010 +
+                                                    scen_prod_HUC2$n_manure_kg_2010 +
+                                                    scen_prod_HUC2$n_crop_fix_kg_2010)
+scen_prod_HUC2$NUE15 = scen_prod_HUC2$NUE + 0.15
+scen_prod_HUC2$n_crop_rem_kgsqkm55 = scen_prod_HUC2$n_crop_rem_kgsqkm * 1.55 
+
+scen_prod_HUC2$N_surp_kgsqkm_p55 = 
+  scen_prod_HUC2$totalN_2016_kgNha *100 + # convert from ha to km2 
+  scen_prod_HUC2$n_farm_fert_kgsqkm + 
+  scen_prod_HUC2$n_manure_kgsqkm + 
+  scen_prod_HUC2$n_crop_fix_kgsqkm +
+  scen_prod_HUC2$n_human_food_waste_kgsqkm - 
+  scen_prod_HUC2$n_crop_rem_kgsqkm55
+
+scen_prod_HUC2$N_ag_surp_kgsqkm_p55 = 
+  scen_prod_HUC2$n_farm_fert_kgsqkm + 
+  scen_prod_HUC2$n_manure_kgsqkm + 
+  scen_prod_HUC2$n_crop_fix_kgsqkm -
+  scen_prod_HUC2$n_crop_rem_kgsqkm55
+
+
+# Calculate Change in NUE = outputs/inputs
+scen_prod_HUC2$NUE_chg = scen_prod_HUC2$n_crop_rem_kgsqkm55 / 
+  (scen_prod_HUC2$n_farm_fert_kgsqkm + 
+  scen_prod_HUC2$n_manure_kgsqkm + 
+  scen_prod_HUC2$n_crop_fix_kgsqkm)
+
+summary(scen_prod_HUC2$NUE_chg)
+summary(scen_prod_HUC2$NUE)
+
+
+# Update variable values 
+scen_prod_HUC2$n_surplus_kgsqkm = scen_prod_HUC2$N_surp_kgsqkm_p55
+scen_prod_HUC2$N_surp_kgsqkm = scen_prod_HUC2$N_surp_kgsqkm_p55
+scen_prod_HUC2$N_Surp_kgsqkm_2017ws = scen_prod_HUC2$N_surp_kgsqkm_p55
+scen_prod_HUC2$N_Surp_kgsqkm_2017cat = scen_prod_HUC2$N_surp_kgsqkm_p55
+
+scen_prod_HUC2$N_ag_surp_kgsqkm = scen_prod_HUC2$N_ag_surp_kgsqkm_p55
+scen_prod_HUC2$n_ag_surplus_kgsqkm = scen_prod_HUC2$N_ag_surp_kgsqkm_p55
+
+
+summary(scen_prod_HUC2$N_surp_kgsqkm_p55)
+
+
+```
+
+#55% increase in Crop Removal and 15% increase in NUE 
+```{r}
+
+
+scen_prod_HUC3 = scen_prod_HUC2
+
+scen_prod_HUC3$N_surp_kgsqkm_p55n15 = 
+  scen_prod_HUC3$N_surp_kgsqkm_p55 * ((1-(scen_prod_HUC3$NUE+NUE_INCR)) / (1-scen_prod_HUC3$NUE))
+scen_prod_HUC3$N_ag_surp_kgsqkm_p55n15 = 
+  scen_prod_HUC3$N_ag_surp_kgsqkm_p55 * ((1-(scen_prod_HUC3$NUE+NUE_INCR)) / (1-scen_prod_HUC3$NUE))
+
+
+scen_prod_HUC3$n_surplus_kgsqkm = scen_prod_HUC3$N_surp_kgsqkm_p55n15
+scen_prod_HUC3$N_surp_kgsqkm = scen_prod_HUC3$N_surp_kgsqkm_p55n15
+scen_prod_HUC3$N_Surp_kgsqkm_2017ws = scen_prod_HUC3$N_surp_kgsqkm_p55n15
+scen_prod_HUC3$N_Surp_kgsqkm_2017cat = scen_prod_HUC3$N_surp_kgsqkm_p55n15
+
+scen_prod_HUC3$N_ag_surp_kgsqkm = scen_prod_HUC3$N_ag_surp_kgsqkm_p55n15
+scen_prod_HUC3$n_ag_surplus_kgsqkm = scen_prod_HUC3$N_ag_surp_kgsqkm_p55n15
+
+
+summary(scen_prod_HUC3$N_surp_kgsqkm_p55n15)
+
+```
+
+
+# Compare Scenarios
+```{r}
+
+summary(NDATA_huc12$N_surp_kgsqkm)
+summary(scen_NUE_HUC$N_surp_kgsqkm_NUE15)
+summary(scen_prod_HUC$N_surp_kgsqkm_prod55)
+summary(scen_p55n15_HUC$N_surp_kgsqkm_p55_n15)
+summary(scen_prod_HUC2$N_surp_kgsqkm_p55)
+summary(scen_prod_HUC3$N_surp_kgsqkm_p55n15)
 
 
 ```
@@ -5744,7 +6774,7 @@ pred_gw_HU12 = pred_all
 #()()()()()()()()()()()()()()()()
 map_title = "Current SWDW Probability of Violations 2020"
 
-predictData = predCat_cur_treat1   # predCat_cur, predCat_cur_treat, predCat_cur_treat1
+predictData = predCat_cur   # predCat_cur, predCat_cur_treat, predCat_cur_treat1
 #rfc_model = rfc_sw_p # rfc_gw_p, rfc_sw_p
 rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
 
@@ -5944,6 +6974,7 @@ names(pred_all)[1] = 'HUC12'
 nrow(pred_all)  # 36252 
 
 nrow(pred_all[pred_all$Prediction > 0.5,])
+100*nrow(pred_all[pred_all$Prediction > 0.5,])/nrow(pred_all)
 summary(pred_all$Prediction)
 
 # Merge on Spatial Data
@@ -6316,17 +7347,29 @@ end_time <- Sys.time(); end_time - start_time
 ```
 
 #---
+
+# Check Averages
+```{r}
+
+summary(predCat_cur$PctCrop2019Ws)
+summary(scen_NUE_HUC$PctCrop2019Ws)
+
+
+
+```
+
+
 # Raster Map 15NUE HUC12
 ```{r}
 
 #()()()()()()()()()()()()()()()()
 map_title = "Future Probability of Violations \n(15% Inrease in NUE)"
 
-predictData = scen_NUE_HUC  
+predictData = scen_NUE_CAT # scen_NUE_HUC, scen_NUE_CAT  
 #rfc_model = rfc_sw_p
-rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
 #rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
-#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
 #rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
 
 
@@ -6399,6 +7442,93 @@ end_time <- Sys.time(); end_time - start_time
 
 ```
 
+# Raster Map 15NUE Catchments
+```{r}
+
+#()()()()()()()()()()()()()()()()
+map_title = "Future Probability of Violations \n(15% Inrease in NUE)"
+
+predictData = scen_NUE_CAT # scen_NUE_HUC, scen_NUE_CAT  
+#rfc_model = rfc_sw_p
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
+
+
+#()()()()()()()()()()()()()()()()
+
+predictData2 = as.data.frame(subset(predictData,select=-c(COMID)))
+dim(predictData2)
+
+setdiff(names(rfc_model$variable.importance),colnames(predictData)) # gives not matching
+
+
+predict1 = predict(rfc_model,data = predictData2)
+
+preds = as.data.frame(predict1$predictions[,2])
+names(preds)[1] = "Prediction"
+
+# Merge back on HUC12s
+pred_all = cbind(predictData$COMID ,preds)
+names(pred_all)[1] = 'COMID'
+
+nrow(pred_all)  # 2643994 
+
+nrow(pred_all[pred_all$Prediction > 0.5,]) # 598450
+100*nrow(pred_all[pred_all$Prediction > 0.5,]) /nrow(pred_all) # 15.1
+summary(pred_all$Prediction)
+
+# Summarize by HUC12
+pred_all2. = merge(pred_all,Cat_HUC12,by='COMID')
+pred_all2 = pred_all2. %>% group_by(HUC12) %>% summarize(Prediction = mean(Prediction,na.rm=T))
+# Merge on Spatial Data
+
+map1 = merge(pred_all2,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
+
+map2 = map1[complete.cases(map1[,c("Prediction")]),] 
+map2 <- st_as_sf(map2) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Prediction),]
+#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
+
+nrow(map3[map3$Prediction>0.5,])
+summary(map3$Prediction)
+
+# Format rasters
+start_time <- Sys.time()
+map4<-st_rasterize(map3[,"Prediction"],
+                     st_as_stars(st_bbox(states_boundary),
+                                 dx = 3000, dy = 3000, values=NA_real_), na.rm=T)
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 8.113112 secs (Desktop at 1000m)
+
+
+## Plot Nitrogen Maps
+start_time <- Sys.time()
+ggplot()+
+  geom_stars(data=map4, aes(fill=Prediction))+
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  # scale_color_viridis(option="magma",name="Risk Score" 
+  #                     ,limits = c(0, 1)
+  #                     )+ # options: viridis, magma, plasma
+  binned_scale(aesthetics = "fill",
+               palette=function(x) c("#5E4FA2","#3288BD","#66C2A5","#ABDDA4","#E6F598",
+                                     "#FEE08B","#FDAE61","#F46D43","#D53E4F","#9E0142"),
+               breaks=c(.1, .2, .3, .4, .5, 0.6, .7, 0.8, 0.9)) +
+  theme (axis.text = element_blank(), axis.title = element_blank(), 
+         panel.background = element_blank(), axis.ticks = element_blank(), 
+         legend.text = element_text(size = 14), legend.title = element_text(size = 14))+
+  ggtitle(map_title)+
+  theme(plot.title = element_text(hjust=0.5))+
+  labs(fill="Risk Value")
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 33.21989 secs
+
+
+
+```
+
+
 # Raster Map 55Prod HUC12
 * Increase in productivity by 55% (constant NUE)
 ```{r}
@@ -6408,8 +7538,175 @@ map_title = "Future Probability of Violations \n(55% Inrease in Productivity, no
 
 predictData = scen_prod_HUC  
 #rfc_model = rfc_sw_p
-#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
-rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
+
+
+#()()()()()()()()()()()()()()()()
+
+predictData2 = as.data.frame(subset(predictData,select=-c(HUC12)))
+dim(predictData2)
+
+setdiff(names(rfc_model$variable.importance),colnames(predictData)) # gives not matching
+
+
+predict1 = predict(rfc_model,data = predictData2)
+
+preds = as.data.frame(predict1$predictions[,2])
+names(preds)[1] = "Prediction"
+
+# Merge back on HUC12s
+pred_all = cbind(predictData$HUC12 ,preds)
+names(pred_all)[1] = 'HUC12'
+
+nrow(pred_all)  # 36252 
+
+100*nrow(pred_all[pred_all$Prediction > 0.5,])/nrow(pred_all)
+summary(pred_all$Prediction)
+
+# Merge on Spatial Data
+
+map1 = merge(pred_all,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
+
+map2 = map1[complete.cases(map1[,c("Prediction")]),] 
+map2 <- st_as_sf(map2) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Prediction),]
+#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
+
+nrow(map3[map3$Prediction>0.5,])
+summary(map3$Prediction)
+
+# Format rasters
+start_time <- Sys.time()
+map4<-st_rasterize(map3[,"Prediction"],
+                     st_as_stars(st_bbox(states_boundary),
+                                 dx = 3000, dy = 3000, values=NA_real_), na.rm=T)
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 8.113112 secs (Desktop at 1000m)
+
+
+## Plot Nitrogen Maps
+start_time <- Sys.time()
+ggplot()+
+  geom_stars(data=map4, aes(fill=Prediction))+
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  # scale_color_viridis(option="magma",name="Risk Score" 
+  #                     ,limits = c(0, 1)
+  #                     )+ # options: viridis, magma, plasma
+  binned_scale(aesthetics = "fill",
+               palette=function(x) c("#5E4FA2","#3288BD","#66C2A5","#ABDDA4","#E6F598",
+                                     "#FEE08B","#FDAE61","#F46D43","#D53E4F","#9E0142"),
+               breaks=c(.1, .2, .3, .4, .5, 0.6, .7, 0.8, 0.9)) +
+  theme (axis.text = element_blank(), axis.title = element_blank(), 
+         panel.background = element_blank(), axis.ticks = element_blank(), 
+         legend.text = element_text(size = 14), legend.title = element_text(size = 14))+
+  ggtitle(map_title)+
+  theme(plot.title = element_text(hjust=0.5))+
+  labs(fill="Risk Value")
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 33.21989 secs
+
+
+
+```
+
+# Raster Map 55Prod HUC12
+* Increase in crop removal by 55% ()
+```{r}
+
+#()()()()()()()()()()()()()()()()
+map_title = "Future Probability of Violations \n(55% Inrease in Crop Removal, no change in N inputs)"
+
+predictData = scen_prod_HUC2  
+#rfc_model = rfc_sw_p
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
+
+
+#()()()()()()()()()()()()()()()()
+
+predictData2 = as.data.frame(subset(predictData,select=-c(HUC12)))
+dim(predictData2)
+
+setdiff(names(rfc_model$variable.importance),colnames(predictData)) # gives not matching
+
+
+predict1 = predict(rfc_model,data = predictData2)
+
+preds = as.data.frame(predict1$predictions[,2])
+names(preds)[1] = "Prediction"
+
+# Merge back on HUC12s
+pred_all = cbind(predictData$HUC12 ,preds)
+names(pred_all)[1] = 'HUC12'
+
+nrow(pred_all)  # 36252 
+
+100*nrow(pred_all[pred_all$Prediction > 0.5,])/nrow(pred_all)
+summary(pred_all$Prediction)
+
+# Merge on Spatial Data
+
+map1 = merge(pred_all,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
+
+map2 = map1[complete.cases(map1[,c("Prediction")]),] 
+map2 <- st_as_sf(map2) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Prediction),]
+#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
+
+nrow(map3[map3$Prediction>0.5,])
+summary(map3$Prediction)
+
+# Format rasters
+start_time <- Sys.time()
+map4<-st_rasterize(map3[,"Prediction"],
+                     st_as_stars(st_bbox(states_boundary),
+                                 dx = 3000, dy = 3000, values=NA_real_), na.rm=T)
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 8.113112 secs (Desktop at 1000m)
+
+
+## Plot Nitrogen Maps
+start_time <- Sys.time()
+ggplot()+
+  geom_stars(data=map4, aes(fill=Prediction))+
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  # scale_color_viridis(option="magma",name="Risk Score" 
+  #                     ,limits = c(0, 1)
+  #                     )+ # options: viridis, magma, plasma
+  binned_scale(aesthetics = "fill",
+               palette=function(x) c("#5E4FA2","#3288BD","#66C2A5","#ABDDA4","#E6F598",
+                                     "#FEE08B","#FDAE61","#F46D43","#D53E4F","#9E0142"),
+               breaks=c(.1, .2, .3, .4, .5, 0.6, .7, 0.8, 0.9)) +
+  theme (axis.text = element_blank(), axis.title = element_blank(), 
+         panel.background = element_blank(), axis.ticks = element_blank(), 
+         legend.text = element_text(size = 14), legend.title = element_text(size = 14))+
+  ggtitle(map_title)+
+  theme(plot.title = element_text(hjust=0.5))+
+  labs(fill="Risk Value")
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 33.21989 secs
+
+
+
+```
+
+
+# Raster Map 55Prod HUC12
+* 55% increase in productivity & 15% increase NUE
+```{r}
+
+#()()()()()()()()()()()()()()()()
+map_title = "Future Probability of Violations \n(55% Inrease in Productivit & 15% increase in NUE)"
+
+predictData = scen_prod_HUC3  
+#rfc_model = rfc_sw_p
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
 #rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
 #rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
 
@@ -8581,6 +9878,66 @@ ggplot() +
 end_time <- Sys.time(); end_time - start_time
 
 
+
+
+
+```
+
+# Map Current Fe2O3Cat (StreamCat)
+```{r}
+
+#()()()()()()()()()()()()()()()()
+map_title = "Current % Fe2O3Cat (StreamCat)"
+
+MapData = StreamCat_HU12  
+MapData$Variable = MapData$Fe2O3Cat
+#()()()()()()()()()()()()()()()()
+summary(MapData$Variable)
+
+
+# Remove rows where value is NA or Inf
+MapData$Variable[is.infinite(MapData$Variable)] = NA
+MapData = MapData[complete.cases(MapData[,c("Variable")]),] 
+#test = MapData[,c('HUC12','N_Surp_2017ws','N_surp_RCP4.5G')]
+
+
+# Merge on Spatial Data
+map1 = merge(MapData,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
+map2 <- st_as_sf(map1) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Variable),]
+#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
+
+summary(map3$Variable)
+
+# Format rasters
+start_time <- Sys.time()
+map4<-st_rasterize(map3[,"Variable"],
+                     st_as_stars(st_bbox(states_boundary),
+                                 dx = 10000, dy = 10000, values=NA_real_), na.rm=T)
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 8.113112 secs (Desktop at 1000m)
+
+
+start_time <- Sys.time()
+ggplot() +
+  geom_stars(data=map4, aes(fill=Variable))+
+  geom_sf(data=states_conus,fill=NA,color='black')+
+  scale_fill_viridis(option="magma",name="% ", na.value = "white"
+                      #limits = c(0, 1)
+                      )+ # options: viridis, magma, plasma
+  theme(panel.background = element_blank())+ # remove grey background
+  theme(axis.text = element_blank())+ # remove axis text
+  theme(axis.ticks = element_blank())+ # remove axis text
+  theme(plot.title = element_text(hjust=0.5))+
+  ggtitle(map_title)+
+  
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),     # Remove background
+    panel.grid = element_blank(),     # Remove gridlines
+    axis.text = element_blank(),     # Remove Axis ticks/text/titles
+    axis.ticks = element_blank(),
+    axis.title = element_blank())
+end_time <- Sys.time(); end_time - start_time
 
 
 
@@ -11128,6 +12485,109 @@ end_time <- Sys.time(); end_time - start_time
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # spmodel
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\
+
+# Test Scatter
+```{r}
+
+XYplot = merge(StreamCat_HU12,LU_nni_hu12,by='HUC12')  
+
+XYplot$crop_hay_past_2019streamcat = XYplot$PctHay2019Cat + XYplot$PctCrop2019Cat
+XYplot$Pct_crop_land_2010_iclus = XYplot$Pct_crop_land_2010
+XYplot$Pct_crop_pasture_2010_iclus = XYplot$Pct_crop_pasture_land_2010
+
+test = merge(ag_nlcd_2050_rcp4.5G,ag_nlcd_2050_rcp8.5G,by='HUC12')
+test = merge(test,ag2050,by='HUC12')
+test = merge(test,XYplot[,c('HUC12','Pct_crop_land_2010_iclus','crop_hay_past_2019streamcat')],by='HUC12')
+
+test$diff2 = test$Pct_crop_pasture_land_RCP4.5G - test$ag_nlcd_2050_rcp4.5G
+
+
+plot(test$ag_nlcd_2050_rcp4.5G ~ test$Pct_crop_pasture_land_RCP4.5G)
+
+ggplot(data=test, aes(x=Pct_crop_pasture_land_RCP4.5G, y=ag_nlcd_2050_rcp4.5G)) + 
+  geom_hex(bins = 100) + ggtitle("Prediced Future StreamCat") +
+  xlim(0, max(ns.obs.prd)) + ylim(0, max(ns.obs.prd)) +
+  scale_fill_gradient(low = "grey", high = "red") +
+  geom_abline(color='black') + theme_bw()
+
+ggplot(data=test, aes(x=crop_hay_past_2019streamcat, y=ag_nlcd_2050_rcp4.5G)) + 
+  geom_hex(bins = 100) + ggtitle("Prediced Future StreamCat") +
+  xlim(0, max(ns.obs.prd)) + ylim(0, max(ns.obs.prd)) +
+  scale_fill_gradient(low = "grey", high = "red") +
+  geom_abline(color='black') + theme_bw()
+
+
+# Hexplot 
+# remove the (0,0)
+test$flag0 = ifelse(test$Pct_crop_pasture_land_RCP4.5G < 1 | test$ag_nlcd_2050_rcp4.5G <1,0,1)
+test2 = test[test$flag0 !=0,]
+ggplot(test2, aes(Pct_crop_pasture_land_RCP4.5G,ag_nlcd_2050_rcp4.5G)) +
+  geom_hex()
+
+
+
+```
+
+# Map Current % Diff between ICLUS and StreamCat Land (ICLUS 2010)
+```{r}
+
+#()()()()()()()()()()()()()()()()
+map_title = "Future Difference btwn ICLUS 2050 & StreamCat Ag Land 2050"
+
+MapData = test 
+MapData$Variable = MapData$diff2
+#()()()()()()()()()()()()()()()()
+summary(MapData$Variable)
+
+
+# Remove rows where value is NA or Inf
+MapData$Variable[is.infinite(MapData$Variable)] = NA
+MapData = MapData[complete.cases(MapData[,c("Variable")]),] 
+#test = MapData[,c('HUC12','N_Surp_2017ws','N_surp_RCP4.5G')]
+
+
+# Merge on Spatial Data
+map1 = merge(MapData,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
+map2 <- st_as_sf(map1) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Variable),]
+#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
+
+summary(map3$Variable)
+
+# Format rasters
+start_time <- Sys.time()
+map4<-st_rasterize(map3[,"Variable"],
+                     st_as_stars(st_bbox(states_boundary),
+                                 dx = 10000, dy = 10000, values=NA_real_), na.rm=T)
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 8.113112 secs (Desktop at 1000m)
+
+
+start_time <- Sys.time()
+ggplot() +
+  geom_stars(data=map4, aes(fill=Variable))+
+  geom_sf(data=states_conus,fill=NA,color='black')+
+  scale_fill_viridis(option="cividis",name="Diff=ICLUS-StreamCat",na.value = "white" 
+                      #limits = c(0, 1)
+                      )+ # options: viridis, magma, plasma
+  theme(panel.background = element_blank())+ # remove grey background
+  theme(axis.text = element_blank())+ # remove axis text
+  theme(axis.ticks = element_blank())+ # remove axis text
+  theme(plot.title = element_text(hjust=0.5))+
+  ggtitle(map_title)+
+  
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),     # Remove background
+    panel.grid = element_blank(),     # Remove gridlines
+    axis.text = element_blank(),     # Remove Axis ticks/text/titles
+    axis.ticks = element_blank(),
+    axis.title = element_blank())
+end_time <- Sys.time(); end_time - start_time
+
+
+
+```
+
 # Spatial Model Correction for Ag land
 * Goal:
 *** 1. develop relationship between 2010 Iclus and Current NLCD/StreamCat with spmodel
@@ -11141,10 +12601,14 @@ library(broom)
 library(knitr)
 library(tictoc)
 
+XYplot = merge(StreamCat_HU12,LU_nni_hu12,by='HUC12')  
 
+XYplot$crop_hay_past_2019streamcat = XYplot$PctHay2019Cat + XYplot$PctCrop2019Cat
+XYplot$Pct_crop_land_2010_iclus = XYplot$Pct_crop_land_2010
+XYplot$Pct_crop_pasture_2010_iclus = XYplot$Pct_crop_pasture_land_2010
 
 # Add on spatial information
-ag_sp = merge(XYplot[,c('HUC12','crop_hay_past_streamcat','Pct_crop_pasture_2010_iclus')],
+ag_sp = merge(XYplot[,c('HUC12','crop_hay_past_2019streamcat','Pct_crop_pasture_2010_iclus')],
               huc12_p[,c('HUC12','geometry')],by='HUC12')
 ag_sp <- st_as_sf(ag_sp) # added this because the above didn't retain geometry
 
@@ -11313,107 +12777,6 @@ write.csv(ag_nlcd_2050, file = paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS
 
 ```
 
-# Test Scatter
-```{r}
-
-XYplot = merge(StreamCat_HU12,LU_nni_hu12,by='HUC12')  
-
-XYplot$crop_hay_past_2019streamcat = XYplot$PctHay2019Cat + XYplot$PctCrop2019Cat
-XYplot$Pct_crop_land_2010_iclus = XYplot$Pct_crop_land_2010
-XYplot$Pct_crop_pasture_2010_iclus = XYplot$Pct_crop_pasture_land_2010
-
-test = merge(ag_nlcd_2050_rcp4.5G,ag_nlcd_2050_rcp8.5G,by='HUC12')
-test = merge(test,ag2050,by='HUC12')
-test = merge(test,XYplot[,c('HUC12','Pct_crop_land_2010_iclus','crop_hay_past_2019streamcat')],by='HUC12')
-
-test$diff2 = test$Pct_crop_pasture_land_RCP4.5G - test$ag_nlcd_2050_rcp4.5G
-
-
-plot(test$ag_nlcd_2050_rcp4.5G ~ test$Pct_crop_pasture_land_RCP4.5G)
-
-ggplot(data=test, aes(x=Pct_crop_pasture_land_RCP4.5G, y=ag_nlcd_2050_rcp4.5G)) + 
-  geom_hex(bins = 100) + ggtitle("Prediced Future StreamCat") +
-  xlim(0, max(ns.obs.prd)) + ylim(0, max(ns.obs.prd)) +
-  scale_fill_gradient(low = "grey", high = "red") +
-  geom_abline(color='black') + theme_bw()
-
-ggplot(data=test, aes(x=crop_hay_past_2019streamcat, y=ag_nlcd_2050_rcp4.5G)) + 
-  geom_hex(bins = 100) + ggtitle("Prediced Future StreamCat") +
-  xlim(0, max(ns.obs.prd)) + ylim(0, max(ns.obs.prd)) +
-  scale_fill_gradient(low = "grey", high = "red") +
-  geom_abline(color='black') + theme_bw()
-
-
-# Hexplot 
-# remove the (0,0)
-test$flag0 = ifelse(test$Pct_crop_pasture_land_RCP4.5G < 1 | test$ag_nlcd_2050_rcp4.5G <1,0,1)
-test2 = test[test$flag0 !=0,]
-ggplot(test2, aes(Pct_crop_pasture_land_RCP4.5G,ag_nlcd_2050_rcp4.5G)) +
-  geom_hex()
-
-
-
-```
-
-# Map Current % Diff between ICLUS and StreamCat Land (ICLUS 2010)
-```{r}
-
-#()()()()()()()()()()()()()()()()
-map_title = "Future Difference btwn ICLUS 2050 & StreamCat Ag Land 2050"
-
-MapData = test 
-MapData$Variable = MapData$diff2
-#()()()()()()()()()()()()()()()()
-summary(MapData$Variable)
-
-
-# Remove rows where value is NA or Inf
-MapData$Variable[is.infinite(MapData$Variable)] = NA
-MapData = MapData[complete.cases(MapData[,c("Variable")]),] 
-#test = MapData[,c('HUC12','N_Surp_2017ws','N_surp_RCP4.5G')]
-
-
-# Merge on Spatial Data
-map1 = merge(MapData,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
-map2 <- st_as_sf(map1) # added this because the above didn't retain geometry
-map3 <- map2[order(map2$Variable),]
-#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
-
-summary(map3$Variable)
-
-# Format rasters
-start_time <- Sys.time()
-map4<-st_rasterize(map3[,"Variable"],
-                     st_as_stars(st_bbox(states_boundary),
-                                 dx = 10000, dy = 10000, values=NA_real_), na.rm=T)
-end_time <- Sys.time(); end_time - start_time
-# Time difference of 8.113112 secs (Desktop at 1000m)
-
-
-start_time <- Sys.time()
-ggplot() +
-  geom_stars(data=map4, aes(fill=Variable))+
-  geom_sf(data=states_conus,fill=NA,color='black')+
-  scale_fill_viridis(option="cividis",name="Diff=ICLUS-StreamCat",na.value = "white" 
-                      #limits = c(0, 1)
-                      )+ # options: viridis, magma, plasma
-  theme(panel.background = element_blank())+ # remove grey background
-  theme(axis.text = element_blank())+ # remove axis text
-  theme(axis.ticks = element_blank())+ # remove axis text
-  theme(plot.title = element_text(hjust=0.5))+
-  ggtitle(map_title)+
-  
-  theme(
-    panel.background = element_rect(fill = "white", color = NA),     # Remove background
-    panel.grid = element_blank(),     # Remove gridlines
-    axis.text = element_blank(),     # Remove Axis ticks/text/titles
-    axis.ticks = element_blank(),
-    axis.title = element_blank())
-end_time <- Sys.time(); end_time - start_time
-
-
-
-```
 
 #-----------------------------------------------------------------------------------
 # Old code
