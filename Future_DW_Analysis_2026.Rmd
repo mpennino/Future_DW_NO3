@@ -1351,37 +1351,37 @@ huc12_df = as.data.frame(huc12_s)
 # Catchment Points
 ```{r}
 
-# sp_dir = "D:/Data/Spatial/NHDPlusV2_Centroids/"
-# Cat01_p = st_read(paste0(sp_dir,'NHDPlusV2_Cat01_centroid_point.shp'))
-# Cat02_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat02_centroid_point.shp'))
-# Cat03N_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat03N_centroid_point.shp'))
-# Cat03S_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat03S_centroid_point.shp'))
-# Cat03W_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat03W_centroid_point.shp'))
-# Cat04_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat04_centroid_point.shp'))
-# Cat05_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat05_centroid_point.shp'))
-# Cat06_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat06_centroid_point.shp'))
-# Cat07_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat07_centroid_point.shp'))
-# Cat08_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat08_centroid_point.shp'))
-# Cat09_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat09_centroid_point.shp'))
-# Cat10L_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat10L_centroid_point.shp'))
-# Cat10U_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat10U_centroid_point.shp'))
-# Cat11_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat11_centroid_point.shp'))
-# Cat12_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat12_centroid_point.shp'))
-# Cat13_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat13_centroid_point.shp'))
-# Cat14_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat14_centroid_point.shp'))
-# Cat15_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat15_centroid_point.shp'))
-# Cat16_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat16_centroid_point.shp'))
-# Cat17_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat17_centroid_point.shp'))
-# Cat18_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat18_centroid_point.shp'))
-# 
-# cats_p = rbind(Cat01_p,Cat02_p,Cat03N_p,Cat03S_p,Cat03W_p,
-#                Cat04_p,Cat05_p,Cat06_p,Cat07_p,Cat08_p,Cat09_p,
-#                Cat10L_p,Cat10U_p,Cat11_p,Cat12_p,Cat13_p,Cat14_p,
-#                Cat15_p,Cat16_p,Cat17_p,Cat18_p)
-# 
-# 
-# projection(cats_p)
-# projection(states_conus)
+sp_dir = "D:/Data/Spatial/NHDPlusV2_Centroids/"
+Cat01_p = st_read(paste0(sp_dir,'NHDPlusV2_Cat01_centroid_point.shp'))
+Cat02_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat02_centroid_point.shp'))
+Cat03N_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat03N_centroid_point.shp'))
+Cat03S_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat03S_centroid_point.shp'))
+Cat03W_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat03W_centroid_point.shp'))
+Cat04_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat04_centroid_point.shp'))
+Cat05_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat05_centroid_point.shp'))
+Cat06_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat06_centroid_point.shp'))
+Cat07_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat07_centroid_point.shp'))
+Cat08_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat08_centroid_point.shp'))
+Cat09_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat09_centroid_point.shp'))
+Cat10L_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat10L_centroid_point.shp'))
+Cat10U_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat10U_centroid_point.shp'))
+Cat11_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat11_centroid_point.shp'))
+Cat12_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat12_centroid_point.shp'))
+Cat13_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat13_centroid_point.shp'))
+Cat14_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat14_centroid_point.shp'))
+Cat15_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat15_centroid_point.shp'))
+Cat16_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat16_centroid_point.shp'))
+Cat17_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat17_centroid_point.shp'))
+Cat18_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat18_centroid_point.shp'))
+
+cats_p = rbind(Cat01_p,Cat02_p,Cat03N_p,Cat03S_p,Cat03W_p,
+               Cat04_p,Cat05_p,Cat06_p,Cat07_p,Cat08_p,Cat09_p,
+               Cat10L_p,Cat10U_p,Cat11_p,Cat12_p,Cat13_p,Cat14_p,
+               Cat15_p,Cat16_p,Cat17_p,Cat18_p)
+
+
+projection(cats_p)
+projection(states_conus)
 
 ```
 
@@ -2170,35 +2170,35 @@ end_time <- Sys.time(); end_time - start_time
 
 # Merge back on HUC12s
 ag_nlcd_2050_rcp4.5G_ = cbind(ag2050_sp$COMID ,ag_nlcd_2050_rcp4.5G)
-ag_nlcd_2050_rcp8.5G = cbind(ag2050_sp$COMID ,ag_nlcd_2050_rcp8.5G)
-ag_nlcd_2050_rcp4.5H = cbind(ag2050_sp$COMID ,ag_nlcd_2050_rcp4.5H)
-ag_nlcd_2050_rcp8.5H = cbind(ag2050_sp$HUC12 ,ag_nlcd_2050_rcp8.5H)
+ag_nlcd_2050_rcp8.5G_ = cbind(ag2050_sp$COMID ,ag_nlcd_2050_rcp8.5G)
+ag_nlcd_2050_rcp4.5H_ = cbind(ag2050_sp$COMID ,ag_nlcd_2050_rcp4.5H)
+ag_nlcd_2050_rcp8.5H_ = cbind(ag2050_sp$COMID ,ag_nlcd_2050_rcp8.5H)
 
 ag_nlcd_2050_rcp4.5G_ = as.data.frame(ag_nlcd_2050_rcp4.5G_)
-ag_nlcd_2050_rcp8.5G = as.data.frame(ag_nlcd_2050_rcp8.5G)
-ag_nlcd_2050_rcp4.5H = as.data.frame(ag_nlcd_2050_rcp4.5H)
-ag_nlcd_2050_rcp8.5H = as.data.frame(ag_nlcd_2050_rcp8.5H)
+ag_nlcd_2050_rcp8.5G_ = as.data.frame(ag_nlcd_2050_rcp8.5G_)
+ag_nlcd_2050_rcp4.5H_ = as.data.frame(ag_nlcd_2050_rcp4.5H_)
+ag_nlcd_2050_rcp8.5H_ = as.data.frame(ag_nlcd_2050_rcp8.5H_)
 
 names(ag_nlcd_2050_rcp4.5G_)[1] = 'COMID'
-names(ag_nlcd_2050_rcp8.5G)[1] = 'COMID'
-names(ag_nlcd_2050_rcp4.5H)[1] = 'COMID'
-names(ag_nlcd_2050_rcp8.5H)[1] = 'COMID'
+names(ag_nlcd_2050_rcp8.5G_)[1] = 'COMID'
+names(ag_nlcd_2050_rcp4.5H_)[1] = 'COMID'
+names(ag_nlcd_2050_rcp8.5H_)[1] = 'COMID'
 
 ag_nlcd_2050_rcp4.5G_$ag_nlcd_2050_rcp4.5G = 
   as.numeric(ag_nlcd_2050_rcp4.5G_$ag_nlcd_2050_rcp4.5G)
-ag_nlcd_2050_rcp8.5G$ag_nlcd_2050_rcp8.5G = 
-  as.numeric(ag_nlcd_2050_rcp8.5G$ag_nlcd_2050_rcp8.5G)
-ag_nlcd_2050_rcp4.5H$ag_nlcd_2050_rcp4.5H = 
-  as.numeric(ag_nlcd_2050_rcp4.5H$ag_nlcd_2050_rcp4.5H)
-ag_nlcd_2050_rcp8.5H$ag_nlcd_2050_rcp8.5H = 
-  as.numeric(ag_nlcd_2050_rcp8.5H$ag_nlcd_2050_rcp8.5H)
+ag_nlcd_2050_rcp8.5G_$ag_nlcd_2050_rcp8.5G = 
+  as.numeric(ag_nlcd_2050_rcp8.5G_$ag_nlcd_2050_rcp8.5G)
+ag_nlcd_2050_rcp4.5H_$ag_nlcd_2050_rcp4.5H = 
+  as.numeric(ag_nlcd_2050_rcp4.5H_$ag_nlcd_2050_rcp4.5H)
+ag_nlcd_2050_rcp8.5H_$ag_nlcd_2050_rcp8.5H = 
+  as.numeric(ag_nlcd_2050_rcp8.5H_$ag_nlcd_2050_rcp8.5H)
 
 summary(ag_nlcd_2050_rcp4.5G_$ag_nlcd_2050_rcp4.5G)
 
 # Merge
-ag_nlcd_2050 = merge(ag_nlcd_2050_rcp4.5G_,ag_nlcd_2050_rcp8.5G,by="HUC12")
-ag_nlcd_2050 = merge(ag_nlcd_2050,ag_nlcd_2050_rcp4.5H,by="HUC12")
-ag_nlcd_2050 = merge(ag_nlcd_2050,ag_nlcd_2050_rcp8.5H,by="HUC12")
+ag_nlcd_2050 = merge(ag_nlcd_2050_rcp4.5G_,ag_nlcd_2050_rcp8.5G_,by="COMID")
+ag_nlcd_2050 = merge(ag_nlcd_2050,ag_nlcd_2050_rcp4.5H_,by="COMID")
+ag_nlcd_2050 = merge(ag_nlcd_2050,ag_nlcd_2050_rcp8.5H_,by="COMID")
 
 
 #-------------------------------------------------------------------------------
@@ -2207,15 +2207,71 @@ ag_nlcd_2050 = merge(ag_nlcd_2050,ag_nlcd_2050_rcp8.5H,by="HUC12")
 #saveRDS(m0, file = paste0(future_dir ,'Data/Models/NONSPATIAL_model_ICLUS_vs_NLCD_cropland_cats.rds'))
 #saveRDS(spmod0, file = paste0(future_dir ,'Data/Models/SPATIAL_model_ICLUS_vs_NLCD_cropland_cats.rds'))
 
-write.csv(ag_nlcd_2050_rcp4.5G_, file = paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCPG4.5_COMID.csv'), row.names=F)
+write.csv(ag_nlcd_2050_rcp4.5G_, file = paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP4.5G_COMID.csv'), row.names=F)
+write.csv(ag_nlcd_2050_rcp8.5G_, file = paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP8.5G_COMID.csv'), row.names=F)
+write.csv(ag_nlcd_2050_rcp4.5H_, file = paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP4.5H_COMID.csv'), row.names=F)
+write.csv(ag_nlcd_2050_rcp8.5H_, file = paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP8.5H_COMID.csv'), row.names=F)
 
 write.csv(ag_nlcd_2050, file = paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP_GISS_HADGEM_COMID.csv'), row.names=F)
+
+#test = read.csv(paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCPG4.5_COMID.csv'))
+
+summary(ag_nlcd_2050_rcp4.5G_$ag_nlcd_2050_rcp4.5G)
+summary(test$ag_nlcd_2050_rcp4.5G)
+
 
 
 ```
 
+# Checks
+* how many are outside the [0,100] range
+```{r}
 
-# Change Ratio spmodel - Based on NLCD Ag Land
+test = read.csv(paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP_GISS_HADGEM_COMID.csv'))
+
+100*nrow(test[test$ag_nlcd_2050_rcp4.5G<0,])/nrow(test) # 5.810378
+100*nrow(test[test$ag_nlcd_2050_rcp4.5G>100,])/nrow(test) # 0.1889566
+
+100*nrow(test[test$ag_nlcd_2050_rcp8.5G<0,])/nrow(test) # 5.838858
+100*nrow(test[test$ag_nlcd_2050_rcp8.5G>100,])/nrow(test) # 0.175946
+
+100*nrow(test[test$ag_nlcd_2050_rcp4.5H<0,])/nrow(test) # 5.810076
+100*nrow(test[test$ag_nlcd_2050_rcp4.5H>100,])/nrow(test) # 0.1886919
+
+100*nrow(test[test$ag_nlcd_2050_rcp8.5H<0,])/nrow(test) # 5.840068
+100*nrow(test[test$ag_nlcd_2050_rcp8.5H>100,])/nrow(test) # 0.1754921
+
+100*nrow(test[test$ag_nlcd_2050_rcp4.5G<0 & test$ag_nlcd_2050_rcp4.5G>-5,])/nrow(test) # 4.816843
+
+
+#----------------------------------------------------------------------------------
+test2 = read.csv(paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP_GISS_HADGEM_HU12.csv'))
+
+100*nrow(test2[test2$ag_nlcd_2050_rcp4.5G<0,])/nrow(test2) # 3.663817
+100*nrow(test2[test2$ag_nlcd_2050_rcp4.5G>100,])/nrow(test2) # 0.00248142
+
+100*nrow(test2[test2$ag_nlcd_2050_rcp8.5G<0,])/nrow(test2) # 3.698557
+100*nrow(test2[test2$ag_nlcd_2050_rcp8.5G>100,])/nrow(test2) # 0.00248142
+
+100*nrow(test2[test2$ag_nlcd_2050_rcp4.5H<0,])/nrow(test2) # 3.682428
+100*nrow(test2[test2$ag_nlcd_2050_rcp4.5H>100,])/nrow(test2) # 0.00248142
+
+100*nrow(test2[test2$ag_nlcd_2050_rcp8.5H<0,])/nrow(test2) # 3.706001
+100*nrow(test2[test2$ag_nlcd_2050_rcp8.5H>100,])/nrow(test2) # 0.00248142
+
+# Check range of values for training and prediction datasets
+
+# Training ICLUS
+summary(XYplot$Pct_crop_pasture_2010_iclus)
+
+# Prediction (future) ICLUS
+summary(ag2050_sp$Pct_crop_pasture_land_RCP8.5H)
+
+```
+
+
+
+# Change Ratio spmodel (HUC12) - Based on NLCD Ag Land
 * See spmodel code below
 ```{r}
 
@@ -2232,14 +2288,40 @@ chg_ratio = merge(ag_nlcd_2050, TEMP[,c('HUC12','crop_hay_past_streamcat')],by='
 summary(chg_ratio$ag_nlcd_2050_rcp4.5G)
 summary(chg_ratio$ag_nlcd_2050_rcp8.5G)
 
+# Truncate range of prediction results to the [0,100] range
+# chg_ratio$ag_nlcd_2050_rcp4.5G2 = 
+#   ifelse(chg_ratio$ag_nlcd_2050_rcp4.5G<0,0,chg_ratio$ag_nlcd_2050_rcp4.5G)
+# chg_ratio$ag_nlcd_2050_rcp4.5G2 = 
+#   ifelse(chg_ratio$ag_nlcd_2050_rcp4.5G2>100,100,chg_ratio$ag_nlcd_2050_rcp4.5G2)
+
+chg_ratio$ag_nlcd_2050_rcp4.5G2 = chg_ratio$ag_nlcd_2050_rcp4.5G
+chg_ratio$ag_nlcd_2050_rcp8.5G2 = chg_ratio$ag_nlcd_2050_rcp8.5G
+chg_ratio$ag_nlcd_2050_rcp4.5H2 = chg_ratio$ag_nlcd_2050_rcp4.5H
+chg_ratio$ag_nlcd_2050_rcp8.5H2 = chg_ratio$ag_nlcd_2050_rcp8.5H
+
+chg_ratio$ag_nlcd_2050_rcp4.5G2[chg_ratio$ag_nlcd_2050_rcp4.5G<=0]=0
+chg_ratio$ag_nlcd_2050_rcp4.5G2[chg_ratio$ag_nlcd_2050_rcp4.5G>=100]=100
+chg_ratio$ag_nlcd_2050_rcp8.5G2[chg_ratio$ag_nlcd_2050_rcp8.5G<=0]=0
+chg_ratio$ag_nlcd_2050_rcp8.5G2[chg_ratio$ag_nlcd_2050_rcp8.5G>=100]=100
+
+chg_ratio$ag_nlcd_2050_rcp4.5H2[chg_ratio$ag_nlcd_2050_rcp4.5H<=0]=0
+chg_ratio$ag_nlcd_2050_rcp4.5H2[chg_ratio$ag_nlcd_2050_rcp4.5H>=100]=100
+chg_ratio$ag_nlcd_2050_rcp8.5H2[chg_ratio$ag_nlcd_2050_rcp8.5H<=0]=0
+chg_ratio$ag_nlcd_2050_rcp8.5H2[chg_ratio$ag_nlcd_2050_rcp8.5H>=100]=100
+
+summary(chg_ratio$ag_nlcd_2050_rcp4.5G2)
+summary(chg_ratio$ag_nlcd_2050_rcp8.5G2)
+summary(chg_ratio$ag_nlcd_2050_rcp4.5H2)
+summary(chg_ratio$ag_nlcd_2050_rcp8.5H2)
+
 chg_ratio$change_ratio_crop_RCP4.5G = 
-  chg_ratio$ag_nlcd_2050_rcp4.5G/chg_ratio$crop_hay_past_streamcat
+  chg_ratio$ag_nlcd_2050_rcp4.5G2/chg_ratio$crop_hay_past_streamcat
 chg_ratio$change_ratio_crop_RCP8.5G = 
-  chg_ratio$ag_nlcd_2050_rcp8.5G/chg_ratio$crop_hay_past_streamcat
+  chg_ratio$ag_nlcd_2050_rcp8.5G2/chg_ratio$crop_hay_past_streamcat
 chg_ratio$change_ratio_crop_RCP4.5H = 
-  chg_ratio$ag_nlcd_2050_rcp4.5H/chg_ratio$crop_hay_past_streamcat
+  chg_ratio$ag_nlcd_2050_rcp4.5H2/chg_ratio$crop_hay_past_streamcat
 chg_ratio$change_ratio_crop_RCP8.5H = 
-  chg_ratio$ag_nlcd_2050_rcp8.5H/chg_ratio$crop_hay_past_streamcat
+  chg_ratio$ag_nlcd_2050_rcp8.5H2/chg_ratio$crop_hay_past_streamcat
 
 summary(chg_ratio$change_ratio_crop_RCP4.5G )
 
@@ -2273,6 +2355,92 @@ summary(chg_ratio$change_ratio_crop_RCP8.5H)
 
 # Merge on 
 LU_nni_hu12 = merge(LU_nni_hu12,chg_ratio,by='HUC12')
+
+
+```
+
+# Change Ratio spmodel (Catchment) - Based on NLCD Ag Land
+* See spmodel code below
+```{r}
+
+TEMP = merge(StreamCat_cats,LU_nni_cat,by='COMID')  
+TEMP$crop_hay_past_streamcat = TEMP$PctHay2019Cat + TEMP$PctCrop2019Cat
+TEMP$Pct_crop_land_2010_iclus = TEMP$Pct_crop_land_2010
+
+ag_nlcd_2050. = read.csv(paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP_GISS_HADGEM_COMID.csv'))
+
+chg_ratio = merge(ag_nlcd_2050., TEMP[,c('COMID','crop_hay_past_streamcat')],by='COMID')
+
+summary(chg_ratio$ag_nlcd_2050_rcp4.5G)
+summary(chg_ratio$ag_nlcd_2050_rcp8.5G)
+
+# Truncate range of prediction results to the [0,100] range
+# chg_ratio$ag_nlcd_2050_rcp4.5G2 = 
+#   ifelse(chg_ratio$ag_nlcd_2050_rcp4.5G<0,0,chg_ratio$ag_nlcd_2050_rcp4.5G)
+# chg_ratio$ag_nlcd_2050_rcp4.5G2 = 
+#   ifelse(chg_ratio$ag_nlcd_2050_rcp4.5G2>100,100,chg_ratio$ag_nlcd_2050_rcp4.5G2)
+
+chg_ratio$ag_nlcd_2050_rcp4.5G2 = chg_ratio$ag_nlcd_2050_rcp4.5G
+chg_ratio$ag_nlcd_2050_rcp8.5G2 = chg_ratio$ag_nlcd_2050_rcp8.5G
+chg_ratio$ag_nlcd_2050_rcp4.5H2 = chg_ratio$ag_nlcd_2050_rcp4.5H
+chg_ratio$ag_nlcd_2050_rcp8.5H2 = chg_ratio$ag_nlcd_2050_rcp8.5H
+
+chg_ratio$ag_nlcd_2050_rcp4.5G2[chg_ratio$ag_nlcd_2050_rcp4.5G<=0]=0
+chg_ratio$ag_nlcd_2050_rcp4.5G2[chg_ratio$ag_nlcd_2050_rcp4.5G>=100]=100
+chg_ratio$ag_nlcd_2050_rcp8.5G2[chg_ratio$ag_nlcd_2050_rcp8.5G<=0]=0
+chg_ratio$ag_nlcd_2050_rcp8.5G2[chg_ratio$ag_nlcd_2050_rcp8.5G>=100]=100
+
+chg_ratio$ag_nlcd_2050_rcp4.5H2[chg_ratio$ag_nlcd_2050_rcp4.5H<=0]=0
+chg_ratio$ag_nlcd_2050_rcp4.5H2[chg_ratio$ag_nlcd_2050_rcp4.5H>=100]=100
+chg_ratio$ag_nlcd_2050_rcp8.5H2[chg_ratio$ag_nlcd_2050_rcp8.5H<=0]=0
+chg_ratio$ag_nlcd_2050_rcp8.5H2[chg_ratio$ag_nlcd_2050_rcp8.5H>=100]=100
+
+summary(chg_ratio$ag_nlcd_2050_rcp4.5G2)
+summary(chg_ratio$ag_nlcd_2050_rcp8.5G2)
+summary(chg_ratio$ag_nlcd_2050_rcp4.5H2)
+summary(chg_ratio$ag_nlcd_2050_rcp8.5H2)
+
+chg_ratio$change_ratio_crop_RCP4.5G = 
+  chg_ratio$ag_nlcd_2050_rcp4.5G2/chg_ratio$crop_hay_past_streamcat
+chg_ratio$change_ratio_crop_RCP8.5G = 
+  chg_ratio$ag_nlcd_2050_rcp8.5G2/chg_ratio$crop_hay_past_streamcat
+chg_ratio$change_ratio_crop_RCP4.5H = 
+  chg_ratio$ag_nlcd_2050_rcp4.5H2/chg_ratio$crop_hay_past_streamcat
+chg_ratio$change_ratio_crop_RCP8.5H = 
+  chg_ratio$ag_nlcd_2050_rcp8.5H2/chg_ratio$crop_hay_past_streamcat
+
+summary(chg_ratio$change_ratio_crop_RCP4.5G )
+
+# Convert change ratio to NA if zero value in 2010 (resulting in Inf for change ratio)
+chg_ratio$change_ratio_crop_RCP4.5G[is.infinite(chg_ratio$change_ratio_crop_RCP4.5G)] = NA
+chg_ratio$change_ratio_crop_RCP8.5G[is.infinite(chg_ratio$change_ratio_crop_RCP8.5G)] = NA
+chg_ratio$change_ratio_crop_RCP4.5H[is.infinite(chg_ratio$change_ratio_crop_RCP4.5H)] = NA
+chg_ratio$change_ratio_crop_RCP8.5H[is.infinite(chg_ratio$change_ratio_crop_RCP8.5H)] = NA
+
+
+# If Change ratio is NA (meaning 0% crop in 2010) convert to 1 (meaning no change)
+chg_ratio$change_ratio_crop_RCP4.5G = 
+  ifelse(is.na(chg_ratio$change_ratio_crop_RCP4.5G),1,
+         chg_ratio$change_ratio_crop_RCP4.5G)
+chg_ratio$change_ratio_crop_RCP8.5G = 
+  ifelse(is.na(chg_ratio$change_ratio_crop_RCP8.5G),1,
+         chg_ratio$change_ratio_crop_RCP8.5G)
+chg_ratio$change_ratio_crop_RCP4.5H = 
+  ifelse(is.na(chg_ratio$change_ratio_crop_RCP4.5H),1,
+         chg_ratio$change_ratio_crop_RCP4.5H)
+chg_ratio$change_ratio_crop_RCP8.5H = 
+  ifelse(is.na(chg_ratio$change_ratio_crop_RCP8.5H),1,
+         chg_ratio$change_ratio_crop_RCP8.5H)
+
+
+summary(chg_ratio$change_ratio_crop_RCP4.5G)
+summary(chg_ratio$change_ratio_crop_RCP8.5G)
+summary(chg_ratio$change_ratio_crop_RCP4.5H)
+summary(chg_ratio$change_ratio_crop_RCP8.5H)
+
+
+# Merge on 
+LU_nni_cat = merge(LU_nni_cat,chg_ratio,by='COMID')
 
 
 ```
@@ -2410,7 +2578,7 @@ LU_nni_hu12 = merge(LU_nni_hu12,chg_ratio,by='HUC12')
 ```
 
 
-# Farm Fert
+# Farm Fert (HUC12)
 ```{r}
 
 #-------------------------------------------------------------------------------
@@ -2477,7 +2645,69 @@ summary(LU_nni_hu12$n_farm_fert_kgsqkm_RCP8.5H)
 
 ```
 
-# Manure N
+# Farm Fert (Catchment)
+```{r}
+
+#-------------------------------------------------------------------------------
+# Calculations (change_area units = m2)
+summary(LU_nni_cat$change_area_07.cropland_landuse_RCP4.5GISS )
+
+# Get mass of N 2010
+LU_nni_cat$n_farm_fert_kg_2010 = 
+  LU_nni_cat$n_ff_2010cat #* LU_nni_cat$CatAreaSqKm # units are kg
+
+# Get mass of N in 2050
+# LU_nni_cat$n_farm_fert_kg_RCP4.5G = 
+#   LU_nni_cat$change_ratio_ag_RCP4.5G * LU_nni_cat$n_farm_fert_kg_2010
+# LU_nni_cat$n_farm_fert_kg_RCP8.5G = 
+#   LU_nni_cat$change_ratio_ag_RCP8.5G * LU_nni_cat$n_farm_fert_kg_2010
+# LU_nni_cat$n_farm_fert_kg_RCP4.5H = 
+#   LU_nni_cat$change_ratio_ag_RCP4.5H * LU_nni_cat$n_farm_fert_kg_2010
+# LU_nni_cat$n_farm_fert_kg_RCP8.5H = 
+#   LU_nni_cat$change_ratio_ag_RCP8.5H * LU_nni_cat$n_farm_fert_kg_2010
+
+LU_nni_cat$n_farm_fert_kg_RCP4.5G = 
+  LU_nni_cat$change_ratio_crop_RCP4.5G * LU_nni_cat$n_farm_fert_kg_2010
+LU_nni_cat$n_farm_fert_kg_RCP8.5G = 
+  LU_nni_cat$change_ratio_crop_RCP8.5G * LU_nni_cat$n_farm_fert_kg_2010
+LU_nni_cat$n_farm_fert_kg_RCP4.5H = 
+  LU_nni_cat$change_ratio_crop_RCP4.5H * LU_nni_cat$n_farm_fert_kg_2010
+LU_nni_cat$n_farm_fert_kg_RCP8.5H = 
+  LU_nni_cat$change_ratio_crop_RCP8.5H * LU_nni_cat$n_farm_fert_kg_2010
+
+# Get area weighted N
+LU_nni_cat$n_farm_fert_kgsqkm_RCP4.5G = 
+  LU_nni_cat$n_farm_fert_kg_RCP4.5G / LU_nni_cat$CatAreaSqKm
+LU_nni_cat$n_farm_fert_kgsqkm_RCP8.5G = 
+  LU_nni_cat$n_farm_fert_kg_RCP8.5G / LU_nni_cat$CatAreaSqKm
+LU_nni_cat$n_farm_fert_kgsqkm_RCP4.5H = 
+  LU_nni_cat$n_farm_fert_kg_RCP4.5H / LU_nni_cat$CatAreaSqKm
+LU_nni_cat$n_farm_fert_kgsqkm_RCP8.5H = 
+  LU_nni_cat$n_farm_fert_kg_RCP8.5H / LU_nni_cat$CatAreaSqKm
+
+# Change
+LU_nni_cat$change_n_farm_fert_kgsqkm_RCP4.5G = LU_nni_cat$n_farm_fert_kgsqkm_RCP4.5G - LU_nni_cat$n_farm_fert_kg_2010
+LU_nni_cat$change_n_farm_fert_kgsqkm_RCP8.5G = LU_nni_cat$n_farm_fert_kgsqkm_RCP8.5G - LU_nni_cat$n_farm_fert_kg_2010
+LU_nni_cat$change_n_farm_fert_kgsqkm_RCP4.5H = LU_nni_cat$n_farm_fert_kgsqkm_RCP4.5H - LU_nni_cat$n_farm_fert_kg_2010
+LU_nni_cat$change_n_farm_fert_kgsqkm_RCP8.5H = LU_nni_cat$n_farm_fert_kgsqkm_RCP8.5H - LU_nni_cat$n_farm_fert_kg_2010
+
+
+summary(LU_nni_cat$n_farm_fert_kg_2010)
+summary(LU_nni_cat$n_farm_fert_kg_RCP4.5G)
+summary(LU_nni_cat$n_farm_fert_kg_RCP8.5G)
+summary(LU_nni_cat$n_farm_fert_kg_RCP4.5H)
+summary(LU_nni_cat$n_farm_fert_kg_RCP8.5H)
+
+summary(LU_nni_cat$n_farm_fert_kgsqkm)
+summary(LU_nni_cat$n_farm_fert_kgsqkm_RCP4.5G)
+summary(LU_nni_cat$n_farm_fert_kgsqkm_RCP8.5G)
+summary(LU_nni_cat$n_farm_fert_kgsqkm_RCP4.5H)
+summary(LU_nni_cat$n_farm_fert_kgsqkm_RCP8.5H)
+
+
+```
+
+# Manure N (HUC12)
 ```{r}
 # 
 
@@ -2537,7 +2767,67 @@ summary(LU_nni_hu12$change_n_manure_kgsqkm_RCP4.5G)
 
 ```
 
-# CBNF
+# Manure N (Catchment)
+```{r}
+# 
+
+# Get mass of N 2010
+LU_nni_cat$n_manure_kg_2010 = 
+  LU_nni_cat$n_lw_2010cat #* LU_nni_cat$CatAreaSqKm # units are kg
+
+# Get mass of N in 2050
+# LU_nni_cat$n_manure_kg_RCP4.5G = 
+#   LU_nni_cat$change_ratio_ag_RCP4.5G * LU_nni_cat$n_manure_kg_2010
+# LU_nni_cat$n_manure_kg_RCP8.5G = 
+#   LU_nni_cat$change_ratio_ag_RCP8.5G * LU_nni_cat$n_manure_kg_2010
+# LU_nni_cat$n_manure_kg_RCP4.5H = 
+#   LU_nni_cat$change_ratio_ag_RCP4.5H * LU_nni_cat$n_manure_kg_2010
+# LU_nni_cat$n_manure_kg_RCP8.5H = 
+#   LU_nni_cat$change_ratio_ag_RCP8.5H * LU_nni_cat$n_manure_kg_2010
+
+LU_nni_cat$n_manure_kg_RCP4.5G = 
+  LU_nni_cat$change_ratio_crop_RCP4.5G * LU_nni_cat$n_manure_kg_2010
+LU_nni_cat$n_manure_kg_RCP8.5G = 
+  LU_nni_cat$change_ratio_crop_RCP8.5G * LU_nni_cat$n_manure_kg_2010
+LU_nni_cat$n_manure_kg_RCP4.5H = 
+  LU_nni_cat$change_ratio_crop_RCP4.5H * LU_nni_cat$n_manure_kg_2010
+LU_nni_cat$n_manure_kg_RCP8.5H = 
+  LU_nni_cat$change_ratio_crop_RCP8.5H * LU_nni_cat$n_manure_kg_2010
+
+# Get area weighted N
+LU_nni_cat$n_manure_kgsqkm_RCP4.5G = 
+  LU_nni_cat$n_manure_kg_RCP4.5G / LU_nni_cat$CatAreaSqKm
+LU_nni_cat$n_manure_kgsqkm_RCP8.5G = 
+  LU_nni_cat$n_manure_kg_RCP8.5G / LU_nni_cat$CatAreaSqKm
+LU_nni_cat$n_manure_kgsqkm_RCP4.5H = 
+  LU_nni_cat$n_manure_kg_RCP4.5H / LU_nni_cat$CatAreaSqKm
+LU_nni_cat$n_manure_kgsqkm_RCP8.5H = 
+  LU_nni_cat$n_manure_kg_RCP8.5H / LU_nni_cat$CatAreaSqKm
+
+# Change
+LU_nni_cat$change_n_manure_kgsqkm_RCP4.5G = LU_nni_cat$n_manure_kgsqkm_RCP4.5G - LU_nni_cat$n_manure_kg_2010
+LU_nni_cat$change_n_manure_kgsqkm_RCP8.5G = LU_nni_cat$n_manure_kgsqkm_RCP8.5G - LU_nni_cat$n_manure_kg_2010
+LU_nni_cat$change_n_manure_kgsqkm_RCP4.5H = LU_nni_cat$n_manure_kgsqkm_RCP4.5H - LU_nni_cat$n_manure_kg_2010
+LU_nni_cat$change_n_manure_kgsqkm_RCP8.5H = LU_nni_cat$n_manure_kgsqkm_RCP8.5H - LU_nni_cat$n_manure_kg_2010
+
+
+summary(LU_nni_cat$n_manure_kg_2010)
+summary(LU_nni_cat$n_manure_kg_RCP4.5G)
+summary(LU_nni_cat$n_manure_kg_RCP8.5G)
+summary(LU_nni_cat$n_manure_kg_RCP4.5H)
+summary(LU_nni_cat$n_manure_kg_RCP8.5H)
+
+summary(LU_nni_cat$n_manure_kgsqkm)
+summary(LU_nni_cat$n_manure_kgsqkm_RCP4.5G)
+summary(LU_nni_cat$n_manure_kgsqkm_RCP8.5G)
+summary(LU_nni_cat$n_manure_kgsqkm_RCP4.5H)
+summary(LU_nni_cat$n_manure_kgsqkm_RCP8.5H)
+
+summary(LU_nni_cat$change_n_manure_kgsqkm_RCP4.5G)
+
+```
+
+# CBNF (HUC12)
 ```{r}
 
 # 
@@ -2591,9 +2881,62 @@ summary(LU_nni_hu12$n_crop_fix_kgsqkm_RCP8.5H)
 
 ```
 
+# CBNF (Catchment)
+```{r}
+
+# 
+
+# Get mass of N 2010
+LU_nni_cat$n_crop_fix_kg_2010 = 
+  LU_nni_cat$n_cf_2010cat #* LU_nni_cat$CatAreaSqKm # units are kg
+
+# Get mass of N in 2050
+# LU_nni_cat$n_crop_fix_kg_RCP4.5G = 
+#   LU_nni_cat$change_ratio_ag_RCP4.5G * LU_nni_cat$n_crop_fix_kg_2010
+# LU_nni_cat$n_crop_fix_kg_RCP8.5G = 
+#   LU_nni_cat$change_ratio_ag_RCP8.5G * LU_nni_cat$n_crop_fix_kg_2010
+# LU_nni_cat$n_crop_fix_kg_RCP4.5H = 
+#   LU_nni_cat$change_ratio_ag_RCP4.5H * LU_nni_cat$n_crop_fix_kg_2010
+# LU_nni_cat$n_crop_fix_kg_RCP8.5H = 
+#   LU_nni_cat$change_ratio_ag_RCP8.5H * LU_nni_cat$n_crop_fix_kg_2010
+
+LU_nni_cat$n_crop_fix_kg_RCP4.5G = 
+  LU_nni_cat$change_ratio_crop_RCP4.5G * LU_nni_cat$n_crop_fix_kg_2010
+LU_nni_cat$n_crop_fix_kg_RCP8.5G = 
+  LU_nni_cat$change_ratio_crop_RCP8.5G * LU_nni_cat$n_crop_fix_kg_2010
+LU_nni_cat$n_crop_fix_kg_RCP4.5H = 
+  LU_nni_cat$change_ratio_crop_RCP4.5H * LU_nni_cat$n_crop_fix_kg_2010
+LU_nni_cat$n_crop_fix_kg_RCP8.5H = 
+  LU_nni_cat$change_ratio_crop_RCP8.5H * LU_nni_cat$n_crop_fix_kg_2010
+
+# Get area weighted N
+LU_nni_cat$n_crop_fix_kgsqkm_RCP4.5G = 
+  LU_nni_cat$n_crop_fix_kg_RCP4.5G / LU_nni_cat$CatAreaSqKm
+LU_nni_cat$n_crop_fix_kgsqkm_RCP8.5G = 
+  LU_nni_cat$n_crop_fix_kg_RCP8.5G / LU_nni_cat$CatAreaSqKm
+LU_nni_cat$n_crop_fix_kgsqkm_RCP4.5H = 
+  LU_nni_cat$n_crop_fix_kg_RCP4.5H / LU_nni_cat$CatAreaSqKm
+LU_nni_cat$n_crop_fix_kgsqkm_RCP8.5H = 
+  LU_nni_cat$n_crop_fix_kg_RCP8.5H / LU_nni_cat$CatAreaSqKm
 
 
-# Crop Removal
+summary(LU_nni_cat$n_crop_fix_kg_2010)
+summary(LU_nni_cat$n_crop_fix_kg_RCP4.5G)
+summary(LU_nni_cat$n_crop_fix_kg_RCP8.5G)
+summary(LU_nni_cat$n_crop_fix_kg_RCP4.5H)
+summary(LU_nni_cat$n_crop_fix_kg_RCP8.5H)
+
+#summary(LU_nni_cat$n_crop_fix_kgsqkm)
+summary(LU_nni_cat$n_crop_fix_kgsqkm_RCP4.5G)
+summary(LU_nni_cat$n_crop_fix_kgsqkm_RCP8.5G)
+summary(LU_nni_cat$n_crop_fix_kgsqkm_RCP4.5H)
+summary(LU_nni_cat$n_crop_fix_kgsqkm_RCP8.5H)
+
+
+```
+
+
+# Crop Removal (HUC12)
 ```{r}
 
 # Get mass of N 2010
@@ -2648,9 +2991,64 @@ summary(LU_nni_hu12$n_crop_rem_kgsqkm_RCP8.5H)
 ```
 
 
+# Crop Removal (Catchment)
+```{r}
+
+# Get mass of N 2010
+LU_nni_cat$n_crop_rem_kg_2010 = 
+  LU_nni_cat$n_cr_2010cat #* LU_nni_cat$CatAreaSqKm # units are kg
+
+# Get mass of N in 2050
+# LU_nni_cat$n_crop_rem_kg_RCP4.5G = 
+#   LU_nni_cat$change_ratio_ag_RCP4.5G * LU_nni_cat$n_crop_rem_kg_2010
+# LU_nni_cat$n_crop_rem_kg_RCP8.5G = 
+#   LU_nni_cat$change_ratio_ag_RCP8.5G * LU_nni_cat$n_crop_rem_kg_2010
+# LU_nni_cat$n_crop_rem_kg_RCP4.5H = 
+#   LU_nni_cat$change_ratio_ag_RCP4.5H * LU_nni_cat$n_crop_rem_kg_2010
+# LU_nni_cat$n_crop_rem_kg_RCP8.5H = 
+#   LU_nni_cat$change_ratio_ag_RCP8.5H * LU_nni_cat$n_crop_rem_kg_2010
+
+LU_nni_cat$n_crop_rem_kg_RCP4.5G = 
+  LU_nni_cat$change_ratio_crop_RCP4.5G * LU_nni_cat$n_crop_rem_kg_2010
+LU_nni_cat$n_crop_rem_kg_RCP8.5G = 
+  LU_nni_cat$change_ratio_crop_RCP8.5G * LU_nni_cat$n_crop_rem_kg_2010
+LU_nni_cat$n_crop_rem_kg_RCP4.5H = 
+  LU_nni_cat$change_ratio_crop_RCP4.5H * LU_nni_cat$n_crop_rem_kg_2010
+LU_nni_cat$n_crop_rem_kg_RCP8.5H = 
+  LU_nni_cat$change_ratio_crop_RCP8.5H * LU_nni_cat$n_crop_rem_kg_2010
 
 
-# Human (demand & Waste)
+# Get area weighted N
+LU_nni_cat$n_crop_rem_kgsqkm_RCP4.5G = 
+  LU_nni_cat$n_crop_rem_kg_RCP4.5G / LU_nni_cat$CatAreaSqKm
+LU_nni_cat$n_crop_rem_kgsqkm_RCP8.5G = 
+  LU_nni_cat$n_crop_rem_kg_RCP8.5G / LU_nni_cat$CatAreaSqKm
+LU_nni_cat$n_crop_rem_kgsqkm_RCP4.5H = 
+  LU_nni_cat$n_crop_rem_kg_RCP4.5H / LU_nni_cat$CatAreaSqKm
+LU_nni_cat$n_crop_rem_kgsqkm_RCP8.5H = 
+  LU_nni_cat$n_crop_rem_kg_RCP8.5H / LU_nni_cat$CatAreaSqKm
+
+
+summary(LU_nni_cat$n_crop_rem_kg_2010)
+summary(LU_nni_cat$n_crop_rem_kg_RCP4.5G)
+summary(LU_nni_cat$n_crop_rem_kg_RCP8.5G)
+summary(LU_nni_cat$n_crop_rem_kg_RCP4.5H)
+summary(LU_nni_cat$n_crop_rem_kg_RCP8.5H)
+
+summary(LU_nni_cat$n_crop_rem_kgsqkm)
+summary(LU_nni_cat$n_crop_rem_kgsqkm_RCP4.5G)
+summary(LU_nni_cat$n_crop_rem_kgsqkm_RCP8.5G)
+summary(LU_nni_cat$n_crop_rem_kgsqkm_RCP4.5H)
+summary(LU_nni_cat$n_crop_rem_kgsqkm_RCP8.5H)
+
+
+
+```
+
+
+
+
+# Human (demand & Waste) HUC12
 * Need to fix issue of zero pop density where StreamCat has Pop Value and NNI has human demand value
 * From QA Checklist metadata tab, "popdens_2010_nm2" = population density (#/m2) in 2010
 * There is no population_2010 listed in the metadata, so this field must be the pop density (same with "population_RCP4.5GISS", etc.)
@@ -2744,6 +3142,111 @@ summary(popden_hu12$n_human_food_waste_kg_RCP4.5G)
 
 
 #popden_hu12 = MapData[complete.cases(MapData[,c("Variable")]),] 
+
+```
+
+
+
+# Human (demand & Waste) Catchment
+* Need to fix issue of zero pop density where StreamCat has Pop Value and NNI has human demand value
+* From QA Checklist metadata tab, "popdens_2010_nm2" = population density (#/m2) in 2010
+* There is no population_2010 listed in the metadata, so this field must be the pop density (same with "population_RCP4.5GISS", etc.)
+```{r}
+
+
+popden_cat = merge(popden_cat_[,c('COMID','population_2010','population_RCP4.5GISS',
+                                    'population_RCP4.5Hadgem','population_RCP8.5Hadgem',
+                                    'change_population_RCP4.5GISS',
+                                    'change_population_RCP4.5Hadgem',
+                                    'change_population_RCP8.5Hadgem')],
+                    unique(StreamCat_cats[,c("COMID","CatAreaSqKm","n_hw_2010cat",
+                                             'PopDen2010Cat')]),by='COMID')
+
+#popden_cat = merge(popden_cat,StreamCat_HU12[,c('HUC12','PopDen2010Cat')],by='HUC12') 
+
+#popden_cat$Pop2010Cat = popden_cat$PopDen2010Cat * popden_cat$area_sqkm
+
+popden_cat$pop_den_2010 = popden_cat$population_2010 * 10^6 #converts the current untis of #/m2 to #/km2)
+popden_cat$pop_den_RCP4.5G = popden_cat$population_RCP4.5GISS * 10^6 #converts the current untis of #/m2 to #/km2 
+#popden_cat$pop_den_RCP8.5G = popden_cat$population_RCP8.5GISS * 10^6 #converts the current untis of #/m2 to #/km2  this data isn't available
+popden_cat$pop_den_RCP4.5H = popden_cat$population_RCP4.5Hadgem * 10^6 #converts the current untis of #/m2 to #/km2 
+popden_cat$pop_den_RCP8.5H = popden_cat$population_RCP8.5Hadgem  * 10^6 #converts the current untis of #/m2 to #/km2 
+
+# Calculate Change Ratio (the multiplier for calculating how much mass of food changed)
+popden_cat$change_ratio_pop_RCP4.5G = 
+  popden_cat$pop_den_RCP4.5G / popden_cat$pop_den_2010 #popden_cat$population_2010
+popden_cat$change_ratio_pop_RCP4.5H = 
+  popden_cat$pop_den_RCP4.5H / popden_cat$pop_den_2010 #popden_cat$population_2010
+popden_cat$change_ratio_pop_RCP8.5H = 
+  popden_cat$pop_den_RCP8.5H / popden_cat$pop_den_2010 # popden_cat$population_2010
+
+# If Change in Pop is zero, convert change ratio to zero
+popden_cat$change_ratio_pop_RCP4.5G = 
+  ifelse(popden_cat$change_population_RCP4.5GISS==0,0,popden_cat$change_ratio_pop_RCP4.5G)
+popden_cat$change_ratio_pop_RCP4.5H = 
+  ifelse(popden_cat$change_population_RCP4.5Hadgem==0,0,popden_cat$change_ratio_pop_RCP4.5H)
+popden_cat$change_ratio_pop_RCP8.5H = 
+  ifelse(popden_cat$change_population_RCP8.5Hadgem==0,0,popden_cat$change_ratio_pop_RCP8.5H)
+
+
+# Verify if change ratio is same when use pop density (yes it does)
+# popden_cat$change_ratio_pop_RCP4.5G_ = 
+#   popden_cat$pop_den_RCP4.5G / popden_cat$pop_den_2010
+# summary(popden_cat$change_ratio_pop_RCP4.5G) 
+# summary(popden_cat$change_ratio_pop_RCP4.5G_) 
+
+# Get mass of N 2010
+popden_cat$n_human_food_waste_kg_2010 = 
+  popden_cat$n_hw_2010cat # * popden_cat$area_sqkm units already kg
+# popden_cat$n_human_food_dem_kg_2010 = 
+#   popden_cat$n_human_food_dem_kgsqkm * popden_cat$area_sqkm
+
+# Get mass of N in 2050
+popden_cat$n_human_food_waste_kg_RCP4.5G = 
+  popden_cat$change_ratio_pop_RCP4.5G * popden_cat$n_human_food_waste_kg_2010
+popden_cat$n_human_food_waste_kg_RCP4.5H = 
+  popden_cat$change_ratio_pop_RCP4.5H * popden_cat$n_human_food_waste_kg_2010
+popden_cat$n_human_food_waste_kg_RCP8.5H = 
+  popden_cat$change_ratio_pop_RCP8.5H * popden_cat$n_human_food_waste_kg_2010
+
+# popden_cat$n_human_food_dem_kg_RCP4.5G = 
+#   popden_cat$change_ratio_pop_RCP4.5G * popden_cat$n_human_food_dem_kg_2010
+# popden_cat$n_human_food_dem_kg_RCP4.5H = 
+#   popden_cat$change_ratio_pop_RCP4.5H * popden_cat$n_human_food_dem_kg_2010
+# popden_cat$n_human_food_dem_kg_RCP8.5H = 
+#   popden_cat$change_ratio_pop_RCP8.5H * popden_cat$n_human_food_dem_kg_2010
+
+# Get area normalized value
+popden_cat$n_human_food_waste_kgsqkm_RCP4.5G = 
+  popden_cat$n_human_food_waste_kg_RCP4.5G / popden_cat$CatAreaSqKm
+popden_cat$n_human_food_waste_kgsqkm_RCP4.5H = 
+  popden_cat$n_human_food_waste_kg_RCP4.5H / popden_cat$CatAreaSqKm
+popden_cat$n_human_food_waste_kgsqkm_RCP8.5H = 
+  popden_cat$n_human_food_waste_kg_RCP8.5H / popden_cat$CatAreaSqKm
+
+# popden_cat$n_human_food_dem_kgsqkm_RCP4.5G = 
+#   popden_cat$n_human_food_dem_kg_RCP4.5G / popden_cat$CatAreaSqKm
+# popden_cat$n_human_food_dem_kgsqkm_RCP4.5H = 
+#   popden_cat$n_human_food_dem_kg_RCP4.5H / popden_cat$CatAreaSqKm
+# popden_cat$n_human_food_dem_kgsqkm_RCP8.5H = 
+#   popden_cat$n_human_food_dem_kg_RCP8.5H / popden_cat$CatAreaSqKm
+
+
+# Remove rows where value is NA or Inf
+popden_cat$n_human_food_waste_kg_RCP4.5G[is.infinite(popden_cat$n_human_food_waste_kg_RCP4.5G)] = NA
+popden_cat$n_human_food_waste_kg_RCP4.5H[is.infinite(popden_cat$n_human_food_waste_kg_RCP4.5H)] = NA
+popden_cat$n_human_food_waste_kg_RCP8.5H[is.infinite(popden_cat$n_human_food_waste_kg_RCP8.5H)] = NA
+
+popden_cat$n_human_food_waste_kgsqkm_RCP4.5G[is.infinite(popden_cat$n_human_food_waste_kgsqkm_RCP4.5G)] = NA
+popden_cat$n_human_food_waste_kgsqkm_RCP4.5H[is.infinite(popden_cat$n_human_food_waste_kgsqkm_RCP4.5H)] = NA
+popden_cat$n_human_food_waste_kgsqkm_RCP8.5H[is.infinite(popden_cat$n_human_food_waste_kgsqkm_RCP8.5H)] = NA
+
+summary(popden_cat$n_human_food_waste_kgsqkm_RCP4.5G)
+
+summary(popden_cat$n_human_food_dem_kg_RCP4.5H)
+
+
+#popden_cat = MapData[complete.cases(MapData[,c("Variable")]),] 
 
 ```
 
@@ -2885,7 +3388,7 @@ end_time <- Sys.time(); end_time - start_time
 
 #--------------------------------------------------------------------------------------
 
-# N Surplus Calc HUC12
+# N Surp Calc HUC12
 * N Surplus = N inputs – N outputs
 * N inputs = N Deposition + Fertilizer N + Livestock Manure N + Fixation N + Human Waste N  
 * N outputs = N from crop removal	
@@ -2914,6 +3417,13 @@ n_cols = c('HUC12'
            ,'n_farm_fert_kgsqkm_RCP8.5H','n_manure_kgsqkm_RCP8.5H'
            ,'n_crop_fix_kgsqkm_RCP8.5H','n_crop_rem_kgsqkm_RCP8.5H'
            ,'Pct_forest_RCP8.5H'#,'Pct_ag_land_RCP8.5H'
+           
+           ,'Pct_crop_land_2010'
+           ,'Pct_crop_land_RCP4.5G','Pct_crop_land_RCP8.5G'
+           ,'Pct_crop_land_RCP4.5H','Pct_crop_land_RCP8.5H'
+           ,'Pct_crop_pasture_land_2010'
+           ,'Pct_crop_pasture_land_RCP4.5G','Pct_crop_pasture_land_RCP8.5G'
+           ,'Pct_crop_pasture_land_RCP4.5H','Pct_crop_pasture_land_RCP8.5H'
            )
 
 setdiff(n_cols,colnames(LU_nni_hu12)) # gives not matching
@@ -3031,26 +3541,194 @@ NDATA_huc12$change_N_ag_surp_RCP8.5H = NDATA_huc12$N_ag_surp_RCP8.5H - NDATA_huc
 
 ```
 
-# N Surp Catchments
+# N Surp Calc Catchments
 ```{r}
 
+c_cols1 = c('COMID','n_dep_2010cat','n_ff_2010cat','n_lw_2010cat'
+           ,'n_cf_2010cat','n_cr_2010cat'#,'n_hw_2010cat'
+           ,'n_dep_2010ws','n_ff_2010ws','n_lw_2010ws'
+           ,'n_cf_2010ws','n_cr_2010ws','n_hw_2010ws'
+           ,'n_dep_2017cat','n_ff_2017cat','n_lw_2017cat'
+           ,'n_cf_2017cat','n_cr_2017cat','n_hw_2017cat'
+           ,'n_dep_2017ws','n_ff_2017ws','n_lw_2017ws'
+           ,'n_cf_2017ws','n_cr_2017ws','n_hw_2017ws'
+           ,'WsAreaSqKm'
+)
 
-StreamCat_cats
+c_cols2 = c('COMID','n_farm_fert_kgsqkm_RCP4.5G','n_manure_kgsqkm_RCP4.5G'
+           ,'n_crop_fix_kgsqkm_RCP4.5G','n_crop_rem_kgsqkm_RCP4.5G'
+           ,'Pct_forest_RCP4.5G'
+           
+           ,'n_farm_fert_kgsqkm_RCP8.5G','n_manure_kgsqkm_RCP8.5G'
+           ,'n_crop_fix_kgsqkm_RCP8.5G','n_crop_rem_kgsqkm_RCP8.5G'
+           ,'Pct_forest_RCP8.5G'
+           
+           ,'n_farm_fert_kgsqkm_RCP4.5H','n_manure_kgsqkm_RCP4.5H'
+           ,'n_crop_fix_kgsqkm_RCP4.5H','n_crop_rem_kgsqkm_RCP4.5H'
+           ,'Pct_forest_RCP4.5H'
+           
+           ,'n_farm_fert_kgsqkm_RCP8.5H','n_manure_kgsqkm_RCP8.5H'
+           ,'n_crop_fix_kgsqkm_RCP8.5H','n_crop_rem_kgsqkm_RCP8.5H'
+           ,'Pct_forest_RCP8.5H'
+           
+           ,'Pct_crop_land_2010'
+           ,'Pct_crop_land_RCP4.5G','Pct_crop_land_RCP8.5G'
+           ,'Pct_crop_land_RCP4.5H','Pct_crop_land_RCP8.5H'
+           ,'Pct_crop_pasture_land_2010'
+           ,'Pct_crop_pasture_land_RCP4.5G','Pct_crop_pasture_land_RCP8.5G'
+           ,'Pct_crop_pasture_land_RCP4.5H','Pct_crop_pasture_land_RCP8.5H'
+           )
+  
 
-StreamCat_cats$n_ag_surp_kg_2017cat = 
-  StreamCat_cats$n_ff_2017cat + # fertilizer (kg)
-  StreamCat_cats$n_lw_2017cat +  # Manure (kg)
-  StreamCat_cats$n_cf_2017cat - # Crop fixation (kg)
-  StreamCat_cats$n_cr_2017cat # crop removal (kg)
+NDATA_cat = merge(StreamCat_cats[,c_cols1],LU_nni_cat[,c_cols2],by='COMID')
+NDATA_cat = merge(NDATA_cat,dep_N_Cat,by='COMID')
+NDATA_cat = merge(NDATA_cat,popden_cat,by='COMID')
 
-StreamCat_cats$n_ag_surp_kg_2017ws = 
-  StreamCat_cats$n_ff_2017ws + # fertilizer (kg)
-  StreamCat_cats$n_lw_2017ws +  # Manure (kg)
-  StreamCat_cats$n_cf_2017ws - # Crop fixation (kg)
-  StreamCat_cats$n_cr_2017ws # crop removal (kg)
+NDATA_cat$n_surp_kg_2010cat = 
+  NDATA_cat$n_dep_2010cat + # Tot N dep (kg)
+  NDATA_cat$n_ff_2010cat + # fertilizer (kg)
+  NDATA_cat$n_lw_2010cat +  # Manure (kg)
+  NDATA_cat$n_cf_2010cat + # Crop fixation (kg)
+  NDATA_cat$n_hw_2010cat - # human waste (kg)
+  NDATA_cat$n_cr_2010cat # crop removal (kg)
 
-StreamCat_cats$n_ag_surp_kgsqkm_2017cat= StreamCat_cats$n_ag_surp_kg_2017cat / StreamCat_cats$CatAreaSqKm
-StreamCat_cats$n_ag_surp_kgsqkm_2017ws= StreamCat_cats$n_ag_surp_kg_2017ws / StreamCat_cats$WsAreaSqKm
+NDATA_cat$n_surp_kg_2010ws = 
+  NDATA_cat$n_dep_2010ws + # Tot N dep (kg)
+  NDATA_cat$n_ff_2010ws + # fertilizer (kg)
+  NDATA_cat$n_lw_2010ws +  # Manure (kg)
+  NDATA_cat$n_cf_2010ws + # Crop fixation (kg)
+  NDATA_cat$n_hw_2010ws - # human waste (kg)
+  NDATA_cat$n_cr_2010ws # crop removal (kg)
+
+NDATA_cat$n_surp_kg_2017cat = 
+  NDATA_cat$n_dep_2017cat + # Tot N dep (kg)
+  NDATA_cat$n_ff_2017cat + # fertilizer (kg)
+  NDATA_cat$n_lw_2017cat +  # Manure (kg)
+  NDATA_cat$n_cf_2017cat + # Crop fixation (kg)
+  NDATA_cat$n_hw_2017cat - # human waste (kg)
+  NDATA_cat$n_cr_2017cat # crop removal (kg)
+
+NDATA_cat$n_surp_kg_2017ws = 
+  NDATA_cat$n_dep_2017ws + # Tot N dep (kg)
+  NDATA_cat$n_ff_2017ws + # fertilizer (kg)
+  NDATA_cat$n_lw_2017ws +  # Manure (kg)
+  NDATA_cat$n_cf_2017ws + # Crop fixation (kg)
+  NDATA_cat$n_hw_2017ws - # human waste (kg)
+  NDATA_cat$n_cr_2017ws # crop removal (kg)
+
+#-------------------------------------------------------------------------------
+NDATA_cat$n_ag_surp_kg_2010cat = 
+  NDATA_cat$n_ff_2010cat + # fertilizer (kg)
+  NDATA_cat$n_lw_2010cat +  # Manure (kg)
+  NDATA_cat$n_cf_2010cat - # Crop fixation (kg)
+  NDATA_cat$n_cr_2010cat # crop removal (kg)
+
+NDATA_cat$n_ag_surp_kg_2010ws = 
+  NDATA_cat$n_ff_2010ws + # fertilizer (kg)
+  NDATA_cat$n_lw_2010ws +  # Manure (kg)
+  NDATA_cat$n_cf_2010ws - # Crop fixation (kg)
+  NDATA_cat$n_cr_2010ws # crop removal (kg)
+
+NDATA_cat$n_ag_surp_kg_2017cat = 
+  NDATA_cat$n_ff_2017cat + # fertilizer (kg)
+  NDATA_cat$n_lw_2017cat +  # Manure (kg)
+  NDATA_cat$n_cf_2017cat - # Crop fixation (kg)
+  NDATA_cat$n_cr_2017cat # crop removal (kg)
+
+NDATA_cat$n_ag_surp_kg_2017ws = 
+  NDATA_cat$n_ff_2017ws + # fertilizer (kg)
+  NDATA_cat$n_lw_2017ws +  # Manure (kg)
+  NDATA_cat$n_cf_2017ws - # Crop fixation (kg)
+  NDATA_cat$n_cr_2017ws # crop removal (kg)
+
+NDATA_cat$n_surp_kgsqkm_2010cat= 
+  NDATA_cat$n_surp_kg_2010cat / NDATA_cat$CatAreaSqKm
+NDATA_cat$n_surp_kgsqkm_2010ws= 
+  NDATA_cat$n_surp_kg_2010ws / NDATA_cat$WsAreaSqKm
+
+NDATA_cat$n_surp_kgsqkm_2017cat= 
+  NDATA_cat$n_surp_kg_2017cat / NDATA_cat$CatAreaSqKm
+NDATA_cat$n_surp_kgsqkm_2017ws= 
+  NDATA_cat$n_surp_kg_2017ws / NDATA_cat$WsAreaSqKm
+
+NDATA_cat$n_ag_surp_kgsqkm_2010cat= 
+  NDATA_cat$n_surp_kg_2010cat / NDATA_cat$CatAreaSqKm
+NDATA_cat$n_surp_kgsqkm_2010ws= 
+  NDATA_cat$n_surp_kg_2010ws / NDATA_cat$WsAreaSqKm
+
+NDATA_cat$n_surp_kgsqkm_2017cat= 
+  NDATA_cat$n_surp_kg_2017cat / NDATA_cat$CatAreaSqKm
+NDATA_cat$n_surp_kgsqkm_2017ws= 
+  NDATA_cat$n_surp_kg_2017ws / NDATA_cat$WsAreaSqKm
+
+
+#-------------------------------------------------------------------------------
+# Calculation for 2050 variables
+NDATA_cat$n_surp_kgsqkm_RCP4.5G = 
+  NDATA_cat$totalN_2050ctl_kgNha * 100 + # Tot N dep
+  NDATA_cat$n_farm_fert_kgsqkm_RCP4.5G + # fertilizer
+  NDATA_cat$n_manure_kgsqkm_RCP4.5G +  # Manure
+  NDATA_cat$n_crop_fix_kgsqkm_RCP4.5G + # Crop fixation
+  NDATA_cat$n_human_food_waste_kgsqkm_RCP4.5G - # human waste
+  NDATA_cat$n_crop_rem_kgsqkm_RCP4.5G # crop removal
+
+NDATA_cat$n_surp_kgsqkm_RCP8.5G = 
+  NDATA_cat$totalN_2050ctl_kgNha * 100 + # Tot N dep 
+  NDATA_cat$n_farm_fert_kgsqkm_RCP8.5G + # fertilizer 
+  NDATA_cat$n_manure_kgsqkm_RCP8.5G +  # Manure 
+  NDATA_cat$n_crop_fix_kgsqkm_RCP8.5G + # Crop fixation
+  NDATA_cat$n_human_food_waste_kgsqkm_RCP4.5G - # human waste #!!! don't have 8.5G
+  NDATA_cat$n_crop_rem_kgsqkm_RCP8.5G # crop removal
+
+NDATA_cat$n_surp_kgsqkm_RCP4.5H = 
+  NDATA_cat$totalN_2050ctl_kgNha * 100 + # Tot N dep
+  NDATA_cat$n_farm_fert_kgsqkm_RCP4.5H + # fertilizer
+  NDATA_cat$n_manure_kgsqkm_RCP4.5H +  # Manure
+  NDATA_cat$n_crop_fix_kgsqkm_RCP4.5H + # Crop fixation
+  NDATA_cat$n_human_food_waste_kgsqkm_RCP4.5H - # human waste
+  NDATA_cat$n_crop_rem_kgsqkm_RCP4.5H # crop removal
+
+NDATA_cat$n_surp_kgsqkm_RCP8.5H = 
+  NDATA_cat$totalN_2050ctl_kgNha * 100 + # Tot N dep 
+  NDATA_cat$n_farm_fert_kgsqkm_RCP8.5H + # fertilizer 
+  NDATA_cat$n_manure_kgsqkm_RCP8.5H +  # Manure 
+  NDATA_cat$n_crop_fix_kgsqkm_RCP8.5H + # Crop fixation
+  NDATA_cat$n_human_food_waste_kgsqkm_RCP8.5H - # human waste
+  NDATA_cat$n_crop_rem_kgsqkm_RCP8.5H # crop removal
+
+#----
+
+NDATA_cat$n_ag_surp_kgsqkm_RCP4.5G = 
+  NDATA_cat$n_farm_fert_kgsqkm_RCP4.5G + # fertilizer
+  NDATA_cat$n_manure_kgsqkm_RCP4.5G +  # Manure
+  NDATA_cat$n_crop_fix_kgsqkm_RCP4.5G - # Crop fixation
+  NDATA_cat$n_crop_rem_kgsqkm_RCP4.5G # crop removal
+
+NDATA_cat$n_ag_surp_kgsqkm_RCP8.5G = 
+  NDATA_cat$n_farm_fert_kgsqkm_RCP8.5G + # fertilizer 
+  NDATA_cat$n_manure_kgsqkm_RCP8.5G +  # Manure 
+  NDATA_cat$n_crop_fix_kgsqkm_RCP8.5G - # Crop fixation
+  NDATA_cat$n_crop_rem_kgsqkm_RCP8.5G # crop removal
+
+NDATA_cat$n_ag_surp_kgsqkm_RCP4.5H = 
+  NDATA_cat$n_farm_fert_kgsqkm_RCP4.5H + # fertilizer
+  NDATA_cat$n_manure_kgsqkm_RCP4.5H +  # Manure
+  NDATA_cat$n_crop_fix_kgsqkm_RCP4.5H - # Crop fixation
+  NDATA_cat$n_crop_rem_kgsqkm_RCP4.5H # crop removal
+
+NDATA_cat$n_ag_surp_kgsqkm_RCP8.5H = 
+  NDATA_cat$n_farm_fert_kgsqkm_RCP8.5H + # fertilizer 
+  NDATA_cat$n_manure_kgsqkm_RCP8.5H +  # Manure 
+  NDATA_cat$n_crop_fix_kgsqkm_RCP8.5H - # Crop fixation
+  NDATA_cat$n_crop_rem_kgsqkm_RCP8.5H # crop removal
+
+summary(NDATA_cat$n_surp_kg_2010cat)
+summary(NDATA_cat$n_surp_kg_2010ws)
+summary(NDATA_cat$n_surp_kgsqkm_2010cat)
+summary(NDATA_cat$n_surp_kgsqkm_2010ws)
+
+summary(NDATA_cat$n_surp_kgsqkm_RCP4.5G)
+
 
 ```
 
@@ -5262,7 +5940,7 @@ ggplot(data=VarImpDF,
 # Current Prediction Dataset
 ```{r}
 
-predCat_cur = StreamCat_sub
+predCat_cur = StreamCat_cats
 predHUC_cur = merge(StreamCat_HU12,NNI17[,c("HUC12","n_surplus_kgsqkm","n_ag_surplus_kgsqkm")],by='HUC12')
 
 # Add on Treatment & assign zero treatment to locations without PWS
@@ -5305,8 +5983,8 @@ predHUC_fut = merge(predHUC_fut,imprv_hu12,by='HUC12')
 predHUC_fut$N_Surp_kgsqkm_2017ws = predHUC_fut$N_surp_RCP4.5G
 predHUC_fut$N_Surp_kgsqkm_2017cat = predHUC_fut$N_surp_RCP4.5G
 
-predHUC_fut$PctCrop2019Ws = predHUC_fut$Pct_ag_land_RCP4.5G
-predHUC_fut$PctCrop2019Cat = predHUC_fut$Pct_ag_land_RCP4.5G
+predHUC_fut$PctCrop2019Ws = predHUC_fut$Pct_crop_pasture_land_RCP4.5G
+predHUC_fut$PctCrop2019Cat = predHUC_fut$Pct_crop_pasture_land_RCP4.5G
 
 predHUC_fut$FertWs = predHUC_fut$n_farm_fert_kgsqkm_RCP4.5G
 predHUC_fut$FertCat = predHUC_fut$n_farm_fert_kgsqkm_RCP4.5G
@@ -5372,9 +6050,11 @@ predHUC_fut = merge(predHUC_fut,imprv_hu12,by='HUC12')
 
 predHUC_fut$n_ags_2017ws = predHUC_fut$N_ag_surp_RCP8.5G
 predHUC_fut$N_Surp_2017ws = predHUC_fut$N_surp_RCP8.5G
-predHUC_fut$n_surplus_kgsqkm = predHUC_fut$N_surp_RCP4.5G
+predHUC_fut$n_surplus_kgsqkm = predHUC_fut$N_surp_RCP8.5G
 
-predHUC_fut$PctCrop2019Cat = predHUC_fut$Pct_ag_land_RCP8.5G
+predHUC_fut$PctCrop2019Ws = predHUC_fut$Pct_crop_pasture_land_RCP8.5G
+predHUC_fut$PctCrop2019Cat = predHUC_fut$Pct_crop_pasture_land_RCP8.5G
+
 predHUC_fut$FertCat = predHUC_fut$n_farm_fert_kgsqkm_RCP8.5G
 predHUC_fut$PopDen2010Cat = predHUC_fut$pop_den_RCP4.5G  #!!! 8.5G value isn't available, so using 4.5
 predHUC_fut$PctImp2016Cat = predHUC_fut$impervious_2050_RCP8.5GISS
@@ -5497,19 +6177,18 @@ predHUC_8.5H = merge(predHUC_fut,StreamCat_HU12[,statkeeps],by='HUC12')
 ```{r}
 
 
-predCat_fut = StreamCat_cats
-#predHUC_fut = merge(predHUC_fut,dep_N_hu12,by='HUC12')
-#predHUC_fut = merge(predHUC_fut,prec_hu12,by='HUC12')
-#predHUC_fut = merge(predHUC_fut,temp_hu12,by='HUC12')
-#predHUC_fut = merge(predHUC_fut,imprv_hu12,by='HUC12')
-#predHUC_fut = merge(predHUC_fut,popden_hu12,by='HUC12')
+#predCat_fut = StreamCat_cats
+predCat_fut = NDATA_cat
+predCat_fut = merge(predCat_fut,prec_Cat,by='COMID')
+predCat_fut = merge(predCat_fut,temp_Cat,by='COMID')
+predCat_fut = merge(predCat_fut,imprv_cat,by='COMID')
+
+predCat_fut$N_Surp_kgsqkm_2017ws = predCat_fut$n_surp_kgsqkm_RCP4.5G
+predCat_fut$N_Surp_kgsqkm_2017cat = predCat_fut$n_surp_kgsqkm_RCP4.5G
 
 
-predCat_fut$N_Surp_kgsqkm_2017ws = predCat_fut$N_surp_RCP4.5G
-predCat_fut$N_Surp_kgsqkm_2017cat = predCat_fut$N_surp_RCP4.5G
-
-predCat_fut$PctCrop2019Ws = predCat_fut$Pct_ag_land_RCP4.5G
-predCat_fut$PctCrop2019Cat = predCat_fut$Pct_ag_land_RCP4.5G
+predCat_fut$PctCrop2019Ws = predCat_fut$Pct_crop_pasture_land_RCP4.5G
+predCat_fut$PctCrop2019Cat = predCat_fut$Pct_crop_pasture_land_RCP4.5G
 
 predCat_fut$FertWs = predCat_fut$n_farm_fert_kgsqkm_RCP4.5G
 predCat_fut$FertCat = predCat_fut$n_farm_fert_kgsqkm_RCP4.5G
@@ -5545,19 +6224,21 @@ predCat_fut$precip9120cat = predCat_fut$precip_2050_mm_RCP4.5GISS
 #"N_Surp_2017ws" "n_ags_2017ws" 
 
 # Merge on static variables
-statkeeps = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
+statkeeps = c('COMID','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
-              'PctCrop2019Ws','PctCrop2019Cat',
               'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
               'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat',
               'ElevWs','AgKffactWs','AgDrain_pctWs','BFIWs',
               'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
               'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
               'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs')
-predCat_4.5G = merge(predCat_fut,StreamCat_HU12[,statkeeps],by='HUC12')
+predCat_4.5G = merge(predCat_fut,StreamCat_cats[,statkeeps],by='COMID')
 
 
-write.csv(predCat_4.5G, file = paste0(future_dir,'Data/Dataset_Future_Catchment_4.5GISS.csv'), row.names=F)
+#write.csv(predCat_4.5G, file = paste0(future_dir,'Data/Dataset_Future_Catchment_4.5GISS.csv'), row.names=F)
+write_fst(predCat_4.5G, paste0(future_dir,'Data/Dataset_Future_Catchment_4.5GISS.fst'), compress = 50, uniform_encoding = TRUE)
+
+
 
 ```
 
@@ -7260,6 +7941,7 @@ end_time <- Sys.time(); end_time - start_time
 
 ```
 
+#-
 # Raster Map 4.5G Catchment
 ```{r}
 
@@ -7268,11 +7950,12 @@ end_time <- Sys.time(); end_time - start_time
 #()()()()()()()()()()()()()()()()
 map_title = "Future Probability of Violations (RCP4.5 GISS)"
 
-predictData = predHUC_4.5G  
+predictData = predCat_4.5G  
 #rfc_model = rfc_sw_p
 #rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
 #rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_HU12.rds'))
-rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
+rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_Cat.rds'))
+#rfc_model = readRDS(paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_GW_Cat.rds'))
 
 #()()()()()()()()()()()()()()()()
 
