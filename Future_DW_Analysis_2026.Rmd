@@ -47,6 +47,42 @@ editor_options:
 * area_17-institutional_landuse_RCP8.5Hadgem = area (m2) of institutional land use in catchment in 2050_rcp8.5hadgem
 * area_18-transport_landuse_RCP8.5Hadgem = area (m2) of transportation land use in catchment in 2050_rcp8.5hadgem
 
+#--
+# Missing HUC12 issue
+```{r}
+
+# RTI Deliverable
+T4f_dir = "C:/Users/mpennino/OneDrive - Environmental Protection Agency (EPA)/Contracts/StRAP4_contracts/Future_DW_NO3/Deliverables/Task_4_Temp_Precip/Final_deliverables/"
+prec_hu12 = read.csv(paste0(T4f_dir,"climate_precip_HUC_final.csv")) # 
+prec_hu12$HUC12 = formatC(as.numeric(as.character(prec_hu12$HUC12)), width = 12, format = "f",flag = "0",digits = 0) # add zero in front of any 
+
+# Michael's Data
+data_dir = "C:/Users/MPennino/OneDrive - Environmental Protection Agency (EPA)/Data/"
+huc12_df = read.csv(paste0(data_dir, 'Spatial/huc12_df.csv'))
+huc12_df$HUC12 = formatC(as.numeric(as.character(huc12_df$HUC12)), width = 12, format = "f",flag = "0",digits = 0) # add zero in front of any 
+
+
+# Compare
+nrow(prec_hu12) # 83073
+nrow(huc12_df) # 82915
+
+# Check for overlap
+selectedRows  = (prec_hu12$HUC12 %in% huc12_df$HUC12) # rows not matching
+hucMatch = prec_hu12[selectedRows,] #
+
+selectedRows  = (!prec_hu12$HUC12 %in% huc12_df$HUC12) # rows not matching
+hucNoMatch = prec_hu12[selectedRows,] #
+
+
+nrow(prec_hu12) - nrow(huc12_df) 
+nrow(hucMatch) # 82915
+nrow(hucNoMatch) # 158
+
+
+
+```
+
+
 
 #--------------------------------
 # Function for AUC
@@ -69,6 +105,8 @@ roc.area<-function(probp,prabs) {
 
 data_dir = "C:/Users/MPennino/OneDrive - Environmental Protection Agency (EPA)/Projects/Data/"
 future_dir = "C:/Users/MPennino/OneDrive - Environmental Protection Agency (EPA)/Projects/StRAPs/StRAP4/SSWR.405.1_Future_DW/"
+future_dir2 = "C:/Users/MPennino/OneDrive - Environmental Protection Agency (EPA)/Projects/OASES/Data/Future_NO3/"
+
 
 
 library(USA.state.boundaries)
@@ -106,6 +144,7 @@ states_boundary = st_union(states_conus)
 library(lubridate)
 
 m_dir = 'C:/Users/mpennino/OneDrive - Environmental Protection Agency (EPA)/'
+
 
 data_dir2 = "C:/Users/MPennino/OneDrive - Environmental Protection Agency (EPA)/Data/"
 PWS_inventory_gwsw = read.csv(paste0(data_dir2, 'PWS_inventory_gwsw_2023Q4.csv'))
@@ -836,7 +875,7 @@ T5f_dir = "C:/Users/mpennino/OneDrive - Environmental Protection Agency (EPA)/Co
 
 
 dep_N_hu12 = read.csv(paste0(T5f_dir,"dep_N_HUC_final.csv"))
-dep_S_hu12 = read.csv(paste0(T5f_dir,"dep_S_HUC_final.csv"))
+#dep_S_hu12 = read.csv(paste0(T5f_dir,"dep_S_HUC_final.csv"))
 
 dep_N_Cat = read.csv(paste0(T5f_dir,"dep_N_cat_final.csv"))
 #dep_S_Cat = read.csv(paste0(T5f_dir,"dep_S_cat_final.csv"))
@@ -844,7 +883,7 @@ dep_N_Cat = read.csv(paste0(T5f_dir,"dep_N_cat_final.csv"))
 # Add leading zeros
 dep_N_hu12$HUC12 = formatC(as.numeric(as.character(dep_N_hu12$HUC12)), width = 12, format = "f",flag = "0",digits = 0) 
 
-dep_S_hu12$HUC12 = formatC(as.numeric(as.character(dep_S_hu12$HUC12)), width = 12, format = "f",flag = "0",digits = 0) 
+#dep_S_hu12$HUC12 = formatC(as.numeric(as.character(dep_S_hu12$HUC12)), width = 12, format = "f",flag = "0",digits = 0) 
 
 
 names(dep_N_Cat)[which(colnames(dep_N_Cat)=="Catchment.ID")] = "COMID"
@@ -1044,6 +1083,11 @@ NNI17$n_surplus_kgsqkm =
   NNI17$n_human_food_waste - 
   NNI17$n_crop_rem_kgsqkm
 
+NNI17$n_ag_surplus_kgsqkm = 
+  NNI17$n_farm_fert_kgsqkm +
+  NNI17$n_manure_kgsqkm + 
+  NNI17$n_crop_fix_kgsqkm -
+  NNI17$n_crop_rem_kgsqkm
 
 ```
 
@@ -1354,37 +1398,37 @@ huc12_df = as.data.frame(huc12_s)
 # Catchment Points
 ```{r}
 
-# sp_dir = "D:/Data/Spatial/NHDPlusV2_Centroids/"
-# Cat01_p = st_read(paste0(sp_dir,'NHDPlusV2_Cat01_centroid_point.shp'))
-# Cat02_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat02_centroid_point.shp'))
-# Cat03N_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat03N_centroid_point.shp'))
-# Cat03S_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat03S_centroid_point.shp'))
-# Cat03W_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat03W_centroid_point.shp'))
-# Cat04_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat04_centroid_point.shp'))
-# Cat05_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat05_centroid_point.shp'))
-# Cat06_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat06_centroid_point.shp'))
-# Cat07_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat07_centroid_point.shp'))
-# Cat08_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat08_centroid_point.shp'))
-# Cat09_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat09_centroid_point.shp'))
-# Cat10L_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat10L_centroid_point.shp'))
-# Cat10U_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat10U_centroid_point.shp'))
-# Cat11_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat11_centroid_point.shp'))
-# Cat12_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat12_centroid_point.shp'))
-# Cat13_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat13_centroid_point.shp'))
-# Cat14_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat14_centroid_point.shp'))
-# Cat15_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat15_centroid_point.shp'))
-# Cat16_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat16_centroid_point.shp'))
-# Cat17_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat17_centroid_point.shp'))
-# Cat18_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat18_centroid_point.shp'))
-# 
-# cats_p = rbind(Cat01_p,Cat02_p,Cat03N_p,Cat03S_p,Cat03W_p,
-#                Cat04_p,Cat05_p,Cat06_p,Cat07_p,Cat08_p,Cat09_p,
-#                Cat10L_p,Cat10U_p,Cat11_p,Cat12_p,Cat13_p,Cat14_p,
-#                Cat15_p,Cat16_p,Cat17_p,Cat18_p)
-# 
-# 
-# projection(cats_p)
-# projection(states_conus)
+sp_dir = "D:/Data/Spatial/NHDPlusV2_Centroids/"
+Cat01_p = st_read(paste0(sp_dir,'NHDPlusV2_Cat01_centroid_point.shp'))
+Cat02_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat02_centroid_point.shp'))
+Cat03N_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat03N_centroid_point.shp'))
+Cat03S_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat03S_centroid_point.shp'))
+Cat03W_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat03W_centroid_point.shp'))
+Cat04_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat04_centroid_point.shp'))
+Cat05_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat05_centroid_point.shp'))
+Cat06_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat06_centroid_point.shp'))
+Cat07_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat07_centroid_point.shp'))
+Cat08_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat08_centroid_point.shp'))
+Cat09_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat09_centroid_point.shp'))
+Cat10L_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat10L_centroid_point.shp'))
+Cat10U_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat10U_centroid_point.shp'))
+Cat11_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat11_centroid_point.shp'))
+Cat12_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat12_centroid_point.shp'))
+Cat13_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat13_centroid_point.shp'))
+Cat14_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat14_centroid_point.shp'))
+Cat15_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat15_centroid_point.shp'))
+Cat16_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat16_centroid_point.shp'))
+Cat17_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat17_centroid_point.shp'))
+Cat18_p=st_read(paste0(sp_dir,'NHDPlusV2_Cat18_centroid_point.shp'))
+
+cats_p = rbind(Cat01_p,Cat02_p,Cat03N_p,Cat03S_p,Cat03W_p,
+               Cat04_p,Cat05_p,Cat06_p,Cat07_p,Cat08_p,Cat09_p,
+               Cat10L_p,Cat10U_p,Cat11_p,Cat12_p,Cat13_p,Cat14_p,
+               Cat15_p,Cat16_p,Cat17_p,Cat18_p)
+
+
+projection(cats_p)
+projection(states_conus)
 
 ```
 
@@ -2023,7 +2067,7 @@ TEMP = merge(StreamCat_HU12,LU_nni_hu12,by='HUC12')
 TEMP$crop_hay_past_streamcat = TEMP$PctHay2019Cat + TEMP$PctCrop2019Cat
 TEMP$Pct_crop_land_2010_iclus = TEMP$Pct_crop_land_2010
 
-ag_nlcd_2050 = read.csv(paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP_GISS_HADGEM_HU12.csv'))
+ag_nlcd_2050 = read.csv(paste0(future_dir2,'SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP_GISS_HADGEM_HU12.csv'))
 # Add leading zeros
 ag_nlcd_2050$HUC12 = formatC(as.numeric(as.character(ag_nlcd_2050$HUC12)), width = 12, format = "f",flag = "0",digits = 0) 
 
@@ -2111,7 +2155,7 @@ TEMP = merge(StreamCat_cats,LU_nni_cat,by='COMID')
 TEMP$crop_hay_past_streamcat = TEMP$PctHay2019Cat + TEMP$PctCrop2019Cat
 TEMP$Pct_crop_land_2010_iclus = TEMP$Pct_crop_land_2010
 
-ag_nlcd_2050. = read.csv(paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP_GISS_HADGEM_COMID.csv'))
+ag_nlcd_2050. = read.csv(paste0(future_dir2,'SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP_GISS_HADGEM_COMID.csv'))
 
 chg_ratio = merge(ag_nlcd_2050., TEMP[,c('COMID','crop_hay_past_streamcat')],by='COMID')
 
@@ -2190,7 +2234,7 @@ LU_nni_cat = merge(LU_nni_cat,chg_ratio,by='COMID')
 ```
 
 
-#-------------------------------------------------------------------------------
+
 # Change Ratio - Ag Land
 * Commenting out because using spmodel version of change ratio
 ```{r}
@@ -2321,7 +2365,7 @@ LU_nni_cat = merge(LU_nni_cat,chg_ratio,by='COMID')
 
 ```
 
-
+#-------------------------------------------------------------------------------
 # Farm Fert (HUC12)
 ```{r}
 
@@ -2804,7 +2848,7 @@ popden_hu12 = merge(popden_hu12_[,c('HUC12','population_2010','population_RCP4.5
                                     'change_population_RCP4.5GISS',
                                     'change_population_RCP4.5Hadgem',
                                     'change_population_RCP8.5Hadgem')],
-                    unique(NNI[,c("HUC12","area_sqkm","n_human_food_waste_kgsqkm",
+                    unique(NNI17[,c("HUC12","area_sqkm","n_human_food_waste_kgsqkm",
                                   "n_human_food_dem_kgsqkm")]),by='HUC12')
 
 popden_hu12 = merge(popden_hu12,StreamCat_HU12[,c('HUC12','PopDen2010Cat')],by='HUC12') 
@@ -3283,7 +3327,7 @@ NDATA_huc12$change_N_ag_surp_RCP8.5G = NDATA_huc12$N_ag_surp_RCP8.5G - NDATA_huc
 NDATA_huc12$change_N_ag_surp_RCP4.5H = NDATA_huc12$N_ag_surp_RCP4.5H - NDATA_huc12$N_ag_surp_kgsqkm
 NDATA_huc12$change_N_ag_surp_RCP8.5H = NDATA_huc12$N_ag_surp_RCP8.5H - NDATA_huc12$N_ag_surp_kgsqkm
 
-write_fst(NDATA_huc12, paste0(future_dir,'Data/NDATA_huc12.fst'), compress = 50, uniform_encoding = TRUE)
+write_fst(NDATA_huc12, paste0(future_dir2,'NDATA_huc12.fst'), compress = 50, uniform_encoding = TRUE)
 
 
 ```
@@ -3476,7 +3520,7 @@ summary(NDATA_cat$n_surp_kgsqkm_2010ws)
 
 summary(NDATA_cat$n_surp_kgsqkm_RCP4.5G)
 
-write_fst(NDATA_cat, paste0(future_dir,'Data/NDATA_cat.fst'), compress = 50, uniform_encoding = TRUE)
+write_fst(NDATA_cat, paste0(future_dir2,'NDATA_cat.fst'), compress = 50, uniform_encoding = TRUE)
 
 ```
 
@@ -3524,8 +3568,11 @@ write_fst(NDATA_cat, paste0(future_dir,'Data/NDATA_cat.fst'), compress = 50, uni
 
 rf_sw = merge(viol_sw_hu12,subset(NDATA_huc12,select=-c(PopDen2010Cat)),by='HUC12')
 rf_sw = merge(rf_sw,StreamCat_HU12,by='HUC12')
-rf_sw = merge(rf_sw,subset(NNI17,select=-c(n_human_food_waste_kgsqkm,n_crop_rem_kgsqkm,
-                                           n_farm_fert_kgsqkm,n_manure_kgsqkm,n_crop_fix_kgsqkm)),by='HUC12')
+rf_sw = merge(rf_sw,subset(NNI17,
+                           select=-c(n_human_food_waste_kgsqkm,
+                                     n_crop_rem_kgsqkm,
+                                     n_farm_fert_kgsqkm,
+                                     n_manure_kgsqkm,n_crop_fix_kgsqkm)),by='HUC12')
 #rf_sw = merge(rf_sw,N_treat_huc12_sw,by='HUC12')
 
 
@@ -3561,33 +3608,33 @@ keeps = c("HUC12","viol_freq"
           )
 
 #slim
-keeps = c("HUC12","viol_freq"
-
-          # Land Use
-          #,"PopDen2010Ws","PctCrop2019Ws"#,"PctForest2019Ws"
-          #,"AgKffactWs"
-          #,"AgDrain_pctWs"#,"PctImp2016Ws"
-
-          # Weather/Hydro
-          ,"precip9120ws","tmean9120ws","BFIWs"#,"Precip_Minus_EVTWs"
-          #,"WaterInputWs","wdrw_LDWs"#,"HydrlCondWs"
-          #,"permws"#,"runoffWs"
-
-          # N Inputs
-          ,"N_TW2012Ws","RockNWs"#,"FertWs","CBNFWs","ManureWs"
-          #,"n_human_food_waste_kgsqkm"
-          #,'Septic_km2Cat'
-          ,"n_surplus_kgsqkm"#
-          #,"n_ag_surplus_kgsqkm"#,"N_Surp_2017ws","NANI_kgkm2_Ws"
-          #,"n_crop_rem_kgsqkm"
-          #,'n_farm_fert_kgsqkm','n_manure_kgsqkm'#,'n_crop_fix_kgsqkm'
-
-          # Other
-          ,"Fe2O3Ws"#,"ElevWs"#,"WtDepWs","SandWs"
-          #,"NHDslope_Pct_Ws"#,"Hillslope_PctWs"#,"S_TW2012Ws","rckdepWs"
-          #,'Nitrate_Treatment_freq'
-  
-          )
+# keeps = c("HUC12","viol_freq"
+# 
+#           # Land Use
+#           #,"PopDen2010Ws","PctCrop2019Ws"#,"PctForest2019Ws"
+#           #,"AgKffactWs"
+#           #,"AgDrain_pctWs"#,"PctImp2016Ws"
+# 
+#           # Weather/Hydro
+#           ,"precip9120ws","tmean9120ws","BFIWs"#,"Precip_Minus_EVTWs"
+#           #,"WaterInputWs","wdrw_LDWs"#,"HydrlCondWs"
+#           #,"permws"#,"runoffWs"
+# 
+#           # N Inputs
+#           ,"N_TW2012Ws","RockNWs"#,"FertWs","CBNFWs","ManureWs"
+#           #,"n_human_food_waste_kgsqkm"
+#           #,'Septic_km2Cat'
+#           ,"n_surplus_kgsqkm"#
+#           #,"n_ag_surplus_kgsqkm"#,"N_Surp_2017ws","NANI_kgkm2_Ws"
+#           #,"n_crop_rem_kgsqkm"
+#           #,'n_farm_fert_kgsqkm','n_manure_kgsqkm'#,'n_crop_fix_kgsqkm'
+# 
+#           # Other
+#           ,"Fe2O3Ws"#,"ElevWs"#,"WtDepWs","SandWs"
+#           #,"NHDslope_Pct_Ws"#,"Hillslope_PctWs"#,"S_TW2012Ws","rckdepWs"
+#           #,'Nitrate_Treatment_freq'
+# 
+#           )
 
 
 rf_sw2 = unique(na.omit(rf_sw[,keeps]))
@@ -3606,7 +3653,7 @@ levels(factor(rf_sw2$Viol_Class))
 rf_sw3 = subset(rf_sw2,select=-c(HUC12,viol_freq))
 nrow(rf_sw3) # 7279
 
-#write.csv(rf_sw2, file = paste0(future_dir,'Data/Dataset_RF_Model_SW_HUC12.csv'), row.names=F)
+write.csv(rf_sw2, file = paste0(future_dir2,'Dataset_RF_Model_SW_HUC12.csv'), row.names=F)
 
 data_sw_huc_ = rf_sw2
 data_sw_huc = rf_sw3
@@ -3688,7 +3735,7 @@ levels(factor(rf_gw2$Viol_Class))
 rf_gw3 = subset(rf_gw2,select=-c(HUC12,viol_freq))
 nrow(rf_gw3) # 32253
 
-write.csv(rf_gw2, file = paste0(future_dir,'Data/Dataset_RF_Model_GW_HUC12.csv'), row.names=F)
+write.csv(rf_gw2, file = paste0(future_dir2,'Dataset_RF_Model_GW_HUC12.csv'), row.names=F)
 
 data_gw_huc_ = rf_gw2
 data_gw_huc = rf_gw3
@@ -3759,7 +3806,7 @@ rf_sw3 = subset(rf_sw2,select=-c(COMID,viol_freq))
 nrow(rf_sw3) # 14749
 nrow(rf_sw3[rf_sw3$Viol_Class ==1,]) # 67
 
-write.csv(rf_sw2, file = paste0(future_dir,'Data/Dataset_RF_Model_SW_COMIDS.csv'), row.names=F)
+write.csv(rf_sw2, file = paste0(future_dir2,'Dataset_RF_Model_SW_COMIDS.csv'), row.names=F)
 
 data_sw_cat_ = rf_sw2
 data_sw_cat = rf_sw3
@@ -3835,7 +3882,7 @@ nrow(rf_gw3) # 115797
 
 nrow(rf_gw3[rf_gw3$Viol_Class ==1,]) # 1745
 
-#write.csv(rf_gw2, file = paste0(future_dir,'Data/Dataset_RF_Model_GW_COMIDS.csv'), row.names=F)
+write.csv(rf_gw2, file = paste0(future_dir2,'Dataset_RF_Model_GW_COMIDS.csv'), row.names=F)
 
 data_gw_cat_ = rf_gw2
 data_gw_cat = rf_gw3
@@ -3906,7 +3953,7 @@ rfr_sw2 = unique(na.omit(rfr_sw[,keeps]))
 rfr_sw3 = subset(rfr_sw2,select=-c(HUC12))
 nrow(rfr_sw3) # 7279
 
-#write.csv(rfr_sw2, file = paste0(future_dir,'Data/Dataset_RF_Model_SW_HUC12.csv'), row.names=F)
+#write.csv(rfr_sw2, file = paste0(future_dir,'Data/Dataset_RF_Model_SW_conc_HUC12.csv'), row.names=F)
 
 dataR_sw_huc_ = rfr_sw2
 dataR_sw_huc = rfr_sw3
@@ -3953,7 +4000,7 @@ setdiff(keeps,colnames(rfr_gw)) # gives not matching
 rfr_gw3 = subset(rfr_gw2,select=-c(HUC12))
 nrow(rfr_gw3) # 7544
 
-#write.csv(rfr_gw2, file = paste0(future_dir,'Data/Dataset_RF_Model_GW_HUC12.csv'), row.names=F)
+#write.csv(rfr_gw2, file = paste0(future_dir,'Data/Dataset_RF_Model_GW_conc_HUC12.csv'), row.names=F)
 
 dataR_gw_huc_ = rfr_gw2
 dataR_gw_huc = rfr_gw3
@@ -5753,64 +5800,64 @@ ggplot(data=VarImpDF,
 #install.packages("neuralnet")
 #install.packages("caret")  # Used for data splitting
 
-DATA = data_sw_huc
-
-library(neuralnet)
-library(caret)
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Prepare and Scale the Data
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# Min-Max Scaling function
-normalize <- function(x) {
-  return ((x - min(x)) / (max(x) - min(x)))
-}
-
-# Apply normalization to the predictor variables
-scaled_features <- as.data.frame(lapply(DATA[, 1:7], normalize))
-scaled_data <- cbind(scaled_features, Viol_Class = DATA$Viol_Class)
-
-# Split into Training (80%) and Testing (20%) sets
-set.seed(123)
-train_index <- createDataPartition(scaled_data$Viol_Class, p = 0.8, list = FALSE)
-train_set <- scaled_data[train_index, ]
-test_set  <- scaled_data[-train_index, ]
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Train the Neural Network
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# Formulate the equation
-formula <- Viol_Class ~ precip9120ws + tmean9120ws + BFIWs + N_TW2012Ws + RockNWs + n_surplus_kgsqkm + Fe2O3Ws
-
-# Train the model
-start_time <- Sys.time()
-nn_model <- neuralnet(
-  formula,
-  data = train_set,
-  hidden = 3,            # Number of neurons in hidden layers
-  linear.output = FALSE, # FALSE because this is a classification task
-  err.fct = "ce",        # Cross-entropy loss function for classification
-  act.fct = "logistic"   # Sigmoid activation function
-)
-end_time <- Sys.time(); end_time - start_time
-
-# Plot the trained neural network structure
-plot(nn_model)
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Evaluate the Model
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# Generate predictions on the test set
-predictions <- predict(nn_model, test_set[, 1:7])
-
-# Convert probabilities to binary class outcomes (threshold = 0.5)
-predicted_classes <- ifelse(predictions > 0.5, 1, 0)
-
-# Create a Confusion Matrix to check accuracy
-confusionMatrix(factor(predicted_classes), factor(test_set$Viol_Class))
+# DATA = data_sw_huc
+# 
+# library(neuralnet)
+# library(caret)
+# 
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# # Prepare and Scale the Data
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 
+# # Min-Max Scaling function
+# normalize <- function(x) {
+#   return ((x - min(x)) / (max(x) - min(x)))
+# }
+# 
+# # Apply normalization to the predictor variables
+# scaled_features <- as.data.frame(lapply(DATA[, 1:7], normalize))
+# scaled_data <- cbind(scaled_features, Viol_Class = DATA$Viol_Class)
+# 
+# # Split into Training (80%) and Testing (20%) sets
+# set.seed(123)
+# train_index <- createDataPartition(scaled_data$Viol_Class, p = 0.8, list = FALSE)
+# train_set <- scaled_data[train_index, ]
+# test_set  <- scaled_data[-train_index, ]
+# 
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# # Train the Neural Network
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 
+# # Formulate the equation
+# formula <- Viol_Class ~ precip9120ws + tmean9120ws + BFIWs + N_TW2012Ws + RockNWs + n_surplus_kgsqkm + Fe2O3Ws
+# 
+# # Train the model
+# start_time <- Sys.time()
+# nn_model <- neuralnet(
+#   formula,
+#   data = train_set,
+#   hidden = 3,            # Number of neurons in hidden layers
+#   linear.output = FALSE, # FALSE because this is a classification task
+#   err.fct = "ce",        # Cross-entropy loss function for classification
+#   act.fct = "logistic"   # Sigmoid activation function
+# )
+# end_time <- Sys.time(); end_time - start_time
+# 
+# # Plot the trained neural network structure
+# plot(nn_model)
+# 
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# # Evaluate the Model
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 
+# # Generate predictions on the test set
+# predictions <- predict(nn_model, test_set[, 1:7])
+# 
+# # Convert probabilities to binary class outcomes (threshold = 0.5)
+# predicted_classes <- ifelse(predictions > 0.5, 1, 0)
+# 
+# # Create a Confusion Matrix to check accuracy
+# confusionMatrix(factor(predicted_classes), factor(test_set$Viol_Class))
 
 ```
 
@@ -5824,12 +5871,18 @@ confusionMatrix(factor(predicted_classes), factor(test_set$Viol_Class))
 # Upload files
 ```{r}
 
+m_dir = 'C:/Users/mpennino/OneDrive - Environmental Protection Agency (EPA)/'
+data_dir = "C:/Users/MPennino/OneDrive - Environmental Protection Agency (EPA)/Projects/Data/"
+future_dir = "C:/Users/MPennino/OneDrive - Environmental Protection Agency (EPA)/Projects/StRAPs/StRAP4/SSWR.405.1_Future_DW/"
+future_dir2 = "C:/Users/MPennino/OneDrive - Environmental Protection Agency (EPA)/Projects/OASES/Data/Future_NO3/"
+
+
 StreamCat_cats = read_fst(paste0(future_dir,'Data/StreamCat_Vars_Future_Analysis.fst'))
 StreamCat_HU12 = read_fst(paste0(future_dir,'Data/StreamCat_Vars_Future_Analysis_HUC12.fst'))
 
 NNI17 = read.csv(paste0(m_dir,'Data/NNI_kgskm_2017_HUC12_5yrAvg_prior.csv'))
-NDATA_huc12 = read.csv(paste0(m_dir,'Data/NDATA_huc12.fst'))
-NDATA_cat = read.csv(paste0(m_dir,'Data/NDATA_cat.fst'))
+NDATA_huc12 = read.fst(paste0(future_dir2,'NDATA_huc12.fst'))
+NDATA_cat = read.fst(paste0(future_dir2,'NDATA_cat.fst'))
 
 
   
@@ -5838,9 +5891,41 @@ NNI17$HUC12 = formatC(as.numeric(as.character(NNI17$HUC12)), width = 12, format 
 StreamCat_HU12$HUC12 = formatC(as.numeric(as.character(StreamCat_HU12$HUC12)), width = 12, format = "f",flag = "0",digits = 0)  
 NDATA_huc12$HUC12 = formatC(as.numeric(as.character(NDATA_huc12$HUC12)), width = 12, format = "f",flag = "0",digits = 0)  
 
-  
+NNI17$n_surplus_kgsqkm = 
+  NNI17$n_atm_dep_kgsqkm + 
+  NNI17$n_farm_fert_kgsqkm +
+  NNI17$n_manure_kgsqkm + 
+  NNI17$n_crop_fix_kgsqkm +
+  NNI17$n_human_food_waste - 
+  NNI17$n_crop_rem_kgsqkm
+
+NNI17$n_ag_surplus_kgsqkm = 
+  NNI17$n_farm_fert_kgsqkm +
+  NNI17$n_manure_kgsqkm + 
+  NNI17$n_crop_fix_kgsqkm -
+  NNI17$n_crop_rem_kgsqkm
   
 ```
+
+# Save as parquet
+* So that I can upload in python
+```{r}
+
+library(arrow)
+
+# predCat_cur = StreamCat_cats
+# predHUC_cur = merge(StreamCat_HU12,NNI17[,c("HUC12","n_surplus_kgsqkm","n_ag_surplus_kgsqkm")],by='HUC12')
+# 
+# 
+# 
+# # Save data frame as a Parquet file
+# arrow::write_parquet(predHUC_cur, paste0(future_dir2,"current_NO3_predictors_HUC12.parquet"))
+# arrow::write_parquet(predCat_cur, paste0(future_dir2,"current_NO3_predictors_catchments.parquet"))
+# 
+# write.csv(predHUC_cur, paste0(data_dir,"current_NO3_predictors_HUC12.csv"), row.names=F)
+
+```
+
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -5892,6 +5977,7 @@ predHUC_fut = merge(predHUC_fut,imprv_hu12,by='HUC12')
 
 predHUC_fut$N_Surp_kgsqkm_2017ws = predHUC_fut$N_surp_RCP4.5G
 predHUC_fut$N_Surp_kgsqkm_2017cat = predHUC_fut$N_surp_RCP4.5G
+predHUC_fut$n_surplus_kgsqkm = predHUC_fut$N_surp_RCP4.5G
 
 predHUC_fut$PctCrop2019Ws = predHUC_fut$Pct_crop_pasture_land_RCP4.5G
 predHUC_fut$PctCrop2019Cat = predHUC_fut$Pct_crop_pasture_land_RCP4.5G
@@ -5930,22 +6016,24 @@ predHUC_fut$precip9120cat = predHUC_fut$precip_2050_mm_RCP4.5GISS
 #"N_Surp_2017ws" "n_ags_2017ws" 
 
 # Merge on static variables
-statkeeps = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
-              'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
-              'PctCrop2019Ws','PctCrop2019Cat',
-              'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
-              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat',
-              'ElevWs','AgKffactWs','AgDrain_pctWs','BFIWs',
-              'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
-              'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
-              'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs')
+statkeeps = c('HUC12','ElevCat','ElevWs','AgKffactCat','AgKffactWs',
+              'AgDrain_pctCat','AgDrain_pctWs','BFICat','BFIWs',
+              'Precip_Minus_EVTCat','Precip_Minus_EVTWs',
+              'WaterInputCat','WaterInputWs','wdrw_LDCat','wdrw_LDWs',
+              'permcat','permws',
+              'runoffcat','RockNCat','RockNWs','Fe2O3Cat','Fe2O3Ws',
+              'SandCat','SandWs','NHDslope_Pct_Cat','NHDslope_Pct_Ws',
+              'WtDepCat','Hillslope_PctCat','HydrlCondCat',
+              'runoffws','Septic_km2Cat',
+              'WtDepWs','Hillslope_PctWs','HydrlCondWs')
 predHUC_4.5G = merge(predHUC_fut,StreamCat_HU12[,statkeeps],by='HUC12')
 
 
 #write.csv(predHUC_4.5G, file = paste0(future_dir,'Data/Dataset_Future_HUC12_4.5GISS.csv'), row.names=F)
-write_fst(predHUC_4.5G, paste0(future_dir,'Data/Dataset_Future_HUC12_4.5GISS.fst'), compress = 50, uniform_encoding = TRUE)
+#write_fst(predHUC_4.5G, paste0(future_dir,'Data/Dataset_Future_HUC12_4.5GISS.fst'), compress = 50, uniform_encoding = TRUE)
 
 
+write_parquet(predHUC_4.5G, paste0(future_dir2,"future_RCP4.5G_NO3_predictors_HUC12.parquet"))
 
 ```
 
@@ -5981,18 +6069,20 @@ predHUC_fut$precip9120ws = predHUC_fut$precip_2050_mm_RCP8.5GISS
 #"N_Surp_2017ws" "n_ags_2017ws" 
 
 # Merge on static variables
-statkeeps = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
-              'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
-              'PctCrop2019Ws','PctCrop2019Cat',
-              'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
-              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat',
-              'ElevWs','AgKffactWs','AgDrain_pctWs','BFIWs',
-              'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
-              'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
-              'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs')
+statkeeps = c('HUC12','ElevCat','ElevWs','AgKffactCat','AgKffactWs',
+              'AgDrain_pctCat','AgDrain_pctWs','BFICat','BFIWs',
+              'Precip_Minus_EVTCat','Precip_Minus_EVTWs',
+              'WaterInputCat','WaterInputWs','wdrw_LDCat','wdrw_LDWs',
+              'permcat','permws',
+              'runoffcat','RockNCat','RockNWs','Fe2O3Cat','Fe2O3Ws',
+              'SandCat','SandWs','NHDslope_Pct_Cat','NHDslope_Pct_Ws',
+              'WtDepCat','Hillslope_PctCat','HydrlCondCat',
+              'runoffws','Septic_km2Cat',
+              'WtDepWs','Hillslope_PctWs','HydrlCondWs')
 predHUC_8.5G = merge(predHUC_fut,StreamCat_HU12[,statkeeps],by='HUC12')
 
 
+write_parquet(predHUC_8.5G, paste0(future_dir2,"future_RCP8.5G_NO3_predictors_HUC12.parquet"))
 
 ```
 
@@ -6026,18 +6116,20 @@ predHUC_fut$precip9120ws = predHUC_fut$precip_2050_mm_RCP4.5Hadgem
 #"N_Surp_2017ws" "n_ags_2017ws" 
 
 # Merge on static variables
-statkeeps = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
-              'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
-              'PctCrop2019Ws','PctCrop2019Cat',
-              'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
-              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat',
-              'ElevWs','AgKffactWs','AgDrain_pctWs','BFIWs',
-              'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
-              'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
-              'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs')
+statkeeps = c('HUC12','ElevCat','ElevWs','AgKffactCat','AgKffactWs',
+              'AgDrain_pctCat','AgDrain_pctWs','BFICat','BFIWs',
+              'Precip_Minus_EVTCat','Precip_Minus_EVTWs',
+              'WaterInputCat','WaterInputWs','wdrw_LDCat','wdrw_LDWs',
+              'permcat','permws',
+              'runoffcat','RockNCat','RockNWs','Fe2O3Cat','Fe2O3Ws',
+              'SandCat','SandWs','NHDslope_Pct_Cat','NHDslope_Pct_Ws',
+              'WtDepCat','Hillslope_PctCat','HydrlCondCat',
+              'runoffws','Septic_km2Cat',
+              'WtDepWs','Hillslope_PctWs','HydrlCondWs')
 predHUC_4.5H = merge(predHUC_fut,StreamCat_HU12[,statkeeps],by='HUC12')
 
 
+write_parquet(predHUC_4.5H, paste0(future_dir2,"future_RCP4.5H_NO3_predictors_HUC12.parquet"))
 
 ```
 
@@ -6071,17 +6163,19 @@ predHUC_fut$precip9120ws = predHUC_fut$precip_2050_mm_RCP8.5Hadgem
 #"N_Surp_2017ws" "n_ags_2017ws" 
 
 # Merge on static variables
-statkeeps = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
-              'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
-              'PctCrop2019Ws','PctCrop2019Cat',
-              'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
-              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat',
-              'ElevWs','AgKffactWs','AgDrain_pctWs','BFIWs',
-              'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
-              'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
-              'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs')
+statkeeps = c('HUC12','ElevCat','ElevWs','AgKffactCat','AgKffactWs',
+              'AgDrain_pctCat','AgDrain_pctWs','BFICat','BFIWs',
+              'Precip_Minus_EVTCat','Precip_Minus_EVTWs',
+              'WaterInputCat','WaterInputWs','wdrw_LDCat','wdrw_LDWs',
+              'permcat','permws',
+              'runoffcat','RockNCat','RockNWs','Fe2O3Cat','Fe2O3Ws',
+              'SandCat','SandWs','NHDslope_Pct_Cat','NHDslope_Pct_Ws',
+              'WtDepCat','Hillslope_PctCat','HydrlCondCat',
+              'runoffws','Septic_km2Cat',
+              'WtDepWs','Hillslope_PctWs','HydrlCondWs')
 predHUC_8.5H = merge(predHUC_fut,StreamCat_HU12[,statkeeps],by='HUC12')
 
+write_parquet(predHUC_8.5H, paste0(future_dir2,"future_RCP8.5H_NO3_predictors_HUC12.parquet"))
 
 
 ```
@@ -6149,8 +6243,9 @@ predCat_4.5G = merge(predCat_fut,StreamCat_cats[,statkeeps],by='COMID')
 
 
 #write.csv(predCat_4.5G, file = paste0(future_dir,'Data/Dataset_Future_Catchment_4.5GISS.csv'), row.names=F)
-write_fst(predCat_4.5G, paste0(future_dir,'Data/Dataset_Future_Catchment_4.5GISS.fst'), compress = 50, uniform_encoding = TRUE)
+#write_fst(predCat_4.5G, paste0(future_dir2,'Dataset_Future_Catchment_4.5GISS.fst'), compress = 50, uniform_encoding = TRUE)
 
+write_parquet(predCat_4.5G, paste0(future_dir2,"Dataset_Future_Catchment_4.5GISS.parquet"))
 
 
 ```
@@ -6167,6 +6262,7 @@ NUE_INCR = 0.15
 
 #scen_NUE_HUC = NDATA_huc12
 
+
 statkeeps1 = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
               'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
@@ -6175,7 +6271,7 @@ statkeeps1 = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
               'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
               'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs',
-              'PopDen2010Ws','PctForest2019Ws','precip9120ws',
+              'PopDen2010Ws','PctForest2019Ws','precip9120ws','precip9120cat',
               'tmean9120ws','N_TW2012Ws','FertWs',
               'ManureWs','CBNFWs','PctCrop2019Cat','PctCrop2019Ws',
               'PctForest2019Cat','tmean9120cat','N_TW2012Cat'
@@ -6190,7 +6286,7 @@ statkeeps2 = c('COMID','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
               'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
               'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs',
-              'PopDen2010Ws','PctForest2019Ws','precip9120ws',
+              'PopDen2010Ws','PctForest2019Ws','precip9120ws','precip9120cat',
               'tmean9120ws','N_TW2012Ws','FertWs',
               'ManureWs','CBNFWs','PctCrop2019Cat','PctCrop2019Ws',
               'PctForest2019Cat','tmean9120cat','N_TW2012Cat'
@@ -6280,6 +6376,14 @@ summary(scen_NUE_CAT$N_surp_kgsqkm_wsNUE15)
 
 nrow(NDATA_cat[complete.cases(NDATA_cat[,c("n_surp_kgsqkm_2017ws")]),] ) # 2644008
 nrow(scen_NUE_CAT[complete.cases(scen_NUE_CAT[,c("N_surp_kgsqkm_wsNUE15")]),] ) # 2644024
+
+
+write_fst(scen_NUE_HUC, paste0(future_dir,'Data/Scenario_NUE_Incr_Dataset_HUC12.fst'), compress = 50, uniform_encoding = TRUE)
+write_fst(scen_NUE_CAT, paste0(future_dir,'Data/Scenario_NUE_Incr_Dataset_Cat.fst'), compress = 50, uniform_encoding = TRUE)
+
+write_parquet(scen_NUE_HUC, paste0(future_dir,'Data/Scenario_NUE_Incr_Dataset_HUC12.parquet'))
+write_parquet(scen_NUE_CAT, paste0(future_dir,'Data/Scenario_NUE_Incr_Dataset_Cat.parquet'))
+
 
 
 ```
@@ -7158,6 +7262,267 @@ end_time <- Sys.time(); end_time - start_time
 
 ```
 
+#*******************************************************************************
+
+# Python Results
+```{r}
+
+pyresultsBASE <- read_parquet(paste0(future_dir,"Data/torch_predictions2_HUC12.parquet"))
+pyresultsPROD <- read_parquet(paste0(future_dir,"Data/torch_pred_scenario_prod_HUC12.parquet"))
+pyresultsNUE <- read_parquet(paste0(future_dir,"Data/torch_pred_scenario_nue_HUC12.parquet"))
+
+pyresultsBASE <- read_parquet(paste0(future_dir,"Data/torch_predictions_All_HUC12_sw.parquet"))
+pyresultsPROD <- read_parquet(paste0(future_dir,"Data/torch_pred_scenario_prod_HUC12_sw.parquet"))
+pyresultsNUE <- read_parquet(paste0(future_dir,"Data/torch_pred_scenario_nue_HUC12_sw.parquet"))
+pyresultsRCP4.5G <- read_parquet(paste0(future_dir,"Data/torch_pred_scenario_fut_RCP4.5G_HUC12_sw.parquet"))
+
+#nrow(pyresultsBASE[complete.cases(pyresultsBASE[,c("Pred_Viol_Prob")]),])
+#nrow(pyresultsPROD[complete.cases(pyresultsPROD[,c("Pred_Viol_Prob")]),])
+
+pyresultsBASE$HUC12 = formatC(as.numeric(as.character(pyresultsBASE$HUC12)), width = 12, format = "f",flag = "0",digits = 0) 
+pyresultsPROD$HUC12 = formatC(as.numeric(as.character(pyresultsPROD$HUC12)), width = 12, format = "f",flag = "0",digits = 0) 
+pyresultsNUE$HUC12 = formatC(as.numeric(as.character(pyresultsNUE$HUC12)), width = 12, format = "f",flag = "0",digits = 0) 
+pyresultsRCP4.5G$HUC12 = formatC(as.numeric(as.character(pyresultsRCP4.5G$HUC12)), width = 12, format = "f",flag = "0",digits = 0) 
+
+
+```
+
+# Raster Map Current HUC12
+```{r}
+
+#()()()()()()()()()()()()()()()()
+map_title = "Current SWDW Python Probability of Violations 2020"
+#map_title = "Current GWDW Python Probability of Violations 2020"
+
+#()()()()()()()()()()()()()()()()
+
+pyresults = pyresultsBASE # pyresultsBASE, pyresultsPROD
+
+pyresults$Prediction= pyresults$Pred_Viol_Prob
+# Merge on Spatial Data
+
+map1 = merge(pyresults,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
+
+map2 = map1[complete.cases(map1[,c("Prediction")]),] 
+map2 <- st_as_sf(map2) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Prediction),]
+#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
+
+nrow(map3[map3$Prediction>0.5,]) # 19244
+100*nrow(map3[map3$Prediction>0.5,])/nrow(map3)
+summary(map3$Prediction)
+
+# Format rasters
+start_time <- Sys.time()
+map4<-st_rasterize(map3[,"Prediction"],
+                     st_as_stars(st_bbox(states_boundary),
+                                 dx = 3000, dy = 3000, values=NA_real_), na.rm=T)
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 8.113112 secs (Desktop at 1000m)
+
+
+## Plot Nitrogen Maps
+start_time <- Sys.time()
+ggplot()+
+  geom_stars(data=map4, aes(fill=Prediction))+
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  # scale_color_viridis(option="magma",name="Risk Score" 
+  #                     ,limits = c(0, 1)
+  #                     )+ # options: viridis, magma, plasma
+  binned_scale(aesthetics = "fill",
+               palette=function(x) c("#5E4FA2","#3288BD","#66C2A5","#ABDDA4","#E6F598",
+                                     "#FEE08B","#FDAE61","#F46D43","#D53E4F","#9E0142"),
+               breaks=c(.1, .2, .3, .4, .5, 0.6, .7, 0.8, 0.9)) +
+  theme (axis.text = element_blank(), axis.title = element_blank(), 
+         panel.background = element_blank(), axis.ticks = element_blank(), 
+         legend.text = element_text(size = 14), legend.title = element_text(size = 14))+
+  ggtitle(map_title)+
+  theme(plot.title = element_text(hjust=0.5))+
+  labs(fill="Risk Value")
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 33.21989 secs
+
+
+
+```
+
+# Raster Map RCP4.5 HUC12
+```{r}
+
+#()()()()()()()()()()()()()()()()
+map_title = "SWDW Python 2050 Predictions RCP 4.5"
+#map_title = "GWDW Python Productivity Scenario"
+
+#()()()()()()()()()()()()()()()()
+
+pyresults = pyresultsRCP4.5G # pyresultsBASE, pyresultsPROD
+
+pyresults$Prediction= pyresults$Pred_Viol_Prob
+# Merge on Spatial Data
+
+map1 = merge(pyresults,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
+
+map2 = map1[complete.cases(map1[,c("Prediction")]),] 
+map2 <- st_as_sf(map2) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Prediction),]
+#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
+
+nrow(map3[map3$Prediction>0.5,]) # 19244
+100*nrow(map3[map3$Prediction>0.5,])/nrow(map3)
+summary(map3$Prediction)
+
+# Format rasters
+start_time <- Sys.time()
+map4<-st_rasterize(map3[,"Prediction"],
+                     st_as_stars(st_bbox(states_boundary),
+                                 dx = 3000, dy = 3000, values=NA_real_), na.rm=T)
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 8.113112 secs (Desktop at 1000m)
+
+
+## Plot Nitrogen Maps
+start_time <- Sys.time()
+ggplot()+
+  geom_stars(data=map4, aes(fill=Prediction))+
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  # scale_color_viridis(option="magma",name="Risk Score" 
+  #                     ,limits = c(0, 1)
+  #                     )+ # options: viridis, magma, plasma
+  binned_scale(aesthetics = "fill",
+               palette=function(x) c("#5E4FA2","#3288BD","#66C2A5","#ABDDA4","#E6F598",
+                                     "#FEE08B","#FDAE61","#F46D43","#D53E4F","#9E0142"),
+               breaks=c(.1, .2, .3, .4, .5, 0.6, .7, 0.8, 0.9)) +
+  theme (axis.text = element_blank(), axis.title = element_blank(), 
+         panel.background = element_blank(), axis.ticks = element_blank(), 
+         legend.text = element_text(size = 14), legend.title = element_text(size = 14))+
+  ggtitle(map_title)+
+  theme(plot.title = element_text(hjust=0.5))+
+  labs(fill="Risk Value")
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 33.21989 secs
+
+
+
+```
+
+# Raster Map NUE HUC12
+```{r}
+
+#()()()()()()()()()()()()()()()()
+map_title = "SWDW Python NUE Scenario"
+#map_title = "GWDW Python NUE Scenario"
+
+#()()()()()()()()()()()()()()()()
+
+pyresults = pyresultsNUE # pyresultsBASE, pyresultsPROD
+
+pyresults$Prediction= pyresults$Pred_Viol_Prob
+# Merge on Spatial Data
+
+map1 = merge(pyresults,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
+
+map2 = map1[complete.cases(map1[,c("Prediction")]),] 
+map2 <- st_as_sf(map2) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Prediction),]
+#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
+
+nrow(map3[map3$Prediction>0.5,]) # 19244
+100*nrow(map3[map3$Prediction>0.5,])/nrow(map3)
+summary(map3$Prediction)
+nrow(map3)
+
+# Format rasters
+start_time <- Sys.time()
+map4<-st_rasterize(map3[,"Prediction"],
+                     st_as_stars(st_bbox(states_boundary),
+                                 dx = 3000, dy = 3000, values=NA_real_), na.rm=T)
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 8.113112 secs (Desktop at 1000m)
+
+
+## Plot Nitrogen Maps
+start_time <- Sys.time()
+ggplot()+
+  geom_stars(data=map4, aes(fill=Prediction))+
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  # scale_color_viridis(option="magma",name="Risk Score" 
+  #                     ,limits = c(0, 1)
+  #                     )+ # options: viridis, magma, plasma
+  binned_scale(aesthetics = "fill",
+               palette=function(x) c("#5E4FA2","#3288BD","#66C2A5","#ABDDA4","#E6F598",
+                                     "#FEE08B","#FDAE61","#F46D43","#D53E4F","#9E0142"),
+               breaks=c(.1, .2, .3, .4, .5, 0.6, .7, 0.8, 0.9)) +
+  theme (axis.text = element_blank(), axis.title = element_blank(), 
+         panel.background = element_blank(), axis.ticks = element_blank(), 
+         legend.text = element_text(size = 14), legend.title = element_text(size = 14))+
+  ggtitle(map_title)+
+  theme(plot.title = element_text(hjust=0.5))+
+  labs(fill="Risk Value")
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 33.21989 secs
+
+
+
+```
+
+# Raster Map Productivity HUC12
+```{r}
+
+#()()()()()()()()()()()()()()()()
+map_title = "SWDW Python Productivity Scenario"
+#map_title = "GWDW Python Productivity Scenario"
+
+#()()()()()()()()()()()()()()()()
+
+pyresults = pyresultsPROD # pyresultsBASE, pyresultsPROD
+
+pyresults$Prediction= pyresults$Pred_Viol_Prob
+# Merge on Spatial Data
+
+map1 = merge(pyresults,huc12_s[,c('HUC12','geometry')],by.x='HUC12',by.y='HUC12',all.x=T)
+
+map2 = map1[complete.cases(map1[,c("Prediction")]),] 
+map2 <- st_as_sf(map2) # added this because the above didn't retain geometry
+map3 <- map2[order(map2$Prediction),]
+#map3 <- st_transform(map3, CRS("+init=epsg:5070"))
+
+nrow(map3[map3$Prediction>0.5,]) # 19244
+100*nrow(map3[map3$Prediction>0.5,])/nrow(map3)
+summary(map3$Prediction)
+
+# Format rasters
+start_time <- Sys.time()
+map4<-st_rasterize(map3[,"Prediction"],
+                     st_as_stars(st_bbox(states_boundary),
+                                 dx = 3000, dy = 3000, values=NA_real_), na.rm=T)
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 8.113112 secs (Desktop at 1000m)
+
+
+## Plot Nitrogen Maps
+start_time <- Sys.time()
+ggplot()+
+  geom_stars(data=map4, aes(fill=Prediction))+
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  # scale_color_viridis(option="magma",name="Risk Score" 
+  #                     ,limits = c(0, 1)
+  #                     )+ # options: viridis, magma, plasma
+  binned_scale(aesthetics = "fill",
+               palette=function(x) c("#5E4FA2","#3288BD","#66C2A5","#ABDDA4","#E6F598",
+                                     "#FEE08B","#FDAE61","#F46D43","#D53E4F","#9E0142"),
+               breaks=c(.1, .2, .3, .4, .5, 0.6, .7, 0.8, 0.9)) +
+  theme (axis.text = element_blank(), axis.title = element_blank(), 
+         panel.background = element_blank(), axis.ticks = element_blank(), 
+         legend.text = element_text(size = 14), legend.title = element_text(size = 14))+
+  ggtitle(map_title)+
+  theme(plot.title = element_text(hjust=0.5))+
+  labs(fill="Risk Value")
+end_time <- Sys.time(); end_time - start_time
+# Time difference of 33.21989 secs
+
+
+
+```
 
 
 #---------------------------------------------------------------------------------
@@ -9757,6 +10122,445 @@ grid.arrange(t3,p1,m10,p2,t1,t2,m9,t7,
 grid.arrange(m9,m6,t1,m8,t11,t5,m10,t7,
              t6,p1,t9,m2,m1,t2,m7,t10,
              t4,p3,p2,p4,p5,p6,p7,p8,nrow=3,ncol=8)
+```
+
+#**
+# Python SHAP Results
+```{r}
+
+pyshap_sw <- read_parquet(paste0(future_dir,"Data/torch_SHAP_values_HUC12_All_Observed_sw.parquet"))
+pyshap_gw <- read_parquet(paste0(future_dir,"Data/torch_SHAP_values_HUC12_All_Observed_gw.parquet"))
+
+dim(pyshap_sw)
+dim(pyshap_gw)
+
+#DATA = read_parquet(paste0(future_dir,'Data/torch_balanced_dataset_GW_HUC12.parquet'))
+DATA = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_SW_HUC12.csv'))
+DATA = read.csv(paste0(future_dir,'Data/Dataset_RF_Model_GW_HUC12.csv'))
+
+# Add leading zeros
+DATA$HUC12 = formatC(as.numeric(as.character(DATA$HUC12)), width = 12, format = "f",flag = "0",digits = 0) 
+
+
+```
+
+# *SW Map-most Pos. influential variables
+```{r}
+
+maxmap = as.data.frame(pyshap_sw)
+
+# Subset out just neg SHAP values
+# Get max value per row
+maxmap$max_value = apply(maxmap, 1, max)
+
+# Find max shapley value in each row
+maxmap$max_shap<-colnames(maxmap)[apply(maxmap,1,which.max)]
+
+# Merge on HUC12 and response variable
+maxmap<-cbind(dplyr::select(DATA, c(HUC12)),maxmap)
+
+# Remove any Rows that are negative
+maxmap = maxmap[maxmap$max_value >0,]
+
+levels(factor(maxmap$max_shap)) 
+
+# Aggregate max shaps to broader categories
+maxmap <- maxmap %>%
+  mutate(max_shap2 = case_when(
+    max_shap=="AgKffactWs" | max_shap=="AgKffactCat" | max_shap=="AgDrain_pctCat" | max_shap=="AgDrain_pctWs" |
+      max_shap== "PctCrop2019Cat"|max_shap== "PctCrop2019Ws" ~ "Agricultural Land Use",
+    max_shap=="n_surplus_kgsqkm" | max_shap=="N_TW2012Cat" | max_shap=="N_Surp_2017ws"  | 
+      max_shap=="FertCat" |max_shap=="FertWs" |max_shap=="CBNFWs" |max_shap=="ManureWs" | max_shap=="n_ag_surplus_kgsqkm"~ "N Inputs",
+    max_shap=="BFIWs"  | max_shap=="runoffcat"~ "Hydrology",
+    max_shap=="Precip_Minus_EVTCat"|max_shap=="Precip_Minus_EVTWs" ~ "Precip. Surplus",
+    max_shap=="RockNCat"|max_shap=="RockNWs"  ~ "Rock N",
+    max_shap=="PctForest2019Cat" ~ "% Forest",
+    max_shap=="ElevCat"|max_shap=="ElevWs"  ~ "Elevation",
+    max_shap=="WtDepCat" ~ "Water Table Depth",
+    max_shap=="PopDen2010Cat" | max_shap=="ElevCat" | max_shap=="PctImp2016Cat"| max_shap=="WtDepCat"~ "Other",
+    max_shap=="Fe2O3Ws" | max_shap=="NHDslope_Pct_Cat" | max_shap=="NHDslope_Pct_Ws" | max_shap=="Hillslope_PctCat" | max_shap=="SandCat" | 
+      max_shap=="permcat" | max_shap=="permws" |max_shap=="HydrlCondCat"~ "Soil/Geology",
+    max_shap=="WaterInputCat" | max_shap=="wdrw_LDCat" | max_shap=="precip9120ws"| max_shap=="precip9120cat"~ "Water Inputs",
+    max_shap=="tmean9120cat"|max_shap=="tmean9120ws"  ~ "Temperature"))
+
+
+maxmap$max_shap2[is.na(maxmap$max_shap2)] <- "Other"
+
+levels(factor(maxmap$max_shap2))
+
+# Merge shapefiles with dataframe
+maxmap<-merge(maxmap,huc12_p,by="HUC12",all.x=T)
+maxmap = st_as_sf(maxmap)
+
+#maxmap<- st_transform(maxmap, CRS("+init=epsg:5070"))
+
+# Get point data for plotting
+maxmap<-cbind(maxmap, st_coordinates(st_centroid(maxmap$geometry)))
+ 
+
+mypal =c( #"Hydrology"="#56B4E9", 
+          "Water Table Depth"="#332288",
+         "Soil/Geology"="#D55E00", 
+         "Agricultural Land Use"="#F0E442", 
+         "% Forest" = "#009E73",
+         "Temperature"="#CC79A7",
+         "Rock N"="orange",
+         "Water Inputs"="#56B4E9",
+         "N Inputs"="red",
+         "Elevation"="#999999",
+         "Other" = "black")
+
+
+# Get % for each variable class
+100*nrow(maxmap[maxmap$max_shap2=='Hydrology', ])/nrow(maxmap)
+100*nrow(maxmap[maxmap$max_shap2=='Precip. Surplus', ])/nrow(maxmap)
+100*nrow(maxmap[maxmap$max_shap2=='Soil/Geology', ])/nrow(maxmap)
+100*nrow(maxmap[maxmap$max_shap2=='Agricultural Land Use', ])/nrow(maxmap)
+100*nrow(maxmap[maxmap$max_shap2=='N Inputs', ])/nrow(maxmap)
+100*nrow(maxmap[maxmap$max_shap2=='Rock N', ])/nrow(maxmap)
+100*nrow(maxmap[maxmap$max_shap2=='Temperature', ])/nrow(maxmap)
+100*nrow(maxmap[maxmap$max_shap2=='Water Inputs', ])/nrow(maxmap)
+100*nrow(maxmap[maxmap$max_shap2=='Other', ])/nrow(maxmap)
+
+
+# Plot map of aggregated max shapley values
+ggplot() +
+  geom_sf(fill='white', data=states_conus, color='black') +
+  geom_point(data=maxmap, aes(x=X, y=Y, color=max_shap2),size=.5) +
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  theme(axis.title = element_blank(), axis.text = element_blank(), axis.ticks = element_blank(), panel.background = element_blank(), panel.grid = element_blank(), plot.title = element_text(hjust = 0.5))+
+  scale_color_manual(values = mypal)+
+    theme(legend.position="none")
+
+# For legend
+maxmap$max_shap2 <-
+  factor(maxmap$max_shap2, 
+         levels = c("Hydrology","Precip. Surplus", "N Inputs",'Rock N',
+                    "Agricultural Land Use","Soil/Geology","% Forest",
+                    "Temperature","Water Inputs","Water Table Depth",
+                    "Elevation","Other"))
+
+
+
+ggplot() +
+  geom_sf(fill='white', data=states_conus, color='black') +
+  geom_point(data=maxmap, aes(x=X, y=Y, color=max_shap2), size=4) +
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  theme(axis.title = element_blank(), axis.text = element_blank(), axis.ticks = element_blank(), panel.background = element_blank(), panel.grid = element_blank(), plot.title = element_text(hjust = 0.5)) +
+  scale_color_manual(values = mypal)
+  #scale_color_manual(values=c("PWS Operation"="#117733", "Weather"="#88CCEE", "Soil/Geologic Characteristics"="#882255", "Hydrology"="#332288", "Agricultural Land Use"="#DDCC77", "Nitrogen Inputs"="#CC6677","Other"="grey"),name="Most Positively Influential Variable")
+
+
+
+
+```
+
+# *SW Map-most Neg. influential variables
+* Aggregate to select variable categories (N Inputs, PWS, Weather, geologic)
+```{r}
+
+
+minmap = as.data.frame(pyshap_sw)
+
+# Subset out just neg SHAP values
+# Get min value per row
+minmap$min_value = apply(minmap, 1, min)
+
+# Find max shapley value in each row
+minmap$min_shap<-colnames(minmap)[apply(minmap,1,which.min)]
+
+
+# Merge on HUC12 and response variable
+minmap<-cbind(dplyr::select(DATA, c(HUC12)),minmap)
+
+# Remove any Rows that are positive
+minmap = minmap[minmap$min_value <0,]
+
+levels(factor(minmap$min_shap)) 
+
+minmap <- minmap %>%
+  mutate(min_shap2 = case_when(
+    min_shap=="AgKffactWs" | min_shap=="AgKffactCat" | min_shap=="AgDrain_pctWs" | min_shap== "PctCrop2019Ws" ~ "Agricultural Land Use",
+    min_shap=="n_surplus_kgsqkm" | min_shap=="N_TW2012Ws" | min_shap=="N_Surp_2017ws" | 
+      min_shap=="FertWs" |min_shap=="ManureWs" | min_shap=="CBNFWs" |  min_shap=="n_ag_surplus_kgsqkm"~ "N Inputs",
+    min_shap=="RunoffWs" | min_shap=="BFIWs" | min_shap=="runoffcat"~ "Hydrology",
+    min_shap=="Precip_Minus_EVTWs" ~ "Precip. Surplus",
+    min_shap=="RockNWs" ~ "Rock N",
+    min_shap=="PctForest2019Ws" ~ "% Forest",
+    min_shap=="ElevWs" ~ "Elevation",
+    min_shap=="WtDepCat" ~ "Water Table Depth",
+    min_shap=="PopDen2010Cat" | min_shap=="ElevCat" | min_shap=="PctImp2016Cat"~ "Other",
+    min_shap=="Fe2O3Ws" | min_shap=="NHDslope_Pct_Ws" | min_shap=="Hillslope_PctWs" | 
+      min_shap=="SandWs" | min_shap=="permws"~ "Soil/Geology",
+    min_shap=="WaterInputCat"|min_shap=="wdrw_LDCat" | min_shap=="precip9120ws" | min_shap=="precip9120cat" ~ "Water Inputs",
+    min_shap=="tmean9120ws" ~ "Temperature"))
+
+
+minmap$min_shap2[is.na(minmap$min_shap2)] <- "Other"
+
+# Merge shapefiles with dataframe
+minmap<-merge(minmap,huc12_p,by="HUC12",all.x=T)
+minmap = st_as_sf(minmap)
+
+minmap<- st_transform(minmap, CRS("+init=epsg:5070"))
+
+# Get point data for plotting
+minmap<-cbind(minmap, st_coordinates(st_centroid(minmap$geometry)))
+
+mypal =c( #"Hydrology"="#56B4E9", 
+          "Water Table Depth"="#332288",
+         "Soil/Geology"="#D55E00", 
+         "Agricultural Land Use"="#F0E442", 
+         "% Forest" = "#009E73",
+         "Temperature"="#CC79A7",
+         "Rock N"="orange",
+         "Water Inputs"="#56B4E9",
+         "N Inputs"="red",
+         "Elevation"="#999999",
+         "Other" = "black")
+
+
+# Get % for each variable class
+100*nrow(minmap[minmap$min_shap2=='Hydrology', ])/nrow(minmap)
+100*nrow(minmap[minmap$min_shap2=='Precip. Surplus', ])/nrow(maxmap)
+100*nrow(minmap[minmap$min_shap2=='Soil/Geology', ])/nrow(minmap)
+100*nrow(minmap[minmap$min_shap2=='Agricultural Land Use', ])/nrow(minmap)
+100*nrow(minmap[minmap$min_shap2=='N Inputs', ])/nrow(minmap)
+100*nrow(minmap[minmap$min_shap2=='Rock N', ])/nrow(maxmap)
+100*nrow(minmap[minmap$min_shap2=='Temperature', ])/nrow(minmap)
+100*nrow(minmap[minmap$min_shap2=='Water Inputs', ])/nrow(minmap)
+100*nrow(minmap[minmap$min_shap2=='Other', ])/nrow(minmap)
+
+# Plot map of aggregated max shapley values
+ggplot() +
+  geom_sf(fill='white', data=states_conus, color='black') +
+  geom_point(data=minmap, aes(x=X, y=Y, color=min_shap2),size=.5) +
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  theme(axis.title = element_blank(), axis.text = element_blank(), axis.ticks = element_blank(), panel.background = element_blank(), panel.grid = element_blank(), plot.title = element_text(hjust = 0.5))+
+  scale_color_manual(values=mypal)+
+    theme(legend.position="none")
+
+
+# For legend
+ggplot() +
+  geom_sf(fill='white', data=states_conus, color='black') +
+  geom_point(data=minmap, aes(x=X, y=Y, color=min_shap2), size=4) +
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  theme(axis.title = element_blank(), axis.text = element_blank(), axis.ticks = element_blank(), panel.background = element_blank(), panel.grid = element_blank(), plot.title = element_text(hjust = 0.5)) +
+  scale_color_manual(values=mypal)
+
+
+
+
+```
+
+# *GW Map-most Pos. influential variables
+```{r}
+
+maxmap = as.data.frame(pyshap_gw)
+
+# Subset out just neg SHAP values
+# Get max value per row
+maxmap$max_value = apply(maxmap, 1, max)
+
+# Find max shapley value in each row
+maxmap$max_shap<-colnames(maxmap)[apply(maxmap,1,which.max)]
+
+# Merge on HUC12 and response variable
+maxmap<-cbind(dplyr::select(DATA, c(HUC12)),maxmap)
+
+# Remove any Rows that are negative
+maxmap = maxmap[maxmap$max_value >0,]
+
+levels(factor(maxmap$max_shap)) 
+
+# Aggregate max shaps to broader categories
+maxmap <- maxmap %>%
+  mutate(max_shap2 = case_when(
+    max_shap=="AgKffactWs" | max_shap=="AgKffactCat" | max_shap=="AgDrain_pctCat" | max_shap== "PctCrop2019Cat" ~ "Agricultural Land Use",
+    max_shap=="n_surplus_kgsqkm" | max_shap=="N_TW2012Cat" | max_shap=="N_Surp_2017ws"  | 
+      max_shap=="FertCat" | max_shap=="n_ag_surplus_kgsqkm"~ "N Inputs",
+    max_shap=="BFICat"  | max_shap=="runoffcat"~ "Hydrology",
+    max_shap=="Precip_Minus_EVTCat" ~ "Precip. Surplus",
+    max_shap=="RockNCat" ~ "Rock N",
+    max_shap=="PctForest2019Cat" ~ "% Forest",
+    max_shap=="ElevCat" ~ "Elevation",
+    max_shap=="WtDepCat" ~ "Water Table Depth",
+    max_shap=="PopDen2010Cat" | max_shap=="ElevCat" | max_shap=="PctImp2016Cat"| max_shap=="WtDepCat"~ "Other",
+    max_shap=="Fe2O3Cat" | max_shap=="NHDslope_Pct_Cat" | max_shap=="Hillslope_PctCat" | max_shap=="SandCat" | 
+      max_shap=="permcat" | max_shap=="HydrlCondCat"~ "Soil/Geology",
+    max_shap=="WaterInputCat"| max_shap=="precip9120ws"| max_shap=="precip9120cat" | max_shap=="wdrw_LDCat" ~ "Water Inputs",
+    max_shap=="tmean9120cat" ~ "Temperature"))
+
+
+maxmap$max_shap2[is.na(maxmap$max_shap2)] <- "Other"
+
+levels(factor(maxmap$max_shap2))
+
+# Merge shapefiles with dataframe
+maxmap<-merge(maxmap,huc12_p,by="HUC12",all.x=T)
+maxmap = st_as_sf(maxmap)
+
+#maxmap<- st_transform(maxmap, CRS("+init=epsg:5070"))
+
+# Get point data for plotting
+maxmap<-cbind(maxmap, st_coordinates(st_centroid(maxmap$geometry)))
+ 
+
+mypal =c( #"Hydrology"="#56B4E9", 
+          "Water Table Depth"="#332288",
+         "Soil/Geology"="#D55E00", 
+         "Agricultural Land Use"="#F0E442", 
+         "% Forest" = "#009E73",
+         "Temperature"="#CC79A7",
+         "Rock N"="orange",
+         "Water Inputs"="#56B4E9",
+         "N Inputs"="red",
+         "Elevation"="#999999",
+         "Other" = "black")
+
+
+# Get % for each variable class
+100*nrow(maxmap[maxmap$max_shap2=='Hydrology', ])/nrow(maxmap)
+100*nrow(maxmap[maxmap$max_shap2=='Precip. Surplus', ])/nrow(maxmap)
+100*nrow(maxmap[maxmap$max_shap2=='Soil/Geology', ])/nrow(maxmap)
+100*nrow(maxmap[maxmap$max_shap2=='Agricultural Land Use', ])/nrow(maxmap)
+100*nrow(maxmap[maxmap$max_shap2=='N Inputs', ])/nrow(maxmap)
+100*nrow(maxmap[maxmap$max_shap2=='Rock N', ])/nrow(maxmap)
+100*nrow(maxmap[maxmap$max_shap2=='Temperature', ])/nrow(maxmap)
+100*nrow(maxmap[maxmap$max_shap2=='Water Inputs', ])/nrow(maxmap)
+100*nrow(maxmap[maxmap$max_shap2=='Other', ])/nrow(maxmap)
+
+
+# Plot map of aggregated max shapley values
+ggplot() +
+  geom_sf(fill='white', data=states_conus, color='black') +
+  geom_point(data=maxmap, aes(x=X, y=Y, color=max_shap2),size=.5) +
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  theme(axis.title = element_blank(), axis.text = element_blank(), axis.ticks = element_blank(), panel.background = element_blank(), panel.grid = element_blank(), plot.title = element_text(hjust = 0.5))+
+  scale_color_manual(values = mypal)+
+    theme(legend.position="none")
+
+# For legend
+maxmap$max_shap2 <-
+  factor(maxmap$max_shap2, 
+         levels = c("Hydrology","Precip. Surplus", "N Inputs",'Rock N',
+                    "Agricultural Land Use","Soil/Geology","% Forest",
+                    "Temperature","Water Inputs","Water Table Depth",
+                    "Elevation","Other"))
+
+
+
+ggplot() +
+  geom_sf(fill='white', data=states_conus, color='black') +
+  geom_point(data=maxmap, aes(x=X, y=Y, color=max_shap2), size=4) +
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  theme(axis.title = element_blank(), axis.text = element_blank(), axis.ticks = element_blank(), panel.background = element_blank(), panel.grid = element_blank(), plot.title = element_text(hjust = 0.5)) +
+  scale_color_manual(values = mypal)
+  #scale_color_manual(values=c("PWS Operation"="#117733", "Weather"="#88CCEE", "Soil/Geologic Characteristics"="#882255", "Hydrology"="#332288", "Agricultural Land Use"="#DDCC77", "Nitrogen Inputs"="#CC6677","Other"="grey"),name="Most Positively Influential Variable")
+
+
+
+
+```
+
+# *GW Map-most Neg. influential variables
+* Aggregate to select variable categories (N Inputs, PWS, Weather, geologic)
+```{r}
+
+
+minmap = as.data.frame(pyshap_gw)
+
+# Subset out just neg SHAP values
+# Get min value per row
+minmap$min_value = apply(minmap, 1, min)
+
+# Find max shapley value in each row
+minmap$min_shap<-colnames(minmap)[apply(minmap,1,which.min)]
+
+
+# Merge on HUC12 and response variable
+minmap<-cbind(dplyr::select(DATA, c(HUC12)),minmap)
+
+# Remove any Rows that are positive
+minmap = minmap[minmap$min_value <0,]
+
+levels(factor(minmap$min_shap)) 
+
+minmap <- minmap %>%
+  mutate(min_shap2 = case_when(
+    min_shap=="AgKffactWs" | min_shap=="AgKffactCat" | min_shap=="AgDrain_pctCat" | min_shap== "PctCrop2019Cat" ~ "Agricultural Land Use",
+    min_shap=="n_surplus_kgsqkm" | min_shap=="N_TW2012Cat" | min_shap=="N_Surp_2017ws" | 
+      min_shap=="FertCat" | min_shap=="n_ag_surplus_kgsqkm"~ "N Inputs",
+    min_shap=="RunoffWs" | min_shap=="BFICat" | min_shap=="runoffcat"~ "Hydrology",
+    min_shap=="Precip_Minus_EVTCat" ~ "Precip. Surplus",
+    min_shap=="RockNCat" ~ "Rock N",
+    min_shap=="PctForest2019Cat" ~ "% Forest",
+    min_shap=="ElevCat" ~ "Elevation",
+    min_shap=="WtDepCat" ~ "Water Table Depth",
+    min_shap=="PopDen2010Cat" | min_shap=="ElevCat" | min_shap=="PctImp2016Cat"~ "Other",
+    min_shap=="Fe2O3Cat" | min_shap=="NHDslope_Pct_Cat" | min_shap=="Hillslope_PctCat" | 
+      min_shap=="SandCat" | min_shap=="permcat"~ "Soil/Geology",
+    min_shap=="WaterInputCat"|min_shap=="wdrw_LDCat" | min_shap=="precip9120ws" | min_shap=="precip9120cat" ~ "Water Inputs",
+    min_shap=="tmean9120cat" ~ "Temperature"))
+
+
+minmap$min_shap2[is.na(minmap$min_shap2)] <- "Other"
+
+# Merge shapefiles with dataframe
+minmap<-merge(minmap,huc12_p,by="HUC12",all.x=T)
+minmap = st_as_sf(minmap)
+
+minmap<- st_transform(minmap, CRS("+init=epsg:5070"))
+
+# Get point data for plotting
+minmap<-cbind(minmap, st_coordinates(st_centroid(minmap$geometry)))
+
+mypal =c( #"Hydrology"="#56B4E9", 
+          "Water Table Depth"="#332288",
+         "Soil/Geology"="#D55E00", 
+         "Agricultural Land Use"="#F0E442", 
+         "% Forest" = "#009E73",
+         "Temperature"="#CC79A7",
+         "Rock N"="orange",
+         "Water Inputs"="#56B4E9",
+         "N Inputs"="red",
+         "Elevation"="#999999",
+         "Other" = "black")
+
+
+# Get % for each variable class
+100*nrow(minmap[minmap$min_shap2=='Hydrology', ])/nrow(minmap)
+100*nrow(minmap[minmap$min_shap2=='Precip. Surplus', ])/nrow(maxmap)
+100*nrow(minmap[minmap$min_shap2=='Soil/Geology', ])/nrow(minmap)
+100*nrow(minmap[minmap$min_shap2=='Agricultural Land Use', ])/nrow(minmap)
+100*nrow(minmap[minmap$min_shap2=='N Inputs', ])/nrow(minmap)
+100*nrow(minmap[minmap$min_shap2=='Rock N', ])/nrow(maxmap)
+100*nrow(minmap[minmap$min_shap2=='Temperature', ])/nrow(minmap)
+100*nrow(minmap[minmap$min_shap2=='Water Inputs', ])/nrow(minmap)
+100*nrow(minmap[minmap$min_shap2=='Other', ])/nrow(minmap)
+
+# Plot map of aggregated max shapley values
+ggplot() +
+  geom_sf(fill='white', data=states_conus, color='black') +
+  geom_point(data=minmap, aes(x=X, y=Y, color=min_shap2),size=.5) +
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  theme(axis.title = element_blank(), axis.text = element_blank(), axis.ticks = element_blank(), panel.background = element_blank(), panel.grid = element_blank(), plot.title = element_text(hjust = 0.5))+
+  scale_color_manual(values=mypal)+
+    theme(legend.position="none")
+
+
+# For legend
+ggplot() +
+  geom_sf(fill='white', data=states_conus, color='black') +
+  geom_point(data=minmap, aes(x=X, y=Y, color=min_shap2), size=4) +
+  geom_sf(fill='transparent', data = states_conus, color='black') +
+  theme(axis.title = element_blank(), axis.text = element_blank(), axis.ticks = element_blank(), panel.background = element_blank(), panel.grid = element_blank(), plot.title = element_text(hjust = 0.5)) +
+  scale_color_manual(values=mypal)
+
+
+
+
 ```
 
 
@@ -13441,7 +14245,6 @@ end_time <- Sys.time(); end_time - start_time
 library(spmodel)
 library(broom)
 library(knitr)
-library(tictoc)
 
 XYplot = merge(StreamCat_HU12,LU_nni_hu12,by='HUC12')  
 
@@ -13461,7 +14264,7 @@ ag_sp = unique(na.omit(ag_sp))
 # Model calibration and prediction
 
 start_time <- Sys.time()
-m0 <- splm(crop_hay_past_streamcat ~ poly(Pct_crop_pasture_2010_iclus, 3), data=ag_sp,
+m0 <- splm(crop_hay_past_2019streamcat ~ poly(Pct_crop_pasture_2010_iclus, 3), data=ag_sp,
 #m0 <- splm(Pct_crop_pasture_2010_iclus ~ poly(crop_hay_past_streamcat, 3), data=ag_sp,
            spcov_type = "none",  # linear model, no accounting for spatial covariance
            local = list(parallel = TRUE, ncores = 12))
@@ -13470,7 +14273,7 @@ end_time <- Sys.time(); end_time - start_time
 gc()
 
 start_time <- Sys.time()
-spmod0 <- splm(crop_hay_past_streamcat ~ poly(Pct_crop_pasture_2010_iclus, 3), data=ag_sp,
+spmod0 <- splm(crop_hay_past_2019streamcat ~ poly(Pct_crop_pasture_2010_iclus, 3), data=ag_sp,
 #spmod0 <- splm(Pct_crop_pasture_2010_iclus ~ poly(crop_hay_past_streamcat, 3), data=ag_sp,
               spcov_type = "exponential",
               local = list(size = 50, method = "kmeans", parallel = TRUE, ncores = 12, var_adjust = "none"))
@@ -13481,11 +14284,11 @@ gc()
 
 #saveRDS(spmod0, './tdep-tn-spatial-model-huc12.rds')
 ns.obs.prd <- data.frame(#observed = m0$obdata$Pct_crop_pasture_2010_iclus,
-                         observed = m0$obdata$crop_hay_past_streamcat,
+                         observed = m0$obdata$crop_hay_past_2019streamcat,
                       predicted = fitted(m0))
 
 obs.prd <- data.frame(#observed = spmod0$obdata$Pct_crop_pasture_2010_iclus,
-                      observed = spmod0$obdata$crop_hay_past_streamcat,
+                      observed = spmod0$obdata$crop_hay_past_2019streamcat,
                       predicted = fitted(spmod0) + fitted(spmod0, type = "spcov")$de)
 
 error <- ns.obs.prd$observed - ns.obs.prd$predicted
@@ -13610,11 +14413,11 @@ ag_nlcd_2050 = merge(ag_nlcd_2050,ag_nlcd_2050_rcp8.5H,by="HUC12")
 #-------------------------------------------------------------------------------
 
 
-saveRDS(m0, file = paste0(future_dir ,'Data/Models/NONSPATIAL_model_ICLUS_vs_NLCD_cropland.rds'))
-saveRDS(spmod0, file = paste0(future_dir ,'Data/Models/SPATIAL_model_ICLUS_vs_NLCD_cropland.rds'))
+saveRDS(m0, file = paste0(future_dir2,'Models/NONSPATIAL_model_ICLUS_vs_NLCD_cropland.rds'))
+saveRDS(spmod0, file = paste0(future_dir2,'Models/SPATIAL_model_ICLUS_vs_NLCD_cropland.rds'))
 
 
-write.csv(ag_nlcd_2050, file = paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP_GISS_HADGEM_HU12.csv'), row.names=F)
+write.csv(ag_nlcd_2050, file = paste0(future_dir2,'SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP_GISS_HADGEM_HU12.csv'), row.names=F)
 
 
 ```
@@ -13634,7 +14437,7 @@ library(knitr)
 
 
 # Can't seem to create new spmodel based on catchment scale data, so uploading HU12-based model
-spmod0 = readRDS(paste0(future_dir ,'Data/Models/SPATIAL_model_ICLUS_vs_NLCD_cropland.rds'))
+spmod0 = readRDS(paste0(future_dir2 ,'Models/SPATIAL_model_ICLUS_vs_NLCD_cropland.rds'))
 
 
 vars1 = c('COMID','PctHay2019Cat','PctHay2019Ws'
@@ -13816,12 +14619,12 @@ ag_nlcd_2050 = merge(ag_nlcd_2050,ag_nlcd_2050_rcp8.5H_,by="COMID")
 #saveRDS(m0, file = paste0(future_dir ,'Data/Models/NONSPATIAL_model_ICLUS_vs_NLCD_cropland_cats.rds'))
 #saveRDS(spmod0, file = paste0(future_dir ,'Data/Models/SPATIAL_model_ICLUS_vs_NLCD_cropland_cats.rds'))
 
-write.csv(ag_nlcd_2050_rcp4.5G_, file = paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP4.5G_COMID.csv'), row.names=F)
-write.csv(ag_nlcd_2050_rcp8.5G_, file = paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP8.5G_COMID.csv'), row.names=F)
-write.csv(ag_nlcd_2050_rcp4.5H_, file = paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP4.5H_COMID.csv'), row.names=F)
-write.csv(ag_nlcd_2050_rcp8.5H_, file = paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP8.5H_COMID.csv'), row.names=F)
+write.csv(ag_nlcd_2050_rcp4.5G_, file = paste0(future_dir2,'SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP4.5G_COMID.csv'), row.names=F)
+write.csv(ag_nlcd_2050_rcp8.5G_, file = paste0(future_dir2,'SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP8.5G_COMID.csv'), row.names=F)
+write.csv(ag_nlcd_2050_rcp4.5H_, file = paste0(future_dir2,'SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP4.5H_COMID.csv'), row.names=F)
+write.csv(ag_nlcd_2050_rcp8.5H_, file = paste0(future_dir2,'SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP8.5H_COMID.csv'), row.names=F)
 
-write.csv(ag_nlcd_2050, file = paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP_GISS_HADGEM_COMID.csv'), row.names=F)
+write.csv(ag_nlcd_2050, file = paste0(future_dir2,'SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCP_GISS_HADGEM_COMID.csv'), row.names=F)
 
 #test = read.csv(paste0(future_dir,'Data/SPATIAL_MODEL_PREDICTIONS_2050_NLCD_RCPG4.5_COMID.csv'))
 
