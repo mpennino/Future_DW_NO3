@@ -386,6 +386,17 @@ fac21. = fac21[,fac_columns]
 
 facs_all_years = rbind(fac17.,fac18.,fac19.,fac20.,fac21.)
 
+rm(fac17.)
+rm(fac17)
+rm(fac18.)
+rm(fac18)
+rm(fac19)
+rm(fac19.)
+rm(fac20)
+rm(fac20.)
+rm(fac21)
+rm(fac21.)
+gc()
 
 ```
 
@@ -826,6 +837,12 @@ length(unique(viol_sw_hu12$HUC12)) # 28
 length(unique(viol_gw_cat$COMID)) # 1754
 length(unique(viol_sw_cat$COMID)) # 70
 
+# Save
+write.csv(viol_sw_cat, file = paste0(future_dir2,'viol_sw_cat_2017to23.csv'), row.names=F)
+write.csv(viol_gw_cat, file = paste0(future_dir2,'viol_gw_cat_2017to23.csv'), row.names=F)
+
+
+
 ```
 
 # Summarize CDC Conc. HUC12 & Catchment
@@ -871,6 +888,11 @@ length(unique(cdc_sw_hu12$HUC12)) # 1699
 
 length(unique(cdc_gw_cat$COMID)) # 14813
 length(unique(cdc_sw_cat$COMID)) # 1936
+
+# Save
+write.csv(cdc_sw_cat, file = paste0(future_dir2,'conc_sw_cat_2017to23.csv'), row.names=F)
+write.csv(cdc_gw_cat, file = paste0(future_dir2,'conc_gw_cat_2017to23.csv'), row.names=F)
+
 
 ```
 
@@ -3881,13 +3903,14 @@ rf_gw = merge(viol_gw_cat,StreamCat_cats,by='COMID')
 keeps_gw = c("COMID","viol_freq"
           
           # Land Use
-          ,"PopDen2010Cat","PctForest2019Cat","PctCrop2019Cat"
-          ,"AgKffactCat"#,"AgDrain_pctCat",
+          ,"PopDen2010Cat","PctCrop2019Cat"#,"PctForest2019Cat",
+          #,"AgKffactCat"#,"AgDrain_pctCat",
           
           # Weather/Hydro
-          ,"precip9120ws","tmean9120cat"#,"BFICat"#,"Precip_Minus_EVTCat"
-          #,"WaterInputCat","wdrw_LDCat"#,"PctImp2016Cat"#"HydrlCondCat",
-          ,"permcat"#,"runoffcat"
+          ,"precip9120cat","tmean9120cat"#,"BFICat"#,"Precip_Minus_EVTCat"
+          #,"WaterInputCat","wdrw_LDCat"#,"PctImp2016Cat"#
+          #,"permcat"#,"runoffcat"
+          ,"HydrlCondCat"
           
           # N Inputs
           ,"RockNCat","N_TW2012Cat"#,"FertCat"#,"ManureCat","CBNFCat",
@@ -3895,35 +3918,35 @@ keeps_gw = c("COMID","viol_freq"
           #,"n_ags_2017cat" # Ag N surp
           
           # Other
-          ,"WtDepCat","Hillslope_PctCat","ElevCat","Fe2O3Cat","SandCat"
+          ,"WtDepCat","ElevCat","Fe2O3Cat","SandCat","Hillslope_PctCat"
           #,"S_TW2012Cat"#,"rckdepcat" #,"NHDslope_Pct_Cat"
           #,'Nitrate_Treatment_yn'
 
           )
 
 # Slimmed
-keeps_gw = c("COMID","viol_freq"
-          
-          # Land Use
-          #,"PopDen2010Cat","PctForest2019Cat","PctCrop2019Cat"
-          #,"AgKffactCat"#,"AgDrain_pctCat",
-          
-          # Weather/Hydro
-          ,"precip9120ws","tmean9120cat"#,"BFICat"#,"Precip_Minus_EVTCat"
-          #,"WaterInputCat","wdrw_LDCat"#,"PctImp2016Cat"#"HydrlCondCat",
-          #,"permcat"#,"runoffcat"
-          
-          # N Inputs
-          ,"RockNCat","N_TW2012Cat"#,"FertCat"#,"ManureCat","CBNFCat",
-          ,"N_Surp_kgsqkm_2017cat"#,"n_ags_kgsqkm_2017cat"
-          #,"n_ags_2017cat" # Ag N surp
-          
-          # Other
-          ,"Fe2O3Cat"#,"WtDepCat","Hillslope_PctCat","ElevCat","SandCat"
-          #,"S_TW2012Cat"#,"rckdepcat" #,"NHDslope_Pct_Cat"
-          #,'Nitrate_Treatment_yn'
-
-          )
+# keeps_gw = c("COMID","viol_freq"
+#           
+#           # Land Use
+#           #,"PopDen2010Cat","PctForest2019Cat","PctCrop2019Cat"
+#           #,"AgKffactCat"#,"AgDrain_pctCat",
+#           
+#           # Weather/Hydro
+#           ,"precip9120ws","tmean9120cat"#,"BFICat"#,"Precip_Minus_EVTCat"
+#           #,"WaterInputCat","wdrw_LDCat"#,"PctImp2016Cat"#"HydrlCondCat",
+#           #,"permcat"#,"runoffcat"
+#           
+#           # N Inputs
+#           ,"RockNCat","N_TW2012Cat"#,"FertCat"#,"ManureCat","CBNFCat",
+#           ,"N_Surp_kgsqkm_2017cat"#,"n_ags_kgsqkm_2017cat"
+#           #,"n_ags_2017cat" # Ag N surp
+#           
+#           # Other
+#           ,"Fe2O3Cat"#,"WtDepCat","Hillslope_PctCat","ElevCat","SandCat"
+#           #,"S_TW2012Cat"#,"rckdepcat" #,"NHDslope_Pct_Cat"
+#           #,'Nitrate_Treatment_yn'
+# 
+#           )
 
 rf_gw2 = unique(na.omit(rf_gw[,keeps_gw]))
 
@@ -4060,6 +4083,123 @@ nrow(rfr_gw3) # 7544
 
 dataR_gw_huc_ = rfr_gw2
 dataR_gw_huc = rfr_gw3
+
+```
+
+# **Prep SW Dataset - Catchment
+```{r}
+
+rfr_sw = merge(cdc_sw_cat,subset(NDATA_cat,select=-c(PopDen2010Cat)),by='COMID')
+rfr_sw = merge(rfr_sw,StreamCat_cats,by='COMID')
+#rfr_sw = merge(rfr_sw,NNI17,by='HUC12')
+
+# Just management variables
+# keeps = c("HUC12","viol_freq"
+#           
+#           # Land Use
+#           ,"PopDen2010Cat"#,"PctForest2019Cat"#,"PctCrop2019Cat"
+#           ,"AgDrain_pctCat"#,"PctImp2016Cat","AgKffactCat"
+#           
+#           # Weather/Hydro
+#           ,"precip9120ws","tmean9120cat","BFICat","Precip_Minus_EVTCat"
+#           ,"WaterInputCat","wdrw_LDCat"#,"HydrlCondCat"
+#           ,"permcat"#,"runoffcat"
+#           
+#           # N Inputs
+#           ,"N_TW2012Cat","FertCat","ManureCat"#,"CBNFCat","RockNCat"
+#           ,"n_surplus_kgsqkm"#,"n_ag_surplus_kgsqkm"#,"N_Surp_2017ws","NANI_kgkm2_Ws"
+#           
+#           # Other
+#           #,"Fe2O3Cat"#,"ElevCat"#,"WtDepCat","Hillslope_PctCat","SandCat"
+#           ,"NHDslope_Pct_Cat"#,"S_TW2012Cat","rckdepcat" 
+#           
+#           )
+
+# Original
+keeps = c("COMID","mean_conc"
+
+          # Land Use
+          ,"PopDen2010Cat","PctCrop2019Cat"#,"PctForest2019Cat"
+          #,"AgKffactCat","AgDrain_pctCat"#,"PctImp2016Cat"
+
+          # Weather/Hydro
+          ,"precip9120ws","tmean9120cat","BFICat"#,"Precip_Minus_EVTCat"
+          #,"WaterInputCat","wdrw_LDCat"#,"HydrlCondCat"
+          ,"permcat"#,"runoffcat"
+
+          # N Inputs
+          ,"RockNCat","N_TW2012Cat"#,"FertCat","ManureCat","CBNFCat"
+          ,"N_Surp_kgsqkm_2017ws"#,"n_ag_surplus_kgsqkm"#,"N_Surp_2017ws","NANI_kgkm2_Ws"
+
+          # Other
+          ,"Fe2O3Cat","ElevCat"#,"WtDepCat","Hillslope_PctCat","SandCat"
+          ,"NHDslope_Pct_Cat"#,"S_TW2012Cat","rckdepcat"
+
+          )
+
+rfr_sw2 = unique(na.omit(rfr_sw[,keeps]))
+
+setdiff(keeps,colnames(rfr_sw)) # gives not matching
+
+
+
+rfr_sw3 = subset(rfr_sw2,select=-c(COMID))
+nrow(rfr_sw3) # 7279
+
+#write.csv(rfr_sw2, file = paste0(future_dir,'Data/Dataset_RF_Model_SW_conc_HUC12.csv'), row.names=F)
+
+dataR_sw_cat_ = rfr_sw2
+dataR_sw_cat = rfr_sw3
+
+write.csv(rfr_sw2, file = paste0(future_dir2,'Dataset_Conc_Model_SW_COMIDS.csv'), row.names=F)
+
+
+```
+
+# **Prep GW Dataset - Catchment
+```{r}
+rfr_gw = merge(cdc_gw_cat,subset(NDATA_cat,select=-c(PopDen2010Cat)),by='COMID')
+rfr_gw = merge(rfr_gw,StreamCat_cats,by='COMID')
+
+# Me
+
+
+keeps = c("COMID","mean_conc"
+          # Land Use
+          ,"PctCrop2019Cat","PopDen2010Cat"#,"PctForest2019Cat",
+          ,"AgKffactCat"#,"AgDrain_pctCat"
+          
+          # Weather/Hydro
+          ,"precip9120ws","tmean9120cat"#,"Precip_Minus_EVTCat"#,"BFICat"
+          #,"WaterInputCat"#,"wdrw_LDCat"#,"PctImp2016Cat"#
+          #,"permcat"
+          ,"HydrlCondCat"#,"runoffcat"
+          
+          # N Inputs
+          ,"RockNCat","N_TW2012Cat"#,"FertCat"#,"CBNFCat","ManureCat"
+          ,"N_Surp_kgsqkm_2017cat"#,"n_ag_surplus_kgsqkm","N_Surp_2017ws" #,"NANI_kgkm2_Ws"
+          
+          # Other
+          ,"Fe2O3Cat","WtDepCat","Hillslope_PctCat","ElevCat","SandCat"
+          #,"rckdepcat" #,"S_TW2012Cat"##,"NHDslope_Pct_Cat"
+          
+          )
+
+rfr_gw2 = unique(na.omit(rfr_gw[,keeps]))
+
+setdiff(keeps,colnames(rfr_gw)) # gives not matching
+
+
+
+rfr_gw3 = subset(rfr_gw2,select=-c(COMID))
+dim(rfr_gw3) # 7544
+
+#write.csv(rfr_gw2, file = paste0(future_dir,'Data/Dataset_RF_Model_GW_conc_HUC12.csv'), row.names=F)
+
+dataR_gw_huc_ = rfr_gw2
+dataR_gw_huc = rfr_gw3
+
+write.csv(rfr_gw2, file = paste0(future_dir2,'Dataset_Conc_Model_GW_COMIDS.csv'), row.names=F)
 
 ```
 
@@ -5948,6 +6088,13 @@ prec_Cat = read.fst(paste0(future_dir2,'Future_Data_COMID_Precipitation.fst'))
 imprv_cat = read.fst(paste0(future_dir2,'Future_Data_COMID_Impervious.fst'))
 
 
+viol_gw_cat = read.csv(paste0(future_dir2,'viol_gw_cat_2017to23.csv'))
+viol_sw_cat = read.csv(paste0(future_dir2,'viol_sw_cat_2017to23.csv'))
+
+
+cdc_gw_cat = read.csv(paste0(future_dir2,'conc_gw_cat_2017to23.csv'))
+cdc_sw_cat = read.csv(paste0(future_dir2,'conc_sw_cat_2017to23.csv'))
+
   
 # Add leading zeros
 NNI17$HUC12 = formatC(as.numeric(as.character(NNI17$HUC12)), width = 12, format = "f",flag = "0",digits = 0)  
@@ -6001,8 +6148,18 @@ keeps1 = c('COMID','PopDen2010Ws', 'PctForest2019Ws', 'PctCrop2019Ws', 'precip91
 # 
 # write.csv(predHUC_cur, paste0(data_dir,"current_NO3_predictors_HUC12.csv"), row.names=F)
 
+arrow::write_parquet(NDATA_cat, paste0(future_dir2,"Future_NO3_predictors_catchments.parquet"))
+
+
 ```
 
+# testing
+```{r}
+
+test_ppt = StreamCat_cats[,c('COMID','precip9120cat','precip9120ws')]
+
+
+```
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -6761,7 +6918,7 @@ statkeeps1 = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
               'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs',
               'PopDen2010Ws','PctForest2019Ws','precip9120ws','precip9120cat',
-              'tmean9120ws','N_TW2012Ws','FertWs',
+              'tmean9120ws','N_TW2012Ws','FertWs','PopDen2010Cat',
               'ManureWs','CBNFWs','PctCrop2019Cat','PctCrop2019Ws',
               'PctForest2019Cat','tmean9120cat','N_TW2012Cat'
               
@@ -6776,7 +6933,7 @@ statkeeps2 = c('COMID','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
               'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs',
               'PopDen2010Ws','PctForest2019Ws','precip9120ws','precip9120cat',
-              'tmean9120ws','N_TW2012Ws','FertWs',
+              'tmean9120ws','N_TW2012Ws','FertWs','PopDen2010Cat',
               'ManureWs','CBNFWs','PctCrop2019Cat','PctCrop2019Ws',
               'PctForest2019Cat','tmean9120cat','N_TW2012Cat'
               
@@ -6999,7 +7156,7 @@ statkeeps1 = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
               'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs',
               'PopDen2010Ws','PctForest2019Ws','precip9120ws','precip9120cat',
-              'tmean9120ws','N_TW2012Ws','FertWs',
+              'tmean9120ws','N_TW2012Ws','FertWs','PopDen2010Cat',
               'ManureWs','CBNFWs','PctCrop2019Cat','PctCrop2019Ws',
               'PctForest2019Cat','tmean9120cat','N_TW2012Cat'
               
@@ -7014,7 +7171,7 @@ statkeeps2 = c('COMID','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
               'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs',
               'PopDen2010Ws','PctForest2019Ws','precip9120ws','precip9120cat',
-              'tmean9120ws','N_TW2012Ws','FertWs',
+              'tmean9120ws','N_TW2012Ws','FertWs','PopDen2010Cat',
               'ManureWs','CBNFWs','PctCrop2019Cat','PctCrop2019Ws',
               'PctForest2019Cat','tmean9120cat','N_TW2012Cat'
               
@@ -7244,7 +7401,7 @@ statkeeps1 = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
               'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs',
               'PopDen2010Ws','PctForest2019Ws','precip9120ws','precip9120cat',
-              'tmean9120ws','N_TW2012Ws','FertWs',
+              'tmean9120ws','N_TW2012Ws','FertWs','PopDen2010Cat',
               'ManureWs','CBNFWs','PctCrop2019Cat','PctCrop2019Ws',
               'PctForest2019Cat','tmean9120cat','N_TW2012Cat'
               
@@ -7259,7 +7416,7 @@ statkeeps2 = c('COMID','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
               'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs',
               'PopDen2010Ws','PctForest2019Ws','precip9120ws','precip9120cat',
-              'tmean9120ws','N_TW2012Ws','FertWs',
+              'tmean9120ws','N_TW2012Ws','FertWs','PopDen2010Cat',
               'ManureWs','CBNFWs','PctCrop2019Cat','PctCrop2019Ws',
               'PctForest2019Cat','tmean9120cat','N_TW2012Cat'
               
@@ -7489,8 +7646,8 @@ statkeeps1 = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
               'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
               'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs',
-              'PopDen2010Ws','PctForest2019Ws','precip9120ws',
-              'tmean9120ws','N_TW2012Ws','FertWs',
+              'PopDen2010Ws','PctForest2019Ws','precip9120ws','precip9120cat',
+              'tmean9120ws','N_TW2012Ws','FertWs',#'PopDen2010Cat',
               'ManureWs','CBNFWs','PctForest2019Cat','N_TW2012Cat',
               'tmean9120cat','FertCat','ManureCat','CBNFCat','PctCrop2019Cat','PctCrop2019Ws')
 
@@ -7502,8 +7659,8 @@ statkeeps2 = c('COMID','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
               'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
               'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs',
-              'PopDen2010Ws','PctForest2019Ws','precip9120ws',
-              'tmean9120ws','N_TW2012Ws','FertWs',
+              'PopDen2010Ws','PctForest2019Ws','precip9120ws','precip9120cat',
+              'tmean9120ws','N_TW2012Ws','FertWs',#'PopDen2010Cat',
               'ManureWs','CBNFWs','PctForest2019Cat','N_TW2012Cat',
               'tmean9120cat','FertCat','ManureCat','CBNFCat','PctCrop2019Cat','PctCrop2019Ws')
 
@@ -7537,16 +7694,16 @@ scen_prod_CAT$NUEws = scen_prod_CAT$n_cr_2017ws / (scen_prod_CAT$n_ff_2017ws +
                                                     scen_prod_CAT$n_lw_2017ws +
                                                     scen_prod_CAT$n_cf_2017ws)
 
-summary(scen_prod_CAT$NUEcat)
-nrow(scen_prod_CAT) # 2644024
-nrow(scen_prod_CAT[complete.cases(scen_prod_CAT[,c("NUEcat")]),] ) # 1490727
+#summary(scen_prod_CAT$NUEcat)
+#nrow(scen_prod_CAT) # 2644024
+#nrow(scen_prod_CAT[complete.cases(scen_prod_CAT[,c("NUEcat")]),] ) # 1490727
 
 
 # if Inputs = 0, make NUE = 0
 scen_prod_HUC$NUE[is.na(scen_prod_HUC$NUE)] <- 0
 scen_prod_CAT$NUEcat[is.na(scen_prod_CAT$NUEcat)] <- 0
 scen_prod_CAT$NUEws[is.na(scen_prod_CAT$NUEws)] <- 0
-nrow(scen_prod_CAT[complete.cases(scen_prod_CAT[,c("NUEcat")]),] ) # 2644024
+#nrow(scen_prod_CAT[complete.cases(scen_prod_CAT[,c("NUEcat")]),] ) # 2644024
 
 scen_prod_CAT$ag_inputs_kgsqkm_2017cat = 
   (scen_prod_CAT$n_ff_2017cat +scen_prod_CAT$n_lw_2017cat +scen_prod_CAT$n_cf_2017cat)/ scen_prod_CAT$CatAreaSqKm
@@ -7678,8 +7835,8 @@ summary(scen_prod_CAT$N_surp_kgsqkm_prod55cat)
 summary(NDATA_cat$n_surp_kgsqkm_2017cat)
 summary(scen_prod_CAT$n_surp_kgsqkm_2017cat)
 
-nrow(NDATA_cat[complete.cases(NDATA_cat[,c("n_surp_kgsqkm_2017cat")]),] ) # 2644008
-nrow(scen_prod_CAT[complete.cases(scen_prod_CAT[,c("N_surp_kgsqkm_prod55cat")]),] ) # 2628506
+#nrow(NDATA_cat[complete.cases(NDATA_cat[,c("n_surp_kgsqkm_2017cat")]),] ) # 2644008
+#nrow(scen_prod_CAT[complete.cases(scen_prod_CAT[,c("N_surp_kgsqkm_prod55cat")]),] ) # 2628506
 
 write_parquet(scen_prod_HUC, paste0(future_dir2,'Scenario_Prod55_NUE0_Dataset_HUC12.parquet'))
 write_parquet(scen_prod_CAT, paste0(future_dir2,'Scenario_Prod55_NUE0_Dataset_Cat.parquet'))
@@ -7770,9 +7927,9 @@ write_parquet(scen_prod_CAT, paste0(future_dir2,'Scenario_Prod55_NUE0_Dataset_Ca
 
 ```
 
-#**55%Prod 15%NUE Incr. 
+#1**55%Prod 15%NUE Incr. 
 * 55% increase in productivity and 15% increase in NUE
-* Assuming constant inputs due to NUE increase 
+* Assuming decreased inputs due to NUE increase 
 ```{r}
 
 library(arrow)
@@ -7793,7 +7950,7 @@ statkeeps1 = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
               'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs',
               'PopDen2010Ws','PctForest2019Ws','precip9120ws','precip9120cat',
-              'tmean9120ws','N_TW2012Ws','FertWs',
+              'tmean9120ws','N_TW2012Ws','FertWs','PopDen2010Cat',
               'ManureWs','CBNFWs','PctCrop2019Cat','PctCrop2019Ws',
               'PctForest2019Cat','tmean9120cat','N_TW2012Cat'
               
@@ -7808,7 +7965,7 @@ statkeeps2 = c('COMID','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
               'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs',
               'PopDen2010Ws','PctForest2019Ws','precip9120ws','precip9120cat',
-              'tmean9120ws','N_TW2012Ws','FertWs',
+              'tmean9120ws','N_TW2012Ws','FertWs','PopDen2010Cat',
               'ManureWs','CBNFWs','PctCrop2019Cat','PctCrop2019Ws',
               'PctForest2019Cat','tmean9120cat','N_TW2012Cat'
               
@@ -7937,6 +8094,162 @@ scen_p55n15_CAT$n_ag_surp_kgsqkm_2017ws = scen_p55n15_CAT$N_ag_surp_kgsqkm_p55n1
 
 write_parquet(scen_p55n15_HUC, paste0(future_dir2,'Scenario_Prod55_NUE15_Dataset_HUC12.parquet'))
 write_parquet(scen_p55n15_CAT, paste0(future_dir2,'Scenario_Prod55_NUE15_Dataset_Cat.parquet'))
+
+
+
+```
+
+#2**55%Prod 15%NUE Incr. 
+* 55% increase in productivity and 15% increase in NUE
+* Assuming constant inputs due to NUE increase 
+```{r}
+
+library(arrow)
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+NUE_INCR = 0.15
+PRO_INCR = 1.55
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+#scen_p55n15_HUC = scen_NUE_HUC
+#scen_p55n15_CAT = scen_NUE_CAT
+
+statkeeps1 = c('HUC12','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
+              'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
+              'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
+              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat',
+              'ElevWs','AgKffactWs','AgDrain_pctWs','BFIWs',
+              'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
+              'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
+              'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs',
+              'PopDen2010Ws','PctForest2019Ws','precip9120ws','precip9120cat',
+              'tmean9120ws','N_TW2012Ws','FertWs','PopDen2010Cat',
+              'ManureWs','CBNFWs','PctCrop2019Cat','PctCrop2019Ws',
+              'PctForest2019Cat','tmean9120cat','N_TW2012Cat'
+              
+              )
+
+statkeeps2 = c('COMID','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
+              'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
+              'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
+              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat',
+              'ElevWs','AgKffactWs','AgDrain_pctWs','BFIWs',
+              'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
+              'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
+              'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs',
+              'PopDen2010Ws','PctForest2019Ws','precip9120ws','precip9120cat',
+              'tmean9120ws','N_TW2012Ws','FertWs','PopDen2010Cat',
+              'ManureWs','CBNFWs','PctCrop2019Cat','PctCrop2019Ws',
+              'PctForest2019Cat','tmean9120cat','N_TW2012Cat'
+              
+              )
+
+statkeeps2a = c('COMID','CatAreaSqKm','WsAreaSqKm',
+                'n_cr_2017cat','n_ff_2017cat','n_lw_2017cat','n_cf_2017cat',
+                'n_cr_2017ws','n_ff_2017ws','n_lw_2017ws','n_cf_2017ws',
+                'n_surp_kgsqkm_2017cat','n_ag_surp_kgsqkm_2017cat',
+                'n_surp_kgsqkm_2017ws','n_ag_surp_kgsqkm_2017ws',
+                'n_dep_2017cat','n_hw_2017cat','n_dep_2017ws','n_hw_2017ws')
+
+
+scen_p55n15_HUC = merge(NDATA_huc12,StreamCat_HU12[,statkeeps1],by='HUC12')
+scen_p55n15_CAT = merge(NDATA_cat[,statkeeps2a],StreamCat_cats[,statkeeps2],by='COMID')
+
+scen_p55n15_HUC$NUE = scen_p55n15_HUC$n_crop_rem_kg_2010 / (scen_p55n15_HUC$n_farm_fert_kg_2010 +
+                                                    scen_p55n15_HUC$n_manure_kg_2010 +
+                                                    scen_p55n15_HUC$n_crop_fix_kg_2010)
+scen_p55n15_CAT$NUEcat = scen_p55n15_CAT$n_cr_2017cat / (scen_p55n15_CAT$n_ff_2017cat +
+                                                    scen_p55n15_CAT$n_lw_2017cat +
+                                                    scen_p55n15_CAT$n_cf_2017cat)
+scen_p55n15_CAT$NUEws = scen_p55n15_CAT$n_cr_2017ws / (scen_p55n15_CAT$n_ff_2017ws +
+                                                    scen_p55n15_CAT$n_lw_2017ws +
+                                                    scen_p55n15_CAT$n_cf_2017ws)
+
+summary(scen_p55n15_CAT$NUEcat) # over a million NAs
+
+
+# Percent of Catchments with positive Ag surplus
+100*nrow(scen_p55n15_CAT[scen_p55n15_CAT$n_ag_surp_kgsqkm_2017cat > 0,])/nrow(scen_p55n15_CAT)
+
+
+
+# if Inputs = 0, make NUE = 0
+scen_p55n15_HUC$NUE[is.na(scen_p55n15_HUC$NUE)] <- 0
+scen_p55n15_CAT$NUEcat[is.na(scen_p55n15_CAT$NUEcat)] <- 0
+scen_p55n15_CAT$NUEws[is.na(scen_p55n15_CAT$NUEws)] <- 0
+nrow(scen_p55n15_CAT[complete.cases(scen_p55n15_CAT[,c("NUEcat")]),] ) # 2644024
+
+scen_p55n15_HUC$NUE15 = scen_p55n15_HUC$NUE + NUE_INCR # 15% increase in NUE
+scen_p55n15_CAT$NUE15cat = scen_p55n15_CAT$NUEcat + NUE_INCR # 15% increase in NUE
+scen_p55n15_CAT$NUE15ws = scen_p55n15_CAT$NUEws + NUE_INCR # 15% increase in NUE
+
+
+#-------------------------------------------------------------------------------
+
+# Calculate Ag inputs with 55% increase and NUE+15%
+scen_p55n15_HUC$N_ag_inputs_kgsqkm_p55n15 = scen_p55n15_HUC$n_crop_rem_kgsqkm * 1.55 
+scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15cat = (scen_p55n15_CAT$n_cr_2017cat/ scen_p55n15_CAT$CatAreaSqKm) * 1.55 
+scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15ws = (scen_p55n15_CAT$n_cr_2017ws/ scen_p55n15_CAT$WsAreaSqKm ) * 1.55 
+
+
+# if Inputs = 0, make = 0
+scen_p55n15_HUC$N_ag_inputs_kgsqkm_p55n15[is.na(scen_p55n15_HUC$N_ag_inputs_kgsqkm_p55n15)] <- 0
+scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15cat[is.na(scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15cat)] <- 0
+scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15ws[is.na(scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15ws)] <- 0
+
+
+#-----------------------------------------------------------------------------------
+# Calculate New N surplus
+scen_p55n15_HUC$N_surp_kgsqkm_prod55nue15 = 
+  scen_p55n15_HUC$N_ag_inputs_kgsqkm_p55n15 + 
+  scen_p55n15_HUC$totalN_2016_kgNha *100 + # convert from ha to km2
+  scen_p55n15_HUC$n_human_food_waste_kgsqkm - 
+  scen_p55n15_HUC$N_ag_inputs_kgsqkm_p55n15 * scen_p55n15_HUC$NUE15 
+
+scen_p55n15_HUC$N_ag_surp_kgsqkm_prod55nue15 = 
+  scen_p55n15_HUC$N_ag_inputs_kgsqkm_p55n15 - 
+  scen_p55n15_HUC$N_ag_inputs_kgsqkm_p55n15 * scen_p55n15_HUC$NUE15
+
+scen_p55n15_CAT$N_surp_kgsqkm_p55n15cat = 
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15cat +
+  scen_p55n15_CAT$n_dep_2017cat / scen_p55n15_CAT$CatAreaSqKm +
+  scen_p55n15_CAT$n_hw_2017cat / scen_p55n15_CAT$CatAreaSqKm - 
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15cat * scen_p55n15_CAT$NUE15cat
+
+scen_p55n15_CAT$N_ag_surp_kgsqkm_p55n15cat = 
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15cat - 
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15cat * scen_p55n15_CAT$NUE15cat
+
+scen_p55n15_CAT$N_surp_kgsqkm_p55n15ws = 
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15ws +  
+  scen_p55n15_CAT$n_dep_2017ws / scen_p55n15_CAT$WsAreaSqKm +
+  scen_p55n15_CAT$n_hw_2017ws / scen_p55n15_CAT$WsAreaSqKm - 
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15ws * scen_p55n15_CAT$NUE15ws
+
+scen_p55n15_CAT$N_ag_surp_kgsqkm_p55n15ws = 
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15ws -  # or N_inputs_kgsqkm_Prod55 or ag_inputs_kgsqkm_prod55cat
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15ws * scen_p55n15_CAT$NUE15ws
+
+
+summary(scen_p55n15_CAT$N_surp_kgsqkm_p55n15cat)
+summary(scen_p55n15_CAT$N_ag_surp_kgsqkm_p55n15ws)
+summary(scen_p55n15_CAT$n_surp_kgsqkm_2017cat)
+
+
+#Generate Prediction Dataset
+scen_p55n15_HUC$n_surplus_kgsqkm  = scen_p55n15_HUC$N_surp_kgsqkm_prod55nue15
+scen_p55n15_HUC$N_surp_kgsqkm = scen_p55n15_HUC$N_surp_kgsqkm_prod55nue15
+scen_p55n15_HUC$N_ag_surp_kgsqkm = scen_p55n15_HUC$N_ag_surp_kgsqkm_prod55nue15
+scen_p55n15_HUC$n_ag_surplus_kgsqkm = scen_p55n15_HUC$N_ag_surp_kgsqkm_prod55nue15
+scen_p55n15_HUC$N_Surp_kgsqkm_2017ws = scen_p55n15_HUC$N_surp_kgsqkm_prod55nue15
+scen_p55n15_HUC$N_Surp_kgsqkm_2017cat = scen_p55n15_HUC$N_surp_kgsqkm_prod55nue15
+
+scen_p55n15_CAT$N_Surp_kgsqkm_2017cat = scen_p55n15_CAT$N_surp_kgsqkm_p55n15cat
+scen_p55n15_CAT$n_ag_surp_kgsqkm_2017cat = scen_p55n15_CAT$N_ag_surp_kgsqkm_p55n15cat
+scen_p55n15_CAT$N_Surp_kgsqkm_2017ws = scen_p55n15_CAT$N_surp_kgsqkm_p55n15ws
+scen_p55n15_CAT$n_ag_surp_kgsqkm_2017ws = scen_p55n15_CAT$N_ag_surp_kgsqkm_p55n15ws
+
+write_parquet(scen_p55n15_HUC, paste0(future_dir2,'Scenario_Prod55_NUE15_constInput_Dataset_HUC12.parquet'))
+write_parquet(scen_p55n15_CAT, paste0(future_dir2,'Scenario_Prod55_NUE15_constInput_Dataset_Cat.parquet'))
 
 
 
@@ -8199,7 +8512,7 @@ predCat_all_45G1 = merge(predCat_fut[,keeps1],StreamCat_cats[,statkeeps],by='COM
 
 ```
 
-#**Prod & Future Scenario (with current NUE + 0.15)
+#**Prod & Future Scenario (with current NUE)
 * 55% increase in Productivity, 0% increase in NUE and Future Scenario 4.5G
 ```{r}
 
@@ -8364,8 +8677,9 @@ write_parquet(predCat_prod_45G, paste0(future_dir2,'Scenario_RCP45G_Prod55_NUE0_
 ```
 
 
-#**Prod, NUE & Future Scenario (with current NUE + 0.15)
+#1a**Prod, NUE & Future Scenario (with current NUE + 0.15)
 * 55% increase in Productivity, 15% increase in NUE and Future Scenario 4.5G
+* With decreased inputs when NUE increases
 ```{r}
 
 #()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
@@ -8515,8 +8829,511 @@ write_parquet(predCat_all_45G, paste0(future_dir2,'Scenario_RCP45G_Prod55_NUE15_
 
 ```
 
-#**Prod, NUE & Future Scenario (with current NUE + 0.15)
-* 55% increase in Productivity, 50% increase in NUE and Future Scenario 4.5G
+#1b**Prod, NUE & Future Scenario (with current NUE + 0.15)
+* 55% increase in Productivity, 15% increase in NUE and Future Scenario 8.5H
+* With decreased inputs when NUE increases
+```{r}
+
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+NUE_INCR = 0.15
+PRO_INCR = 1.55
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+predCat_fut = NDATA_cat
+predCat_fut = merge(predCat_fut,prec_Cat,by='COMID')
+predCat_fut = merge(predCat_fut,temp_Cat,by='COMID')
+predCat_fut = merge(predCat_fut,imprv_cat,by='COMID')
+#predCat_fut = merge(predCat_fut,dep_N_Cat,by='COMID')
+
+# Using Current Inputs and Outputs to calcualte NUE
+predCat_fut$NUEcat = predCat_fut$n_cr_2017cat / (predCat_fut$n_ff_2017cat +
+                                                    predCat_fut$n_lw_2017cat +
+                                                    predCat_fut$n_cf_2017cat)
+predCat_fut$NUEws = predCat_fut$n_cr_2017ws / (predCat_fut$n_ff_2017ws +
+                                                    predCat_fut$n_lw_2017ws +
+                                                    predCat_fut$n_cf_2017ws)
+
+#predCat_fut$NUEcat[is.na(predCat_fut$NUEcat)] <- 0
+#predCat_fut$NUEws[is.na(predCat_fut$NUEws)] <- 0
+
+predCat_fut$NUE15cat = predCat_fut$NUEcat + NUE_INCR # 15% increase in NUE
+predCat_fut$NUE15ws = predCat_fut$NUEws + NUE_INCR # 15% increase in NUE
+
+# Limiting NUE to <=1
+
+#predCat_fut$NUE15cat = ifelse(predCat_fut$NUE15cat>1,1,predCat_fut$NUE15cat)
+#predCat_fut$NUE15ws = ifelse(predCat_fut$NUE15ws>1,1,predCat_fut$NUE15ws)
+
+#-------------------------------------------------------------------------------
+
+# Calculate Ag inputs with 55% increase and NUE+15%
+predCat_fut$N_ag_inputs_kgsqkm_p55n15cat =
+  1.55*predCat_fut$n_crop_rem_kgsqkm_RCP8.5H / predCat_fut$NUE15cat
+predCat_fut$N_ag_inputs_kgsqkm_p55n15ws = 
+  1.55* predCat_fut$n_crop_rem_kgsqkm_RCP8.5H / predCat_fut$NUE15ws
+
+# if Inputs = 0, make = 0
+predCat_fut$N_ag_inputs_kgsqkm_p55n15cat[is.na(predCat_fut$N_ag_inputs_kgsqkm_p55n15cat)] <- 0
+predCat_fut$N_ag_inputs_kgsqkm_p55n15ws[is.na(predCat_fut$N_ag_inputs_kgsqkm_p55n15ws)] <- 0
+
+predCat_fut$N_ag_inputs_kgsqkm_p55n15cat[predCat_fut$N_ag_inputs_kgsqkm_p55n15cat == Inf] <- 0
+predCat_fut$N_ag_inputs_kgsqkm_p55n15ws[predCat_fut$N_ag_inputs_kgsqkm_p55n15ws == Inf] <- 0
+
+#-----------------------------------------------------------------------------------
+# Calculate New N surplus
+
+predCat_fut$N_surp_kgsqkm_RCP_p55n15cat = 
+  predCat_fut$N_ag_inputs_kgsqkm_p55n15cat +
+  predCat_fut$totalN_2050ctl_kgNha * 100 + # convert from ha to km2 
+  predCat_fut$n_human_food_waste_kgsqkm_RCP8.5H -  
+  predCat_fut$n_crop_rem_kgsqkm_RCP8.5H * 1.55 # also have to increase CR
+
+predCat_fut$N_ag_surp_kgsqkm_RCP_p55n15cat = 
+  predCat_fut$N_ag_inputs_kgsqkm_p55n15cat -  
+  predCat_fut$n_crop_rem_kgsqkm_RCP8.5H* 1.55 # also have to increase CR
+
+predCat_fut$N_surp_kgsqkm_RCP_p55n15ws = 
+  predCat_fut$N_ag_inputs_kgsqkm_p55n15ws +  
+  predCat_fut$totalN_2050ctl_kgNha * 100 + # convert from ha to km2 
+  predCat_fut$n_human_food_waste_kgsqkm_RCP8.5H - 
+  predCat_fut$n_crop_rem_kgsqkm_RCP8.5H * 1.55 # also have to increase CR
+
+predCat_fut$N_ag_surp_kgsqkm_RCP_p55n15ws = 
+  predCat_fut$N_ag_inputs_kgsqkm_p55n15ws -  
+  predCat_fut$n_crop_rem_kgsqkm_RCP8.5H * 1.55 # also have to increase CR
+
+
+summary(predCat_fut$N_surp_kgsqkm_RCP_p55n15ws)
+summary(predCat_fut$n_surp_kgsqkm_2017ws)
+
+
+#Generate Prediction Dataset
+
+predCat_fut$N_Surp_kgsqkm_2017cat = predCat_fut$N_surp_kgsqkm_RCP_p55n15cat
+predCat_fut$n_ag_surp_kgsqkm_2017cat = predCat_fut$N_ag_surp_kgsqkm_RCP_p55n15cat
+predCat_fut$N_Surp_kgsqkm_2017ws = predCat_fut$N_surp_kgsqkm_RCP_p55n15ws
+predCat_fut$n_ag_surp_kgsqkm_2017ws = predCat_fut$N_ag_surp_kgsqkm_RCP_p55n15ws
+
+
+
+predCat_fut$PctCrop2019Ws = predCat_fut$Pct_crop_pasture_land_RCP8.5H
+predCat_fut$PctCrop2019Cat = predCat_fut$Pct_crop_pasture_land_RCP8.5H
+
+predCat_fut$FertWs = predCat_fut$n_farm_fert_kgsqkm_RCP8.5H
+predCat_fut$FertCat = predCat_fut$n_farm_fert_kgsqkm_RCP8.5H
+
+predCat_fut$PopDen2010Ws = predCat_fut$pop_den_RCP8.5H
+predCat_fut$PopDen2010Cat = predCat_fut$pop_den_RCP8.5H
+
+predCat_fut$PctImp2016Ws = predCat_fut$impervious_2050_RCP8.5Hadgem
+predCat_fut$PctImp2016Cat = predCat_fut$impervious_2050_RCP8.5Hadgem
+
+predCat_fut$N_TW2012Ws = predCat_fut$totalN_2050ctl_kgNha
+predCat_fut$N_TW2012Cat = predCat_fut$totalN_2050ctl_kgNha
+
+predCat_fut$CBNFWs = predCat_fut$n_crop_fix_kgsqkm_RCP8.5H
+predCat_fut$CBNFCat = predCat_fut$n_crop_fix_kgsqkm_RCP8.5H
+
+predCat_fut$ManureWs = predCat_fut$n_manure_kgsqkm_RCP8.5H
+predCat_fut$ManureCat = predCat_fut$n_manure_kgsqkm_RCP8.5H
+
+predCat_fut$PctForest2019Ws = predCat_fut$Pct_forest_RCP8.5H
+predCat_fut$PctForest2019Cat = predCat_fut$Pct_forest_RCP8.5H
+
+predCat_fut$tmean9120ws = predCat_fut$temp_2050_degC_RCP8.5Hadgem
+predCat_fut$tmean9120cat = predCat_fut$temp_2050_degC_RCP8.5Hadgem
+
+predCat_fut$precip9120ws = predCat_fut$precip_2050_mm_RCP8.5Hadgem
+predCat_fut$precip9120cat = predCat_fut$precip_2050_mm_RCP8.5Hadgem
+
+#predCat_fut$n_ags_2017ws = predCat_fut$N_ag_surp_RCP8.5H
+#predCat_fut$n_surplus_kgsqkm = predCat_fut$N_surp_RCP8.5H
+
+
+#"N_Surp_2017ws" "n_ags_2017ws" 
+
+# Merge on static variables
+keeps1 = c('COMID','PopDen2010Ws', 'PctForest2019Ws', 'PctCrop2019Ws', 'precip9120ws',
+       'tmean9120ws', 'N_TW2012Ws','N_Surp_kgsqkm_2017ws',
+       'PopDen2010Cat', 'PctForest2019Cat', 'PctCrop2019Cat', 'precip9120cat',
+       'tmean9120cat', 'N_TW2012Cat','N_Surp_kgsqkm_2017cat',
+       'NUEcat','NUEws','NUE15cat','NUE15ws')
+
+#setdiff(keeps1,colnames(predCat_fut)) # gives not matching
+
+
+statkeeps = c('COMID','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
+              'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
+              'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
+              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat',
+              'ElevWs','AgKffactWs','AgDrain_pctWs','BFIWs',
+              'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
+              'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
+              'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs')
+predCat_all_85H = merge(predCat_fut[,keeps1],StreamCat_cats[,statkeeps],by='COMID')
+
+
+# remove extraneous fields
+
+
+write_parquet(predCat_all_85H, paste0(future_dir2,'Scenario_RCP85H_Prod55_NUE15_Dataset_Cat.parquet'))
+
+
+```
+
+#2Prod, NUE & Future Scenario (with current NUE + 0.15)
+* 55% increase in Productivity, 15% increase in NUE and Future Scenario 4.5G
+* Assuming constant inputs due to NUE increase 
+```{r}
+
+library(arrow)
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+NUE_INCR = 0.15
+PRO_INCR = 1.55
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+#scen_p55n15_HUC = scen_NUE_HUC
+#scen_p55n15_CAT = scen_NUE_CAT
+
+
+statkeeps2 = c('COMID','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
+              'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
+              'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
+              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat',
+              'ElevWs','AgKffactWs','AgDrain_pctWs','BFIWs',
+              'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
+              'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
+              'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs',
+              'PopDen2010Ws','PctForest2019Ws','precip9120ws','precip9120cat',
+              'tmean9120ws','N_TW2012Ws','FertWs',
+              'ManureWs','CBNFWs','PctCrop2019Cat','PctCrop2019Ws',
+              'PctForest2019Cat','tmean9120cat','N_TW2012Cat'
+
+              )
+# 
+# statkeeps2a = c('COMID','CatAreaSqKm','WsAreaSqKm',
+#                 'n_cr_2017cat','n_ff_2017cat','n_lw_2017cat','n_cf_2017cat',
+#                 'n_cr_2017ws','n_ff_2017ws','n_lw_2017ws','n_cf_2017ws',
+#                 'n_surp_kgsqkm_2017cat','n_ag_surp_kgsqkm_2017cat',
+#                 'n_surp_kgsqkm_2017ws','n_ag_surp_kgsqkm_2017ws',
+#                 'n_dep_2017cat','n_hw_2017cat','n_dep_2017ws','n_hw_2017ws')
+
+
+#scen_p55n15_CAT = merge(NDATA_cat,StreamCat_cats[,statkeeps2],by='COMID')
+
+scen_p55n15_CAT = NDATA_cat
+scen_p55n15_CAT = merge(scen_p55n15_CAT,prec_Cat,by='COMID')
+scen_p55n15_CAT = merge(scen_p55n15_CAT,temp_Cat,by='COMID')
+scen_p55n15_CAT = merge(scen_p55n15_CAT,imprv_cat,by='COMID')
+scen_p55n15_CAT = merge(scen_p55n15_CAT,StreamCat_cats[,statkeeps2],by='COMID')
+
+scen_p55n15_CAT$NUEcat = scen_p55n15_CAT$n_cr_2017cat / (scen_p55n15_CAT$n_ff_2017cat +
+                                                    scen_p55n15_CAT$n_lw_2017cat +
+                                                    scen_p55n15_CAT$n_cf_2017cat)
+scen_p55n15_CAT$NUEws = scen_p55n15_CAT$n_cr_2017ws / (scen_p55n15_CAT$n_ff_2017ws +
+                                                    scen_p55n15_CAT$n_lw_2017ws +
+                                                    scen_p55n15_CAT$n_cf_2017ws)
+
+#summary(scen_p55n15_CAT$NUEcat) # over a million NAs
+
+
+# Percent of Catchments with positive Ag surplus
+#100*nrow(scen_p55n15_CAT[scen_p55n15_CAT$n_ag_surp_kgsqkm_2017cat > 0,])/nrow(scen_p55n15_CAT)
+
+
+
+# if Inputs = 0, make NUE = 0
+scen_p55n15_CAT$NUEcat[is.na(scen_p55n15_CAT$NUEcat)] <- 0
+scen_p55n15_CAT$NUEws[is.na(scen_p55n15_CAT$NUEws)] <- 0
+nrow(scen_p55n15_CAT[complete.cases(scen_p55n15_CAT[,c("NUEcat")]),] ) # 2644024
+
+scen_p55n15_CAT$NUE15cat = scen_p55n15_CAT$NUEcat + NUE_INCR # 15% increase in NUE
+scen_p55n15_CAT$NUE15ws = scen_p55n15_CAT$NUEws + NUE_INCR # 15% increase in NUE
+
+
+#-------------------------------------------------------------------------------
+
+# Calculate Ag inputs with 55% increase and NUE+15%
+scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15cat = scen_p55n15_CAT$n_crop_rem_kgsqkm_RCP4.5G * 1.55 / scen_p55n15_CAT$NUEcat
+scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15ws = scen_p55n15_CAT$n_crop_rem_kgsqkm_RCP4.5G * 1.55 / scen_p55n15_CAT$NUEws
+
+
+# if Inputs = 0, make = 0
+scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15cat[is.na(scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15cat)] <- 0
+scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15ws[is.na(scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15ws)] <- 0
+
+
+#-----------------------------------------------------------------------------------
+
+
+# Calculate New N surplus
+scen_p55n15_CAT$N_surp_kgsqkm_p55n15cat = 
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15cat +
+  scen_p55n15_CAT$totalN_2050ctl_kgNha * 100 + # convert from ha to km2 +
+  scen_p55n15_CAT$n_human_food_waste_kgsqkm_RCP4.5G - 
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15cat * scen_p55n15_CAT$NUE15cat
+
+scen_p55n15_CAT$N_ag_surp_kgsqkm_p55n15cat = 
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15cat - 
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15cat * scen_p55n15_CAT$NUE15cat
+
+scen_p55n15_CAT$N_surp_kgsqkm_p55n15ws = 
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15ws +  
+  scen_p55n15_CAT$totalN_2050ctl_kgNha * 100 + # convert from ha to km2 
+  scen_p55n15_CAT$n_human_food_waste_kgsqkm_RCP4.5G- 
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15ws * scen_p55n15_CAT$NUE15ws
+
+scen_p55n15_CAT$N_ag_surp_kgsqkm_p55n15ws = 
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15ws -  # or N_inputs_kgsqkm_Prod55 or ag_inputs_kgsqkm_prod55cat
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15ws * scen_p55n15_CAT$NUE15ws
+
+
+summary(scen_p55n15_CAT$N_surp_kgsqkm_p55n15cat)
+summary(scen_p55n15_CAT$N_ag_surp_kgsqkm_p55n15ws)
+summary(scen_p55n15_CAT$n_surp_kgsqkm_2017cat)
+
+
+#Generate Prediction Dataset
+
+
+scen_p55n15_CAT$N_Surp_kgsqkm_2017cat = scen_p55n15_CAT$N_surp_kgsqkm_p55n15cat
+scen_p55n15_CAT$n_ag_surp_kgsqkm_2017cat = scen_p55n15_CAT$N_ag_surp_kgsqkm_p55n15cat
+scen_p55n15_CAT$N_Surp_kgsqkm_2017ws = scen_p55n15_CAT$N_surp_kgsqkm_p55n15ws
+scen_p55n15_CAT$n_ag_surp_kgsqkm_2017ws = scen_p55n15_CAT$N_ag_surp_kgsqkm_p55n15ws
+
+scen_p55n15_CAT$PctCrop2019Ws = scen_p55n15_CAT$Pct_crop_pasture_land_RCP4.5G
+scen_p55n15_CAT$PctCrop2019Cat = scen_p55n15_CAT$Pct_crop_pasture_land_RCP4.5G
+
+scen_p55n15_CAT$FertWs = scen_p55n15_CAT$n_farm_fert_kgsqkm_RCP4.5G
+scen_p55n15_CAT$FertCat = scen_p55n15_CAT$n_farm_fert_kgsqkm_RCP4.5G
+
+scen_p55n15_CAT$PopDen2010Ws = scen_p55n15_CAT$pop_den_RCP4.5G
+scen_p55n15_CAT$PopDen2010Cat = scen_p55n15_CAT$pop_den_RCP4.5G
+
+scen_p55n15_CAT$PctImp2016Ws = scen_p55n15_CAT$impervious_2050_RCP4.5GISS
+scen_p55n15_CAT$PctImp2016Cat = scen_p55n15_CAT$impervious_2050_RCP4.5GISS
+
+scen_p55n15_CAT$N_TW2012Ws = scen_p55n15_CAT$totalN_2050ctl_kgNha
+scen_p55n15_CAT$N_TW2012Cat = scen_p55n15_CAT$totalN_2050ctl_kgNha
+
+scen_p55n15_CAT$CBNFWs = scen_p55n15_CAT$n_crop_fix_kgsqkm_RCP4.5G
+scen_p55n15_CAT$CBNFCat = scen_p55n15_CAT$n_crop_fix_kgsqkm_RCP4.5G
+
+scen_p55n15_CAT$ManureWs = scen_p55n15_CAT$n_manure_kgsqkm_RCP4.5G
+scen_p55n15_CAT$ManureCat = scen_p55n15_CAT$n_manure_kgsqkm_RCP4.5G
+
+scen_p55n15_CAT$PctForest2019Ws = scen_p55n15_CAT$Pct_forest_RCP4.5G
+scen_p55n15_CAT$PctForest2019Cat = scen_p55n15_CAT$Pct_forest_RCP4.5G
+
+scen_p55n15_CAT$tmean9120ws = scen_p55n15_CAT$temp_2050_degC_RCP4.5GISS
+scen_p55n15_CAT$tmean9120cat = scen_p55n15_CAT$temp_2050_degC_RCP4.5GISS
+
+scen_p55n15_CAT$precip9120ws = scen_p55n15_CAT$precip_2050_mm_RCP4.5GISS
+scen_p55n15_CAT$precip9120cat = scen_p55n15_CAT$precip_2050_mm_RCP4.5GISS
+
+# Merge on static variables
+keeps1 = c('COMID','PopDen2010Ws', 'PctForest2019Ws', 'PctCrop2019Ws', 'precip9120ws',
+       'tmean9120ws', 'N_TW2012Ws','N_Surp_kgsqkm_2017ws',
+       'PopDen2010Cat', 'PctForest2019Cat', 'PctCrop2019Cat', 'precip9120cat',
+       'tmean9120cat', 'N_TW2012Cat','N_Surp_kgsqkm_2017cat')
+
+#setdiff(keeps1,colnames(predCat_fut)) # gives not matching
+
+
+statkeeps = c('COMID','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
+              'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
+              'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
+              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat',
+              'ElevWs','AgKffactWs','AgDrain_pctWs','BFIWs',
+              'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
+              'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
+              'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs')
+predCat_all_45G = merge(scen_p55n15_CAT[,keeps1],StreamCat_cats[,statkeeps],by='COMID')
+
+
+
+
+write_parquet(predCat_all_45G, paste0(future_dir2,'Scenario_RCP45G_Prod55_NUE15_constInput_Dataset_Cat.parquet'))
+
+
+```
+
+#2bProd, NUE & Future Scenario (with current NUE + 0.15)
+* 55% increase in Productivity, 25% increase in NUE and Future Scenario 4.5G
+* Assuming constant inputs due to NUE increase 
+```{r}
+
+library(arrow)
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+NUE_INCR = 0.25
+PRO_INCR = 1.55
+#()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+#scen_p55n15_HUC = scen_NUE_HUC
+#scen_p55n15_CAT = scen_NUE_CAT
+
+
+statkeeps2 = c('COMID','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
+              'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
+              'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
+              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat',
+              'ElevWs','AgKffactWs','AgDrain_pctWs','BFIWs',
+              'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
+              'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
+              'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs',
+              'PopDen2010Ws','PctForest2019Ws','precip9120ws','precip9120cat',
+              'tmean9120ws','N_TW2012Ws','FertWs',
+              'ManureWs','CBNFWs','PctCrop2019Cat','PctCrop2019Ws',
+              'PctForest2019Cat','tmean9120cat','N_TW2012Cat'
+
+              )
+# 
+# statkeeps2a = c('COMID','CatAreaSqKm','WsAreaSqKm',
+#                 'n_cr_2017cat','n_ff_2017cat','n_lw_2017cat','n_cf_2017cat',
+#                 'n_cr_2017ws','n_ff_2017ws','n_lw_2017ws','n_cf_2017ws',
+#                 'n_surp_kgsqkm_2017cat','n_ag_surp_kgsqkm_2017cat',
+#                 'n_surp_kgsqkm_2017ws','n_ag_surp_kgsqkm_2017ws',
+#                 'n_dep_2017cat','n_hw_2017cat','n_dep_2017ws','n_hw_2017ws')
+
+
+#scen_p55n15_CAT = merge(NDATA_cat,StreamCat_cats[,statkeeps2],by='COMID')
+
+scen_p55n15_CAT = NDATA_cat
+scen_p55n15_CAT = merge(scen_p55n15_CAT,prec_Cat,by='COMID')
+scen_p55n15_CAT = merge(scen_p55n15_CAT,temp_Cat,by='COMID')
+scen_p55n15_CAT = merge(scen_p55n15_CAT,imprv_cat,by='COMID')
+scen_p55n15_CAT = merge(scen_p55n15_CAT,StreamCat_cats[,statkeeps2],by='COMID')
+
+scen_p55n15_CAT$NUEcat = scen_p55n15_CAT$n_cr_2017cat / (scen_p55n15_CAT$n_ff_2017cat +
+                                                    scen_p55n15_CAT$n_lw_2017cat +
+                                                    scen_p55n15_CAT$n_cf_2017cat)
+scen_p55n15_CAT$NUEws = scen_p55n15_CAT$n_cr_2017ws / (scen_p55n15_CAT$n_ff_2017ws +
+                                                    scen_p55n15_CAT$n_lw_2017ws +
+                                                    scen_p55n15_CAT$n_cf_2017ws)
+
+#summary(scen_p55n15_CAT$NUEcat) # over a million NAs
+
+
+# Percent of Catchments with positive Ag surplus
+#100*nrow(scen_p55n15_CAT[scen_p55n15_CAT$n_ag_surp_kgsqkm_2017cat > 0,])/nrow(scen_p55n15_CAT)
+
+
+
+# if Inputs = 0, make NUE = 0
+scen_p55n15_CAT$NUEcat[is.na(scen_p55n15_CAT$NUEcat)] <- 0
+scen_p55n15_CAT$NUEws[is.na(scen_p55n15_CAT$NUEws)] <- 0
+nrow(scen_p55n15_CAT[complete.cases(scen_p55n15_CAT[,c("NUEcat")]),] ) # 2644024
+
+scen_p55n15_CAT$NUE15cat = scen_p55n15_CAT$NUEcat + NUE_INCR # 15% increase in NUE
+scen_p55n15_CAT$NUE15ws = scen_p55n15_CAT$NUEws + NUE_INCR # 15% increase in NUE
+
+
+#-------------------------------------------------------------------------------
+
+# Calculate Ag inputs with 55% increase and NUE+15%
+scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15cat = scen_p55n15_CAT$n_crop_rem_kgsqkm_RCP4.5G * 1.55 / scen_p55n15_CAT$NUEcat
+scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15ws = scen_p55n15_CAT$n_crop_rem_kgsqkm_RCP4.5G * 1.55 / scen_p55n15_CAT$NUEws
+
+
+# if Inputs = 0, make = 0
+scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15cat[is.na(scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15cat)] <- 0
+scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15ws[is.na(scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15ws)] <- 0
+
+
+#-----------------------------------------------------------------------------------
+
+
+# Calculate New N surplus
+scen_p55n15_CAT$N_surp_kgsqkm_p55n15cat = 
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15cat +
+  scen_p55n15_CAT$totalN_2050ctl_kgNha * 100 + # convert from ha to km2 +
+  scen_p55n15_CAT$n_human_food_waste_kgsqkm_RCP4.5G - 
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15cat * scen_p55n15_CAT$NUE15cat
+
+scen_p55n15_CAT$N_ag_surp_kgsqkm_p55n15cat = 
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15cat - 
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15cat * scen_p55n15_CAT$NUE15cat
+
+scen_p55n15_CAT$N_surp_kgsqkm_p55n15ws = 
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15ws +  
+  scen_p55n15_CAT$totalN_2050ctl_kgNha * 100 + # convert from ha to km2 
+  scen_p55n15_CAT$n_human_food_waste_kgsqkm_RCP4.5G- 
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15ws * scen_p55n15_CAT$NUE15ws
+
+scen_p55n15_CAT$N_ag_surp_kgsqkm_p55n15ws = 
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15ws -  # or N_inputs_kgsqkm_Prod55 or ag_inputs_kgsqkm_prod55cat
+  scen_p55n15_CAT$N_ag_inputs_kgsqkm_p55n15ws * scen_p55n15_CAT$NUE15ws
+
+
+summary(scen_p55n15_CAT$N_surp_kgsqkm_p55n15cat)
+summary(scen_p55n15_CAT$N_ag_surp_kgsqkm_p55n15ws)
+summary(scen_p55n15_CAT$n_surp_kgsqkm_2017cat)
+
+
+#Generate Prediction Dataset
+
+
+scen_p55n15_CAT$N_Surp_kgsqkm_2017cat = scen_p55n15_CAT$N_surp_kgsqkm_p55n15cat
+scen_p55n15_CAT$n_ag_surp_kgsqkm_2017cat = scen_p55n15_CAT$N_ag_surp_kgsqkm_p55n15cat
+scen_p55n15_CAT$N_Surp_kgsqkm_2017ws = scen_p55n15_CAT$N_surp_kgsqkm_p55n15ws
+scen_p55n15_CAT$n_ag_surp_kgsqkm_2017ws = scen_p55n15_CAT$N_ag_surp_kgsqkm_p55n15ws
+
+scen_p55n15_CAT$PctCrop2019Ws = scen_p55n15_CAT$Pct_crop_pasture_land_RCP4.5G
+scen_p55n15_CAT$PctCrop2019Cat = scen_p55n15_CAT$Pct_crop_pasture_land_RCP4.5G
+
+scen_p55n15_CAT$FertWs = scen_p55n15_CAT$n_farm_fert_kgsqkm_RCP4.5G
+scen_p55n15_CAT$FertCat = scen_p55n15_CAT$n_farm_fert_kgsqkm_RCP4.5G
+
+scen_p55n15_CAT$PopDen2010Ws = scen_p55n15_CAT$pop_den_RCP4.5G
+scen_p55n15_CAT$PopDen2010Cat = scen_p55n15_CAT$pop_den_RCP4.5G
+
+scen_p55n15_CAT$PctImp2016Ws = scen_p55n15_CAT$impervious_2050_RCP4.5GISS
+scen_p55n15_CAT$PctImp2016Cat = scen_p55n15_CAT$impervious_2050_RCP4.5GISS
+
+scen_p55n15_CAT$N_TW2012Ws = scen_p55n15_CAT$totalN_2050ctl_kgNha
+scen_p55n15_CAT$N_TW2012Cat = scen_p55n15_CAT$totalN_2050ctl_kgNha
+
+scen_p55n15_CAT$CBNFWs = scen_p55n15_CAT$n_crop_fix_kgsqkm_RCP4.5G
+scen_p55n15_CAT$CBNFCat = scen_p55n15_CAT$n_crop_fix_kgsqkm_RCP4.5G
+
+scen_p55n15_CAT$ManureWs = scen_p55n15_CAT$n_manure_kgsqkm_RCP4.5G
+scen_p55n15_CAT$ManureCat = scen_p55n15_CAT$n_manure_kgsqkm_RCP4.5G
+
+scen_p55n15_CAT$PctForest2019Ws = scen_p55n15_CAT$Pct_forest_RCP4.5G
+scen_p55n15_CAT$PctForest2019Cat = scen_p55n15_CAT$Pct_forest_RCP4.5G
+
+scen_p55n15_CAT$tmean9120ws = scen_p55n15_CAT$temp_2050_degC_RCP4.5GISS
+scen_p55n15_CAT$tmean9120cat = scen_p55n15_CAT$temp_2050_degC_RCP4.5GISS
+
+scen_p55n15_CAT$precip9120ws = scen_p55n15_CAT$precip_2050_mm_RCP4.5GISS
+scen_p55n15_CAT$precip9120cat = scen_p55n15_CAT$precip_2050_mm_RCP4.5GISS
+
+# Merge on static variables
+keeps1 = c('COMID','PopDen2010Ws', 'PctForest2019Ws', 'PctCrop2019Ws', 'precip9120ws',
+       'tmean9120ws', 'N_TW2012Ws','N_Surp_kgsqkm_2017ws',
+       'PopDen2010Cat', 'PctForest2019Cat', 'PctCrop2019Cat', 'precip9120cat',
+       'tmean9120cat', 'N_TW2012Cat','N_Surp_kgsqkm_2017cat')
+
+#setdiff(keeps1,colnames(predCat_fut)) # gives not matching
+
+
+statkeeps = c('COMID','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
+              'Precip_Minus_EVTCat','WaterInputCat','wdrw_LDCat',
+              'permcat','runoffcat','RockNCat','Fe2O3Cat','SandCat',
+              'NHDslope_Pct_Cat','WtDepCat','Hillslope_PctCat','HydrlCondCat',
+              'ElevWs','AgKffactWs','AgDrain_pctWs','BFIWs',
+              'Precip_Minus_EVTWs','WaterInputWs','wdrw_LDWs',
+              'permws','runoffws','RockNWs','Fe2O3Ws','SandWs',
+              'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs')
+predCat_all_45G = merge(scen_p55n15_CAT[,keeps1],StreamCat_cats[,statkeeps],by='COMID')
+
+write_parquet(predCat_all_45G, paste0(future_dir2,'Scenario_RCP45G_Prod55_NUE25_constInput_Dataset_Cat.parquet'))
+
+
+```
+
+#*Prod, NUE & Future Scenario (with current NUE + 0.15)
+* 55% increase in Productivity, 25% increase in NUE and Future Scenario 4.5G
 ```{r}
 
 #()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
@@ -8545,7 +9362,6 @@ predCat_fut$NUE15cat = predCat_fut$NUEcat + NUE_INCR # 15% increase in NUE
 predCat_fut$NUE15ws = predCat_fut$NUEws + NUE_INCR # 15% increase in NUE
 
 # Limiting NUE to <=1
-
 #predCat_fut$NUE15cat = ifelse(predCat_fut$NUE15cat>1,1,predCat_fut$NUE15cat)
 #predCat_fut$NUE15ws = ifelse(predCat_fut$NUE15ws>1,1,predCat_fut$NUE15ws)
 
@@ -8667,8 +9483,8 @@ write_parquet(predCat_all_45G, paste0(future_dir2,'Scenario_RCP45G_Prod55_NUE25_
 ```
 
 
-#**Prod, NUE & Future Scenario (with current NUE + 0.15)
-* 55% increase in Productivity, 15% increase in NUE and Future Scenario 4.5G
+#*Prod, NUE & Future Scenario (with current NUE + 0.5)
+* 55% increase in Productivity, 50% increase in NUE and Future Scenario 4.5G
 ```{r}
 
 #()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
@@ -8697,7 +9513,6 @@ predCat_fut$NUE15cat = predCat_fut$NUEcat + NUE_INCR # 15% increase in NUE
 predCat_fut$NUE15ws = predCat_fut$NUEws + NUE_INCR # 15% increase in NUE
 
 # Limiting NUE to <=1
-
 #predCat_fut$NUE15cat = ifelse(predCat_fut$NUE15cat>1,1,predCat_fut$NUE15cat)
 #predCat_fut$NUE15ws = ifelse(predCat_fut$NUE15ws>1,1,predCat_fut$NUE15ws)
 
@@ -8912,7 +9727,7 @@ test$NUE = test$n_cr_2017cat / (test$n_ff_2017cat + test$n_cf_2017cat + test$n_l
 test$NUE15 = test$NUE+0.15  
 summary(test$NUE15)
 
-test$NUE15 = ifelse(test$NUE15>1,1,test$NUE15)
+#test$NUE15 = ifelse(test$NUE15>1,1,test$NUE15)
 summary(test$NUE15)
 
 test$inputs_p55 = 1.55*test$n_cr_2017cat / test$NUE
