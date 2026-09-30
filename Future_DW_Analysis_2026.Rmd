@@ -1504,6 +1504,12 @@ write_fst(StreamCat_cats, paste0(future_dir,'Data/StreamCat_Vars_Future_Analysis
 write_fst(StreamCat_HU12, paste0(future_dir,'Data/StreamCat_Vars_Future_Analysis_HUC12.fst'), compress = 50, uniform_encoding = TRUE)
 
 
+# Save a % full dataset
+# test = read_fst("D:/Data/Cat.All.Vars2_All_Cats.fst")
+# test = test[,c('COMID','CatPctFull','WsPctFull')]
+# write_fst(test, paste0("D:/Data/StreamCat_Percent_Full.fst"), compress = 50, uniform_encoding = TRUE)
+
+
 ```
 
 
@@ -4196,8 +4202,8 @@ dim(rfr_gw3) # 7544
 
 #write.csv(rfr_gw2, file = paste0(future_dir,'Data/Dataset_RF_Model_GW_conc_HUC12.csv'), row.names=F)
 
-dataR_gw_huc_ = rfr_gw2
-dataR_gw_huc = rfr_gw3
+dataR_gw_cat_ = rfr_gw2
+dataR_gw_cat = rfr_gw3
 
 write.csv(rfr_gw2, file = paste0(future_dir2,'Dataset_Conc_Model_GW_COMIDS.csv'), row.names=F)
 
@@ -5914,6 +5920,289 @@ r2_test
 
 ```
 
+# *Fit Conc SW model Catchment
+```{r}
+
+set.seed(10) # 10 HUC12
+
+library(ranger)
+#library(mlr)
+#library(smotefamily)
+library(ROSE)
+
+#()()()()()()()()()()()()()()()()()()()()
+RFDATA = dataR_sw_cat  
+#()()()()()()()()()()()()()()()()()()()()
+
+
+ntree = 500
+#-------------------------------------------------------------------------------------------------
+# Train Test split
+ind_test <- sample(nrow(RFDATA), round(nrow(RFDATA)*0.2))
+rfr_test= RFDATA[ind_test, ]
+rfr_train = RFDATA[-ind_test,]
+
+rfr_train_sw = rfr_train
+#-------------------------------------------------------------------------------------------------
+# Upsampling with SMOTE
+# rf_train2 = SMOTE(X=subset(rf_train,select=-c(Viol_Class)),
+#                 target=subset(rf_train,select=c(Viol_Class)), 
+#                 K=5,dup_size=10)
+
+#data_balanced <- ovun.sample(Viol_Class ~ ., data = rf_train, method = "over", p = 0.5, seed = 123)$data # 0.5 give even classes
+
+#nrow(data_balanced[data_balanced$Viol_Class==1,]) # 5755
+#nrow(rf_train[rf_train$Viol_Class==1,]) # 5755
+
+#-------------------------------------------------------------------------------------------------
+
+
+# Undersampling from majority class (class = 0)
+#rf_train0 = rf_train[rf_train$Viol_Class == 0,]
+#rf_train1 = rf_train[rf_train$Viol_Class == 1,]
+#frac1 = nrow(rf_train1)/nrow(rf_train)
+
+# Balance Dataset (due to zero inflation)
+#sample.frac = c(frac1,1.0) #c(0.1, 0.5) will draw 10% from the first class and 50% 
+#case_weights <- ifelse(rf_train$Viol_Class == 1,  1000, 1) # weighting where class = 1 higher than when class equals 0
+m.try = 5
+min.node = 10
+
+#-------------------------------------------------------------------------------------------------
+# Fit Model: 
+rfr_model_sw = ranger(mean_conc ~ .,
+                      data=rfr_train, # data_balanced, rf_train
+                      num.trees=ntree,
+                      #mtry=m.try,
+                      #min.node.size=min.node,
+                      importance='impurity')
+
+
+#-------------------------------------------------------------------------------------------------
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Model Uncertainty & Bias v1 (using Ranger functions)
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+rfr_ranger = rfr_model_sw
+
+# R-squared
+rfr_ranger$r.squared # 0.9923619
+
+# Prediction Error
+rfr_ranger$prediction.error # 1.038087
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Model Uncertainty & Bias (with cross-validation)
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+# function to get r-squared
+r2 <- function(y, pred) {
+  1 - var(y - pred) / var(y)  
+}
+
+#*****************************
+# R2 Testing Set
+yobs <- rfr_test$mean_conc  # Viol.Conc for other dataset
+ypred = predict(rfr_ranger, data =rfr_test)
+test = cbind(data.frame(yobs=yobs),data.frame(ypreds=ypred$predictions))
+# remove Inf
+test <- test[is.finite(rowSums(test)),]
+
+r2_test = r2(test$yobs,test$ypreds) 
+r2_test # 0.9997797
+
+
+
+#*****************************
+# Root Mean Squared Error (RMSE) Training Dataset
+yobs <- rfr_test$mean_conc # Viol.Conc for other dataset
+ypred = predict(rfr_ranger,data = rfr_test)
+rmse = sqrt(mean((ypred$predictions - yobs)^2))
+rmse # 0.5552267
+
+#*****************************
+# Mean Bias
+yobs <- rfr_test$mean_conc # Viol.Conc for other dataset
+ypred = predict(rfr_ranger,data = rfr_test )
+bias = ( sum(ypred$predictions) - sum(yobs)) / length(yobs) 
+bias # 0.00627016
+
+#*****************************
+# Variance (standard deviation of the error (which is pred-obs))
+yobs <- rfr_test$mean_conc # Viol.Conc for other dataset
+ypred = predict(rfr_ranger,data = rfr_test)
+var = sd(ypred$predictions - yobs)
+var # 0.5579883
+
+#*****************************
+# Observed vs. Predicted
+
+yobs <- rfr_test$mean_conc # Viol.Conc for other dataset
+ypred = predict(rfr_ranger,data = rfr_test)
+tempDF = data.frame(yobs, ypred$predictions)
+
+plot(tempDF$yobs, tempDF$ypred, main='RF')
+abline(lm(tempDF$ypred~tempDF$yobs))
+abline(1,1,col='red')
+
+r2_test
+
+
+# result_df = data.frame(N=nrow(RFDATA),PCC=round(pcc,1),
+#                        sens=round(sens,1),spec=round(spec,1),
+#                        gmean=round(gmean,1),AUC=round(AUC,2)
+#                        )
+# write_clip(result_df) 
+# result_df
+
+# saveRDS(rfc_sw, file = paste0(future_dir ,'Data/Models/RF_bi_model_Future_DW_NO3_SW_HU12.rds'))
+# saveRDS(rfc_sw_p, file = paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+
+
+```
+
+# *Fit Conc GW model Catchment
+```{r}
+
+set.seed(13) # 10 HUC12
+
+library(ranger)
+#library(mlr)
+#library(smotefamily)
+library(ROSE)
+
+#()()()()()()()()()()()()()()()()()()()()
+RFDATA = dataR_gw_cat  
+#()()()()()()()()()()()()()()()()()()()()
+
+
+ntree = 500
+#-------------------------------------------------------------------------------------------------
+# Train Test split
+ind_test <- sample(nrow(RFDATA), round(nrow(RFDATA)*0.2))
+rfr_test= RFDATA[ind_test, ]
+rfr_train = RFDATA[-ind_test,]
+
+rfr_train_gw = rfr_train
+#-------------------------------------------------------------------------------------------------
+# Upsampling with SMOTE
+# rf_train2 = SMOTE(X=subset(rf_train,select=-c(Viol_Class)),
+#                 target=subset(rf_train,select=c(Viol_Class)), 
+#                 K=5,dup_size=10)
+
+#data_balanced <- ovun.sample(Viol_Class ~ ., data = rf_train, method = "over", p = 0.5, seed = 123)$data # 0.5 give even classes
+
+#nrow(data_balanced[data_balanced$Viol_Class==1,]) # 5755
+#nrow(rf_train[rf_train$Viol_Class==1,]) # 5755
+
+#-------------------------------------------------------------------------------------------------
+
+
+# Undersampling from majority class (class = 0)
+#rf_train0 = rf_train[rf_train$Viol_Class == 0,]
+#rf_train1 = rf_train[rf_train$Viol_Class == 1,]
+#frac1 = nrow(rf_train1)/nrow(rf_train)
+
+# Balance Dataset (due to zero inflation)
+#sample.frac = c(frac1,1.0) #c(0.1, 0.5) will draw 10% from the first class and 50% 
+#case_weights <- ifelse(rf_train$Viol_Class == 1,  1000, 1) # weighting where class = 1 higher than when class equals 0
+m.try = 5
+min.node = 10
+
+#-------------------------------------------------------------------------------------------------
+# Fit Model: 
+rfr_model_gw = ranger(mean_conc ~ .,
+                      data=rfr_train, # data_balanced, rf_train
+                      num.trees=ntree,
+                      #mtry=m.try,
+                      #min.node.size=min.node,
+                      importance='impurity')
+
+
+#-------------------------------------------------------------------------------------------------
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Model Uncertainty & Bias v1 (using Ranger functions)
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+rfr_ranger = rfr_model_gw
+
+# R-squared
+rfr_ranger$r.squared # 0.9923619
+
+# Prediction Error
+rfr_ranger$prediction.error # 1.038087
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Model Uncertainty & Bias (with cross-validation)
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+# function to get r-squared
+r2 <- function(y, pred) {
+  1 - var(y - pred) / var(y)  
+}
+
+#*****************************
+# R2 Testing Set
+yobs <- rfr_test$mean_conc  # Viol.Conc for other dataset
+ypred = predict(rfr_ranger, data =rfr_test)
+test = cbind(data.frame(yobs=yobs),data.frame(ypreds=ypred$predictions))
+# remove Inf
+test <- test[is.finite(rowSums(test)),]
+
+r2_test = r2(test$yobs,test$ypreds) 
+r2_test # 0.9997797
+
+
+
+#*****************************
+# Root Mean Squared Error (RMSE) Training Dataset
+yobs <- rfr_test$mean_conc # Viol.Conc for other dataset
+ypred = predict(rfr_ranger,data = rfr_test)
+rmse = sqrt(mean((ypred$predictions - yobs)^2))
+rmse # 0.5552267
+
+#*****************************
+# Mean Bias
+yobs <- rfr_test$mean_conc # Viol.Conc for other dataset
+ypred = predict(rfr_ranger,data = rfr_test )
+bias = ( sum(ypred$predictions) - sum(yobs)) / length(yobs) 
+bias # 0.00627016
+
+#*****************************
+# Variance (standard deviation of the error (which is pred-obs))
+yobs <- rfr_test$mean_conc # Viol.Conc for other dataset
+ypred = predict(rfr_ranger,data = rfr_test)
+var = sd(ypred$predictions - yobs)
+var # 0.5579883
+
+#*****************************
+# Observed vs. Predicted
+
+yobs <- rfr_test$mean_conc # Viol.Conc for other dataset
+ypred = predict(rfr_ranger,data = rfr_test)
+tempDF = data.frame(yobs, ypred$predictions)
+
+plot(tempDF$yobs, tempDF$ypred, main='RF')
+abline(lm(tempDF$ypred~tempDF$yobs))
+abline(1,1,col='red')
+
+r2_test
+
+
+# result_df = data.frame(N=nrow(RFDATA),PCC=round(pcc,1),
+#                        sens=round(sens,1),spec=round(spec,1),
+#                        gmean=round(gmean,1),AUC=round(AUC,2)
+#                        )
+# write_clip(result_df) 
+# result_df
+
+# saveRDS(rfc_sw, file = paste0(future_dir ,'Data/Models/RF_bi_model_Future_DW_NO3_SW_HU12.rds'))
+# saveRDS(rfc_sw_p, file = paste0(future_dir ,'Data/Models/RF_prob_model_Future_DW_NO3_SW_HU12.rds'))
+
+
+```
 
 # **Var Ranking 
 ```{r}
@@ -6115,7 +6404,63 @@ NNI17$n_ag_surplus_kgsqkm =
   NNI17$n_crop_fix_kgsqkm -
   NNI17$n_crop_rem_kgsqkm
   
+
+
+
 ```
+
+# Watershed Accumulated Future Variables
+```{r}
+# tempC_acc = read.csv(paste0(future_dir2,'Ws_Accum_Weighted_Future_TempC_vars.csv'))
+# precip_acc = read.csv(paste0(future_dir2,'Ws_Accum_Weighted_Future_Precip_vars.csv'))
+# NNI_acc = read.csv(paste0(future_dir2,'Ws_Accum_Future_NNI_Vars.csv'))
+# Ndep_acc = read.csv(paste0(future_dir2,'Ws_Accum_Future_N_Dep.csv'))
+# Pct_acc = read.csv(paste0(future_dir2,'Ws_Accum_Future_Land_Use_Pct.csv'))
+# Pop_acc = read.csv(paste0(future_dir2,'Ws_Accum_Future_Pop_Dens.csv'))
+# 
+# arrow::write_parquet(tempC_acc, paste0(future_dir2,"Ws_Accum_Weighted_Future_TempC_vars.parquet"))
+# arrow::write_parquet(precip_acc, paste0(future_dir2,"Ws_Accum_Weighted_Future_Precip_vars.parquet"))
+# arrow::write_parquet(NNI_acc, paste0(future_dir2,"Ws_Accum_Future_NNI_Vars.parquet"))
+# arrow::write_parquet(Ndep_acc, paste0(future_dir2,"Ws_Accum_Future_N_Dep.parquet"))
+# arrow::write_parquet(Pct_acc, paste0(future_dir2,"Ws_Accum_Future_Land_Use_Pct.parquet"))
+# arrow::write_parquet(Pop_acc, paste0(future_dir2,"Ws_Accum_Future_Pop_Dens.parquet"))
+
+NNI_acc <- read_parquet(paste0(future_dir2,"Ws_Accum_Future_NNI_Vars.parquet"))
+Ndep_acc <- read_parquet(paste0(future_dir2,"Ws_Accum_Future_N_Dep.parquet"))
+Pct_acc <- read_parquet(paste0(future_dir2,"Ws_Accum_Future_Land_Use_Pct.parquet"))
+Pop_acc <- read_parquet(paste0(future_dir2,"Ws_Accum_Future_Pop_Dens.parquet"))
+precip_acc <- read_parquet(paste0(future_dir2,"Ws_Accum_Future_Precip_vars.parquet"))
+tempC_acc <- read_parquet(paste0(future_dir2,"Ws_Accum_Future_TempC_vars.parquet"))
+
+temp <- grep("ws_", names(tempC_acc), value = TRUE) # pull out kgsqkm fields
+tempC_acc2 = tempC_acc[,c('COMID',temp)]
+
+temp <- grep("ws_", names(precip_acc), value = TRUE) # pull out kgsqkm fields
+precip_acc2 = precip_acc[,c('COMID',temp)]
+
+temp <- grep("ws_", names(NNI_acc), value = TRUE) # pull out kgsqkm fields
+NNI_acc2 = NNI_acc[,c('COMID',temp)]
+
+temp <- grep("ws_", names(Ndep_acc), value = TRUE) # pull out kgsqkm fields
+Ndep_acc2 = Ndep_acc[,c('COMID',temp)]
+
+temp <- grep("ws_", names(Pct_acc), value = TRUE) # pull out kgsqkm fields
+Pct_acc2 = Pct_acc[,c('COMID',temp)]
+
+temp <- grep("ws_", names(Pop_acc), value = TRUE) # pull out kgsqkm fields
+Pop_acc2 = Pop_acc[,c('COMID',temp)]
+
+ws_vars = unique(merge(tempC_acc2,precip_acc2,by='COMID'))
+ws_vars = unique(merge(ws_vars,NNI_acc2,by='COMID'))
+ws_vars = unique(merge(ws_vars,Ndep_acc2,by='COMID'))
+ws_vars = unique(merge(ws_vars,Pct_acc2,by='COMID'))
+ws_vars = unique(merge(ws_vars,Pop_acc2,by='COMID'))
+gc()
+
+summary(ws_vars$ws_precip_2050_mm_RCP4.5GISS)
+
+```
+
 
 # Save as parquet
 * So that I can upload in python
@@ -6414,7 +6759,7 @@ write_parquet(predHUC_8.5H, paste0(future_dir2,"future_RCP8.5H_NO3_predictors_HU
 
 ```
 
-# Future-4.5G Catchment Prediction Dataset
+# *Future-4.5G Catchment Prediction Dataset
 ```{r}
 library(arrow)
 
@@ -6424,43 +6769,73 @@ predCat_fut = NDATA_cat
 predCat_fut = merge(predCat_fut,prec_Cat,by='COMID')
 predCat_fut = merge(predCat_fut,temp_Cat,by='COMID')
 predCat_fut = merge(predCat_fut,imprv_cat,by='COMID')
+predCat_fut = merge(predCat_fut,ws_vars,by='COMID')
+gc()
 
-predCat_fut$N_Surp_kgsqkm_2017ws = predCat_fut$n_surp_kgsqkm_RCP4.5G
+#test = predCat_fut[,c('COMID','N_TW2012Cat','N_TW2012Ws')]
+#predCat_fut$ws_totalN_2050ctl_kgNha[predCat_fut$COMID == '8413097'] = NA
+
+#predCat_fut$ws_Pct_forest_RCP4.5G[predCat_fut$ws_Pct_forest_RCP4.5G>100]=100 # fix where > 100
+
+
+predCat_fut$N_Surp_kgsqkm_2017ws = predCat_fut$ws_n_surp_kgsqkm_RCP4.5G
 predCat_fut$N_Surp_kgsqkm_2017cat = predCat_fut$n_surp_kgsqkm_RCP4.5G
 
-
-predCat_fut$PctCrop2019Ws = predCat_fut$Pct_crop_pasture_land_RCP4.5G
+predCat_fut$PctCrop2019Ws = predCat_fut$ws_Pct_crop_pasture_land_RCP4.5G
 predCat_fut$PctCrop2019Cat = predCat_fut$Pct_crop_pasture_land_RCP4.5G
 
-predCat_fut$FertWs = predCat_fut$n_farm_fert_kgsqkm_RCP4.5G
+predCat_fut$FertWs = predCat_fut$ws_n_farm_fert_kgsqkm_RCP4.5G
 predCat_fut$FertCat = predCat_fut$n_farm_fert_kgsqkm_RCP4.5G
 
-predCat_fut$PopDen2010Ws = predCat_fut$pop_den_RCP4.5G
+predCat_fut$PopDen2010Ws = predCat_fut$ws_pop_den_RCP4.5G
 predCat_fut$PopDen2010Cat = predCat_fut$pop_den_RCP4.5G
 
-predCat_fut$PctImp2016Ws = predCat_fut$impervious_2050_RCP4.5GISS
+predCat_fut$PctImp2016Ws = predCat_fut$ws_Pct_impervious_2050_RCP4.5GISS
 predCat_fut$PctImp2016Cat = predCat_fut$impervious_2050_RCP4.5GISS
 
-predCat_fut$N_TW2012Ws = predCat_fut$totalN_2050ctl_kgNha
+predCat_fut$N_TW2012Ws = predCat_fut$ws_totalN_2050ctl_kgNha
 predCat_fut$N_TW2012Cat = predCat_fut$totalN_2050ctl_kgNha
 
-predCat_fut$CBNFWs = predCat_fut$n_crop_fix_kgsqkm_RCP4.5G
+predCat_fut$CBNFWs = predCat_fut$ws_n_crop_fix_kgsqkm_RCP4.5G
 predCat_fut$CBNFCat = predCat_fut$n_crop_fix_kgsqkm_RCP4.5G
 
-predCat_fut$ManureWs = predCat_fut$n_manure_kgsqkm_RCP4.5G
+predCat_fut$ManureWs = predCat_fut$ws_n_manure_kgsqkm_RCP4.5G
 predCat_fut$ManureCat = predCat_fut$n_manure_kgsqkm_RCP4.5G
 
-predCat_fut$PctForest2019Ws = predCat_fut$Pct_forest_RCP4.5G
+predCat_fut$PctForest2019Ws = predCat_fut$ws_Pct_forest_RCP4.5G
 predCat_fut$PctForest2019Cat = predCat_fut$Pct_forest_RCP4.5G
 
-predCat_fut$tmean9120ws = predCat_fut$temp_2050_degC_RCP4.5GISS
+predCat_fut$tmean9120ws = predCat_fut$ws_temp_2050_degC_byarea_RCP4.5GISS
 predCat_fut$tmean9120cat = predCat_fut$temp_2050_degC_RCP4.5GISS
 
-predCat_fut$precip9120ws = predCat_fut$precip_2050_mm_RCP4.5GISS
+predCat_fut$precip9120ws = predCat_fut$ws_precip_2050_mm_byarea_RCP4.5GISS
 predCat_fut$precip9120cat = predCat_fut$precip_2050_mm_RCP4.5GISS
 
-#predCat_fut$n_ags_2017ws = predCat_fut$N_ag_surp_RCP4.5G
-#predCat_fut$n_surplus_kgsqkm = predCat_fut$N_surp_RCP4.5G
+
+
+options(scipen = 999)
+summary(predCat_fut$N_Surp_kgsqkm_2017ws)
+summary(predCat_fut$N_Surp_kgsqkm_2017cat)
+summary(predCat_fut$PctCrop2019Ws) # this having learger 3rdQ check out with PctCrop2019Ws vs. PctCrop2019Cat
+summary(predCat_fut$PctCrop2019Cat)
+summary(predCat_fut$FertWs)
+summary(predCat_fut$FertCat)
+summary(predCat_fut$PopDen2010Ws)
+summary(predCat_fut$PopDen2010Cat)
+summary(predCat_fut$PctImp2016Ws)
+summary(predCat_fut$PctImp2016Cat)
+summary(predCat_fut$N_TW2012Ws)
+summary(predCat_fut$N_TW2012Cat)
+summary(predCat_fut$CBNFWs)
+summary(predCat_fut$CBNFCat)
+summary(predCat_fut$ManureWs)
+summary(predCat_fut$ManureCat)
+summary(predCat_fut$PctForest2019Ws)
+summary(predCat_fut$PctForest2019Cat)
+summary(predCat_fut$tmean9120ws)
+summary(predCat_fut$tmean9120cat)
+summary(predCat_fut$precip9120ws)
+summary(predCat_fut$precip9120cat)
 
 
 #"N_Surp_2017ws" "n_ags_2017ws" 
@@ -6494,7 +6869,7 @@ write_parquet(predCat_4.5G, paste0(future_dir2,"Dataset_Future_Catchment_4.5GISS
 
 ```
 
-# Future-8.5G Catchment Prediction Dataset
+# *Future-8.5G Catchment Prediction Dataset
 * Have to use pop_den_RCP4.5G instead of pop_den_RCP8.5G because that dataset is missing from RTI deliverables
 ```{r}
 
@@ -6504,43 +6879,43 @@ predCat_fut = NDATA_cat
 predCat_fut = merge(predCat_fut,prec_Cat,by='COMID')
 predCat_fut = merge(predCat_fut,temp_Cat,by='COMID')
 predCat_fut = merge(predCat_fut,imprv_cat,by='COMID')
+predCat_fut = merge(predCat_fut,ws_vars,by='COMID')
+gc()
 
-predCat_fut$N_Surp_kgsqkm_2017ws = predCat_fut$n_surp_kgsqkm_RCP8.5G
+PopDen2010Ws
+
+predCat_fut$N_Surp_kgsqkm_2017ws = predCat_fut$ws_n_surp_kgsqkm_RCP8.5G
 predCat_fut$N_Surp_kgsqkm_2017cat = predCat_fut$n_surp_kgsqkm_RCP8.5G
 
-
-predCat_fut$PctCrop2019Ws = predCat_fut$Pct_crop_pasture_land_RCP8.5G
+predCat_fut$PctCrop2019Ws = predCat_fut$ws_Pct_crop_pasture_land_RCP8.5G
 predCat_fut$PctCrop2019Cat = predCat_fut$Pct_crop_pasture_land_RCP8.5G
 
-predCat_fut$FertWs = predCat_fut$n_farm_fert_kgsqkm_RCP8.5G
+predCat_fut$FertWs = predCat_fut$ws_n_farm_fert_kgsqkm_RCP8.5G
 predCat_fut$FertCat = predCat_fut$n_farm_fert_kgsqkm_RCP8.5G
 
-predCat_fut$PopDen2010Ws = predCat_fut$pop_den_RCP4.5G # Using 4.5 instead of 8.5 due to missing dataset
-predCat_fut$PopDen2010Cat = predCat_fut$pop_den_RCP4.5G # Using 4.5 instead of 8.5 due to missing dataset
+predCat_fut$PopDen2010Ws = predCat_fut$ws_pop_den_RCP4.5G
+predCat_fut$PopDen2010Cat = predCat_fut$pop_den_RCP4.5G
 
-predCat_fut$PctImp2016Ws = predCat_fut$impervious_2050_RCP8.5GISS
+predCat_fut$PctImp2016Ws = predCat_fut$ws_Pct_impervious_2050_RCP8.5GISS
 predCat_fut$PctImp2016Cat = predCat_fut$impervious_2050_RCP8.5GISS
 
-predCat_fut$N_TW2012Ws = predCat_fut$totalN_2050ctl_kgNha
+predCat_fut$N_TW2012Ws = predCat_fut$ws_totalN_2050ctl_kgNha
 predCat_fut$N_TW2012Cat = predCat_fut$totalN_2050ctl_kgNha
 
-predCat_fut$CBNFWs = predCat_fut$n_crop_fix_kgsqkm_RCP8.5G
+predCat_fut$CBNFWs = predCat_fut$ws_n_crop_fix_kgsqkm_RCP8.5G
 predCat_fut$CBNFCat = predCat_fut$n_crop_fix_kgsqkm_RCP8.5G
 
-predCat_fut$ManureWs = predCat_fut$n_manure_kgsqkm_RCP8.5G
+predCat_fut$ManureWs = predCat_fut$ws_n_manure_kgsqkm_RCP8.5G
 predCat_fut$ManureCat = predCat_fut$n_manure_kgsqkm_RCP8.5G
 
-predCat_fut$PctForest2019Ws = predCat_fut$Pct_forest_RCP8.5G
+predCat_fut$PctForest2019Ws = predCat_fut$ws_Pct_forest_RCP8.5G
 predCat_fut$PctForest2019Cat = predCat_fut$Pct_forest_RCP8.5G
 
-predCat_fut$tmean9120ws = predCat_fut$temp_2050_degC_RCP8.5GISS
+predCat_fut$tmean9120ws = predCat_fut$ws_temp_2050_degC_byarea_RCP8.5GISS
 predCat_fut$tmean9120cat = predCat_fut$temp_2050_degC_RCP8.5GISS
 
-predCat_fut$precip9120ws = predCat_fut$precip_2050_mm_RCP8.5GISS
+predCat_fut$precip9120ws = predCat_fut$ws_precip_2050_mm_byarea_RCP8.5GISS
 predCat_fut$precip9120cat = predCat_fut$precip_2050_mm_RCP8.5GISS
-
-#predCat_fut$n_ags_2017ws = predCat_fut$N_ag_surp_RCP8.5G
-#predCat_fut$n_surplus_kgsqkm = predCat_fut$N_surp_RCP8.5G
 
 # Keep just necessary fields (for faster loading later)
 keeps1 = c('COMID','PopDen2010Ws', 'PctForest2019Ws', 'PctCrop2019Ws', 'precip9120ws',
@@ -6561,6 +6936,8 @@ statkeeps = c('COMID','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs')
 predCat_8.5G = merge(predCat_fut[,keeps1],StreamCat_cats[,statkeeps],by='COMID')
 
+setdiff(keeps1,colnames(predCat_fut)) # gives not matching
+
 
 #write.csv(predCat_8.5G, file = paste0(future_dir,'Data/Dataset_Future_Catchment_8.5GISS.csv'), row.names=F)
 #write_fst(predCat_8.5G, paste0(future_dir2,'Dataset_Future_Catchment_8.5GISS.fst'), compress = 50, uniform_encoding = TRUE)
@@ -6570,7 +6947,7 @@ write_parquet(predCat_8.5G, paste0(future_dir2,"Dataset_Future_Catchment_8.5GISS
 
 ```
 
-# Future-4.5H Catchment Prediction Dataset
+# *Future-4.5H Catchment Prediction Dataset
 ```{r}
 
 
@@ -6579,44 +6956,66 @@ predCat_fut = NDATA_cat
 predCat_fut = merge(predCat_fut,prec_Cat,by='COMID')
 predCat_fut = merge(predCat_fut,temp_Cat,by='COMID')
 predCat_fut = merge(predCat_fut,imprv_cat,by='COMID')
+predCat_fut = merge(predCat_fut,ws_vars,by='COMID')
+gc()
 
-predCat_fut$N_Surp_kgsqkm_2017ws = predCat_fut$n_surp_kgsqkm_RCP4.5H
+
+predCat_fut$N_Surp_kgsqkm_2017ws = predCat_fut$ws_n_surp_kgsqkm_RCP4.5H
 predCat_fut$N_Surp_kgsqkm_2017cat = predCat_fut$n_surp_kgsqkm_RCP4.5H
 
-
-predCat_fut$PctCrop2019Ws = predCat_fut$Pct_crop_pasture_land_RCP4.5H
+predCat_fut$PctCrop2019Ws = predCat_fut$ws_Pct_crop_pasture_land_RCP4.5H
 predCat_fut$PctCrop2019Cat = predCat_fut$Pct_crop_pasture_land_RCP4.5H
 
-predCat_fut$FertWs = predCat_fut$n_farm_fert_kgsqkm_RCP4.5H
+predCat_fut$FertWs = predCat_fut$ws_n_farm_fert_kgsqkm_RCP4.5H
 predCat_fut$FertCat = predCat_fut$n_farm_fert_kgsqkm_RCP4.5H
 
-predCat_fut$PopDen2010Ws = predCat_fut$pop_den_RCP4.5H
+predCat_fut$PopDen2010Ws = predCat_fut$ws_pop_den_RCP4.5H
 predCat_fut$PopDen2010Cat = predCat_fut$pop_den_RCP4.5H
 
-predCat_fut$PctImp2016Ws = predCat_fut$impervious_2050_RCP4.5Hadgem
+predCat_fut$PctImp2016Ws = predCat_fut$ws_Pct_impervious_2050_RCP4.5Hadgem
 predCat_fut$PctImp2016Cat = predCat_fut$impervious_2050_RCP4.5Hadgem
 
-predCat_fut$N_TW2012Ws = predCat_fut$totalN_2050ctl_kgNha
+predCat_fut$N_TW2012Ws = predCat_fut$ws_totalN_2050ctl_kgNha
 predCat_fut$N_TW2012Cat = predCat_fut$totalN_2050ctl_kgNha
 
-predCat_fut$CBNFWs = predCat_fut$n_crop_fix_kgsqkm_RCP4.5H
+predCat_fut$CBNFWs = predCat_fut$ws_n_crop_fix_kgsqkm_RCP4.5H
 predCat_fut$CBNFCat = predCat_fut$n_crop_fix_kgsqkm_RCP4.5H
 
-predCat_fut$ManureWs = predCat_fut$n_manure_kgsqkm_RCP4.5H
+predCat_fut$ManureWs = predCat_fut$ws_n_manure_kgsqkm_RCP4.5H
 predCat_fut$ManureCat = predCat_fut$n_manure_kgsqkm_RCP4.5H
 
-predCat_fut$PctForest2019Ws = predCat_fut$Pct_forest_RCP4.5H
+predCat_fut$PctForest2019Ws = predCat_fut$ws_Pct_forest_RCP4.5H
 predCat_fut$PctForest2019Cat = predCat_fut$Pct_forest_RCP4.5H
 
-predCat_fut$tmean9120ws = predCat_fut$temp_2050_degC_RCP4.5Hadgem
+predCat_fut$tmean9120ws = predCat_fut$ws_temp_2050_degC_byarea_RCP4.5Hadgem
 predCat_fut$tmean9120cat = predCat_fut$temp_2050_degC_RCP4.5Hadgem
 
-predCat_fut$precip9120ws = predCat_fut$precip_2050_mm_RCP4.5Hadgem
+predCat_fut$precip9120ws = predCat_fut$ws_precip_2050_mm_byarea_RCP4.5Hadgem
 predCat_fut$precip9120cat = predCat_fut$precip_2050_mm_RCP4.5Hadgem
 
-#predCat_fut$n_ags_2017ws = predCat_fut$N_ag_surp_RCP4.5H
-#predCat_fut$n_surplus_kgsqkm = predCat_fut$N_surp_RCP4.5H
-
+options(scipen = 999)
+summary(predCat_fut$N_Surp_kgsqkm_2017ws)
+summary(predCat_fut$N_Surp_kgsqkm_2017cat)
+summary(predCat_fut$PctCrop2019Ws) # this having larger 3rdQ check out with PctCrop2019Ws vs. PctCrop2019Cat
+summary(predCat_fut$PctCrop2019Cat)
+summary(predCat_fut$FertWs)
+summary(predCat_fut$FertCat)
+summary(predCat_fut$PopDen2010Ws)
+summary(predCat_fut$PopDen2010Cat)
+summary(predCat_fut$PctImp2016Ws)
+summary(predCat_fut$PctImp2016Cat)
+summary(predCat_fut$N_TW2012Ws)
+summary(predCat_fut$N_TW2012Cat)
+summary(predCat_fut$CBNFWs)
+summary(predCat_fut$CBNFCat)
+summary(predCat_fut$ManureWs)
+summary(predCat_fut$ManureCat)
+summary(predCat_fut$PctForest2019Ws)
+summary(predCat_fut$PctForest2019Cat)
+summary(predCat_fut$tmean9120ws)
+summary(predCat_fut$tmean9120cat)
+summary(predCat_fut$precip9120ws)
+summary(predCat_fut$precip9120cat)
 
 # Keep just necessary fields (for faster loading later)
 keeps1 = c('COMID','PopDen2010Ws', 'PctForest2019Ws', 'PctCrop2019Ws', 'precip9120ws',
@@ -6637,6 +7036,8 @@ statkeeps = c('COMID','ElevCat','AgKffactCat','AgDrain_pctCat','BFICat',
               'NHDslope_Pct_Ws','WtDepWs','Hillslope_PctWs','HydrlCondWs')
 predCat_4.5H = merge(predCat_fut[,keeps1],StreamCat_cats[,statkeeps],by='COMID')
 
+setdiff(keeps1,colnames(predCat_fut)) # gives not matching
+
 
 #write.csv(predCat_4.5H, file = paste0(future_dir,'Data/Dataset_Future_Catchment_4.5Hadgem.csv'), row.names=F)
 #write_fst(predCat_4.5H, paste0(future_dir2,'Dataset_Future_Catchment_4.5Hadgem.fst'), compress = 50, uniform_encoding = TRUE)
@@ -6646,7 +7047,7 @@ write_parquet(predCat_4.5H, paste0(future_dir2,"Dataset_Future_Catchment_4.5Hadg
 
 ```
 
-# Future-8.5H Catchment Prediction Dataset
+# *Future-8.5H Catchment Prediction Dataset
 ```{r}
 
 
@@ -6655,43 +7056,41 @@ predCat_fut = NDATA_cat
 predCat_fut = merge(predCat_fut,prec_Cat,by='COMID')
 predCat_fut = merge(predCat_fut,temp_Cat,by='COMID')
 predCat_fut = merge(predCat_fut,imprv_cat,by='COMID')
+predCat_fut = merge(predCat_fut,ws_vars,by='COMID')
+gc()
 
-predCat_fut$N_Surp_kgsqkm_2017ws = predCat_fut$n_surp_kgsqkm_RCP8.5H
+predCat_fut$N_Surp_kgsqkm_2017ws = predCat_fut$ws_n_surp_kgsqkm_RCP8.5H
 predCat_fut$N_Surp_kgsqkm_2017cat = predCat_fut$n_surp_kgsqkm_RCP8.5H
 
-
-predCat_fut$PctCrop2019Ws = predCat_fut$Pct_crop_pasture_land_RCP8.5H
+predCat_fut$PctCrop2019Ws = predCat_fut$ws_Pct_crop_pasture_land_RCP8.5H
 predCat_fut$PctCrop2019Cat = predCat_fut$Pct_crop_pasture_land_RCP8.5H
 
-predCat_fut$FertWs = predCat_fut$n_farm_fert_kgsqkm_RCP8.5H
+predCat_fut$FertWs = predCat_fut$ws_n_farm_fert_kgsqkm_RCP8.5H
 predCat_fut$FertCat = predCat_fut$n_farm_fert_kgsqkm_RCP8.5H
 
-predCat_fut$PopDen2010Ws = predCat_fut$pop_den_RCP8.5H
+predCat_fut$PopDen2010Ws = predCat_fut$ws_pop_den_RCP8.5H
 predCat_fut$PopDen2010Cat = predCat_fut$pop_den_RCP8.5H
 
-predCat_fut$PctImp2016Ws = predCat_fut$impervious_2050_RCP8.5Hadgem
+predCat_fut$PctImp2016Ws = predCat_fut$ws_Pct_impervious_2050_RCP8.5Hadgem
 predCat_fut$PctImp2016Cat = predCat_fut$impervious_2050_RCP8.5Hadgem
 
-predCat_fut$N_TW2012Ws = predCat_fut$totalN_2050ctl_kgNha
+predCat_fut$N_TW2012Ws = predCat_fut$ws_totalN_2050ctl_kgNha
 predCat_fut$N_TW2012Cat = predCat_fut$totalN_2050ctl_kgNha
 
-predCat_fut$CBNFWs = predCat_fut$n_crop_fix_kgsqkm_RCP8.5H
+predCat_fut$CBNFWs = predCat_fut$ws_n_crop_fix_kgsqkm_RCP8.5H
 predCat_fut$CBNFCat = predCat_fut$n_crop_fix_kgsqkm_RCP8.5H
 
-predCat_fut$ManureWs = predCat_fut$n_manure_kgsqkm_RCP8.5H
+predCat_fut$ManureWs = predCat_fut$ws_n_manure_kgsqkm_RCP8.5H
 predCat_fut$ManureCat = predCat_fut$n_manure_kgsqkm_RCP8.5H
 
-predCat_fut$PctForest2019Ws = predCat_fut$Pct_forest_RCP8.5H
+predCat_fut$PctForest2019Ws = predCat_fut$ws_Pct_forest_RCP8.5H
 predCat_fut$PctForest2019Cat = predCat_fut$Pct_forest_RCP8.5H
 
-predCat_fut$tmean9120ws = predCat_fut$temp_2050_degC_RCP8.5Hadgem
+predCat_fut$tmean9120ws = predCat_fut$ws_temp_2050_degC_byarea_RCP8.5Hadgem
 predCat_fut$tmean9120cat = predCat_fut$temp_2050_degC_RCP8.5Hadgem
 
-predCat_fut$precip9120ws = predCat_fut$precip_2050_mm_RCP8.5Hadgem
+predCat_fut$precip9120ws = predCat_fut$ws_precip_2050_mm_byarea_RCP8.5Hadgem
 predCat_fut$precip9120cat = predCat_fut$precip_2050_mm_RCP8.5Hadgem
-
-#predCat_fut$n_ags_2017ws = predCat_fut$N_ag_surp_RCP8.5H
-#predCat_fut$n_surplus_kgsqkm = predCat_fut$N_surp_RCP8.5H
 
 
 # Keep just necessary fields (for faster loading later)
@@ -6719,6 +7118,7 @@ predCat_8.5H = merge(predCat_fut[,keeps1],StreamCat_cats[,statkeeps],by='COMID')
 
 write_parquet(predCat_8.5H, paste0(future_dir2,"Dataset_Future_Catchment_8.5Hadgem.parquet"))
 
+gc()
 
 ```
 
